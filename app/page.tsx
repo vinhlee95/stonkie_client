@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 const BACKEND_URL = process.env.BACKEND_URL
 
 interface Company {
@@ -25,9 +27,10 @@ export default async function Page() {
       {data && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {data.map((company) => (
-            <div 
+            <Link 
               key={company.ticker} 
-              className="bg-gray-800 rounded-lg p-4 flex items-center shadow-md hover:shadow-lg transition-shadow"
+              href={`/tickers/${company.ticker}`}
+              className="bg-gray-800 rounded-lg p-4 flex items-center shadow-md hover:shadow-lg transition-shadow cursor-pointer"
             >
               {company.logo_url && (
                 <div className="w-12 h-12 mr-4 flex-shrink-0">
@@ -42,7 +45,7 @@ export default async function Page() {
                 <h3 className="text-white text-lg font-medium">{company.name}</h3>
                 <p className="text-gray-400">{company.ticker}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
