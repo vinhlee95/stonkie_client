@@ -6,7 +6,10 @@ interface FinancialData {
 }
 
 export default async function GrowthChart({ticker}: {ticker: string}) {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/financial-data/${ticker.toLowerCase()}/income_statement`)
+  const res = await fetch(`${process.env.BACKEND_URL}/api/financial-data/${ticker.toLowerCase()}/income_statement`, {
+    // Cache for 15 minutes
+    next: {revalidate: 15*60}
+  })
   let data = await res.json() as FinancialData
 
   if (!data) return null;
