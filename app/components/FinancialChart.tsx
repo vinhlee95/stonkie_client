@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
 import React from 'react';
@@ -127,6 +128,7 @@ const FinancialChart: React.FC<ChartProps> = ({
             family: "'Inter', sans-serif",
             size: 12,
           },
+          
           callback: function(value: any): string {
             return formatYAxisValue(value);
           },
