@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import KeyStats, {KeyStatsType} from "./KeyStats";
 import GrowthChart from "./GrowthChart";
 
-export default async function TickerDetails({ params }: { params: { ticker: string } }) {
+export default async function TickerDetails({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = await params;
   
   const keyStatsResponse = await fetch(`${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/key-stats`, {
