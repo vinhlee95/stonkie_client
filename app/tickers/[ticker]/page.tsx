@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import KeyStats, {KeyStatsType} from "./KeyStats";
 import GrowthChart from "./GrowthChart";
 import EpsChart from "./EpsChart";
+import DebtCoverageChart from "./DebtCoverageChart";
 
 export default async function TickerDetails({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = await params;
@@ -20,6 +21,9 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
       </Suspense>
       <Suspense fallback={<p>Loading EPS chart...</p>}>
         <EpsChart ticker={ticker} />
+      </Suspense>
+      <Suspense fallback={<p>Loading Debt and coverage chart...</p>}>
+        <DebtCoverageChart ticker={ticker} />
       </Suspense>
     </>
   )

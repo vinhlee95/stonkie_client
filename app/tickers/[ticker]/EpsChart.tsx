@@ -10,7 +10,7 @@ export default async function EpsChart({ticker}: {ticker: string}) {
     // Cache for 15 minutes
     next: {revalidate: 15*60}
   })
-  let data = await res.json() as FinancialData
+  const data = await res.json() as FinancialData
 
   const columns = data.columns;
 
