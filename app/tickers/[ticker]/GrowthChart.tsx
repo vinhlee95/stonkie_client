@@ -5,7 +5,10 @@ interface FinancialData {
   columns: string[];
 }
 
-export default async function GrowthChart({data}: {data: FinancialData | null}) {
+export default async function GrowthChart({ticker}: {ticker: string}) {
+  const res = await fetch(`${process.env.BACKEND_URL}/api/financial-data/${ticker.toLowerCase()}/income_statement`)
+  let data = await res.json() as FinancialData
+
   if (!data) return null;
   const columns = data.columns;
   
