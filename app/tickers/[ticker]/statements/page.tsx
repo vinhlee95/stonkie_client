@@ -1,4 +1,9 @@
+export default async function Statements({ params }: { params: Promise<{ ticker: string }> }) {
+  const {ticker} = await params
 
-export default async function Statements() {
-  return <h1>Statements</h1>
+  return (
+    <>
+      <h1>Statements for {ticker}</h1>
+    </>
+  )
 }
