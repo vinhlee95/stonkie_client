@@ -11,7 +11,7 @@ export type KeyStatsType = {
 
 export default function KeyStats({keyStats}: {keyStats: KeyStatsType}) {
   return (
-    <>
+    <div className="mb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="stat-card">
           <h3 className="text-gray-600">Market capitalization</h3>
@@ -43,6 +43,6 @@ export default function KeyStats({keyStats}: {keyStats: KeyStatsType}) {
           <p className="text-2xl font-bold">${formatNumber(keyStats.revenue)}</p>
         </div>
       </div>
-    </>
+    </div>
   )
 }
