@@ -18,16 +18,12 @@ const TABS = [
 function Tabs({ticker}: {ticker: string}) {
   return (
     <>      
-      <div className="flex space-x-4 mb-6">
+      <div className="flex space-x-4 mb-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
         {TABS.map((tab) => (
           <Link key={tab.label} href={`/tickers/${ticker}/statements${tab.path}`}>
             <button
               key={tab.label}
-              className={`px-6 py-3 rounded-full ${
-                true
-                  ? 'bg-slate-800 text-white font-medium' 
-                  : 'bg-transparent text-gray-300 hover:text-white hover:bg-slate-700'
-              }`}
+              className={'px-6 py-3 rounded-full bg-slate-800 text-white font-medium flex-shrink-0'}
             >
               {tab.label}
             </button>
