@@ -3,7 +3,7 @@ import KeyStats, {KeyStatsType} from "./KeyStats";
 import GrowthChart from "./GrowthChart";
 import EpsChart from "./EpsChart";
 import DebtCoverageChart from "./DebtCoverageChart";
-import TabNavigation from "./TabNavigation";
+import TabNavigation from "../../components/TabNavigation";
 
 export default async function TickerDetails({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = await params;
@@ -13,16 +13,10 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
     next: {revalidate: 15*60}
   })
   const keyStats = (await keyStatsResponse.json()).data as KeyStatsType
-  
-  const tabs = [
-    { label: 'Overview', path: `/tickers/${ticker}` },
-    { label: 'Financial statements', path: `/tickers/${ticker}/statements` },
-    { label: 'Revenue', path: `/tickers/${ticker}/revenue` },
-  ];
 
   return (
     <div className="p-4">
-      <TabNavigation tabs={tabs} />
+      <TabNavigation ticker={ticker} />
       <KeyStats keyStats={keyStats} />
       <Suspense fallback={<p>Loading growth chart...</p>}>
         <GrowthChart ticker={ticker} />
