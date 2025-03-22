@@ -3,7 +3,7 @@ export default async function Statements({ params }: { params: Promise<{ ticker:
 
   return (
     <>
-      <h1>Statements for {ticker}</h1>
+      <h1>Statements</h1>
     </>
   )
 }
