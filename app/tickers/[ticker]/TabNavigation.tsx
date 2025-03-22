@@ -14,7 +14,8 @@ export default function TabNavigation({ticker}: {ticker: string}) {
   return (
     <div className="flex p-4">
       {tabs.map((tab) => {
-        const isActive = pathname === tab.path;
+        // statements route has multiple sub-routes
+        const isActive = tab.path.includes('statements') ? pathname.includes(tab.path) : pathname === tab.path;
         return (
           <Link
             key={tab.path}
