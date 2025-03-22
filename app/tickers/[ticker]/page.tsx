@@ -14,7 +14,7 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
   const keyStats = (await keyStatsResponse.json()).data as KeyStatsType
 
   return (
-    <>
+    <div className="p-4">
       <KeyStats keyStats={keyStats} />
       <Suspense fallback={<p>Loading growth chart...</p>}>
         <GrowthChart ticker={ticker} />
@@ -25,6 +25,6 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
       <Suspense fallback={<p>Loading Debt and coverage chart...</p>}>
         <DebtCoverageChart ticker={ticker} />
       </Suspense>
-    </>
+    </div>
   )
 } 
