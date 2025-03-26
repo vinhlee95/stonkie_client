@@ -1,4 +1,3 @@
-'use client'
 import React from 'react';
 import { Box, TextField, Button, InputAdornment } from '@mui/material';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
