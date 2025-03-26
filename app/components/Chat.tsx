@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { Box, Button, Paper, Typography } from '@mui/material';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import MessageContent from './MessageContent';
@@ -19,13 +20,9 @@ interface MessageChunk {
   body: string;
 }
 
-interface FinancialChatboxProps {
-  ticker: string | undefined;  // Current ticker passed from parent component
-}
-
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080'
 
-const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ ticker }) => {
+const FinancialChatbox = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +30,8 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ ticker }) => {
   const [hasFetchedFAQs, setHasFetchedFAQs] = useState(false);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const [isMaximized, setIsMaximized] = useState(false);
+  const params = useParams();
+  const ticker = params.ticker
 
   useEffect(() => {
     setMessages([]);
