@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import Image from 'next/image';
 
 interface MessageContentProps {
   content: string;
@@ -18,7 +19,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
 }) => {
   if (isUser) {
     return (
-      <p className="text-gray-900 dark:text-white">
+      <p className="text-gray-900 dark:text-white text-2xl font-medium pb-4">
         {content}
       </p>
     );
@@ -71,12 +72,14 @@ const BotMessage: React.FC<{ content: string }> = ({ content }) => (
 
 const BotHeader: React.FC = () => (
   <div
-    className="flex items-center gap-1 bg-gray-200 dark:bg-gray-800 rounded-lg p-2 shadow-sm"
+    className="flex items-center gap-1 bg-gray-200 dark:bg-gray-800 rounded-full p-2 px-4 shadow-sm inline-flex max-w-max"
   >
-    <img
+    <Image
       src="/stonkie.png"
       alt="Stonkie Avatar"
-      className="w-6 h-6 rounded-full"
+      width={24}
+      height={24}
+      className="rounded-full"
     />
     <p className="text-gray-500 font-bold">
       Stonkie
