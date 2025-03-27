@@ -1,7 +1,5 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
-import AddIcon from '@mui/icons-material/Add';
 
 interface MessageContentProps {
   content: string;
@@ -20,51 +18,44 @@ const MessageContent: React.FC<MessageContentProps> = ({
 }) => {
   if (isUser) {
     return (
-      <Typography 
-        variant="h4" 
-        sx={{ 
-          fontSize: '1.75rem',
-          fontWeight: 500,
-          mb: 3,
-          color: 'text.primary',
-          pt: 2,
-        }}
-      >
+      <p className="text-gray-900 dark:text-white">
         {content}
-      </Typography>
+      </p>
     );
   }
 
   if (isFAQ && suggestions) {
     return (
-      <Box>
-        {content && <Typography sx={{ mb: 1 }}>{content}</Typography>}
-        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <div className="py-2 w-full">
+        {content && <p className="mb-2 text-gray-900 dark:text-white">{content}</p>}
+        <div className="flex flex-col">
           {suggestions.map((suggestion, index) => (
-            <Box
+            <div
               key={index}
               onClick={() => onFAQClick?.(suggestion)}
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                py: 1.5,
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                cursor: 'pointer',
-                '&:hover': {
-                  backgroundColor: 'action.hover',
-                }
-              }}
+              className="flex justify-between items-center py-1.5 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              <Typography sx={{ color: 'text.primary', flex: 1, pr: 2 }}>
+              <p className="text-gray-900 dark:text-white flex-1 pr-2">
                 {suggestion}
-              </Typography>
-              <AddIcon sx={{ color: 'primary.main' }} />
-            </Box>
+              </p>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5 text-blue-600 dark:text-blue-400" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M12 4v16m8-8H4" 
+                />
+              </svg>
+            </div>
           ))}
-        </Box>
-      </Box>
+        </div>
+      </div>
     );
   }
 
@@ -72,99 +63,68 @@ const MessageContent: React.FC<MessageContentProps> = ({
 };
 
 const BotMessage: React.FC<{ content: string }> = ({ content }) => (
-  <Box>
+  <div>
     <BotHeader />
     <MarkdownContent content={content} />
-  </Box>
+  </div>
 );
 
 const BotHeader: React.FC = () => (
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 1,
-      backgroundColor: (theme) => 
-        theme.palette.mode === 'light' 
-          ? theme.palette.grey[200] 
-          : theme.palette.background.paper,
-      borderRadius: '16px',
-      padding: '4px 16px 4px 8px',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      width: 'fit-content',
-      mb: 1.5
-    }}
+  <div
+    className="flex items-center gap-1 bg-gray-200 dark:bg-gray-800 rounded-lg p-2 shadow-sm"
   >
-    <Box
-      component="img"
+    <img
       src="/stonkie.png"
       alt="Stonkie Avatar"
-      sx={{
-        width: 24,
-        height: 24,
-        borderRadius: '50%',
-        flexShrink: 0,
-      }}
+      className="w-6 h-6 rounded-full"
     />
-    <Typography sx={{ color: 'text.secondary', fontWeight: 'bold' }}>
+    <p className="text-gray-500 font-bold">
       Stonkie
-    </Typography>
-  </Box>
+    </p>
+  </div>
 );
 
 const MarkdownContent: React.FC<{ content: string }> = ({ content }) => (
-  <Box>
+  <div>
     <ReactMarkdown
       components={{
         h2: ({ children }) => (
-          <Typography variant="h6" sx={{ fontWeight: 'bold', mt: 1, mb: 2 }}>
+          <h3 className="font-bold mt-4 mb-2 text-lg text-gray-900 dark:text-white">
             {children}
-          </Typography>
+          </h3>
         ),
         p: ({ children }) => (
-          <Typography sx={{ mb: 1.5, color: 'text.primary' }}>{children}</Typography>
+          <p className="mb-1.5 text-gray-900 dark:text-white">{children}</p>
         ),
         strong: ({ children }) => (
-          <Typography component="span" sx={{ fontWeight: 'bold' }}>
+          <span className="font-bold">
             {children}
-          </Typography>
+          </span>
         ),
         ul: ({ children }) => (
-          <Box component="ul" sx={{ pl: 2, mb: 1.5 }}>
+          <ul className="pl-4 mb-1.5 list-disc">
             {children}
-          </Box>
+          </ul>
         ),
         li: ({ children }) => (
-          <Typography component="li" sx={{ mb: 0.5 }}>
+          <li className="mb-0.5">
             {children}
-          </Typography>
+          </li>
         ),
         table: ({ children }) => (
-          <Box sx={{ overflowX: 'auto', mb: 2 }}>
-            <table style={{ 
-              borderCollapse: 'collapse', 
-              width: '100%',
-              fontSize: '0.875rem'
-            }}>
+          <div className="overflow-x-auto mb-2">
+            <table className="w-full text-sm border-collapse">
               {children}
             </table>
-          </Box>
+          </div>
         ),
         th: ({ children }) => (
-          <th style={{ 
-            border: '1px solid #ddd',
-            padding: '8px',
-            backgroundColor: '#f5f5f5',
-            textAlign: 'left'
-          }}>
+          <th className="border border-gray-300 p-2 bg-gray-100 text-left">
             {children}
           </th>
         ),
         td: ({ children }) => (
-          <td style={{ 
-            border: '1px solid #ddd',
-            padding: '8px'
-          }}>
+          <td className="border border-gray-300 p-2">
             {children}
           </td>
         ),
@@ -172,7 +132,7 @@ const MarkdownContent: React.FC<{ content: string }> = ({ content }) => (
     >
       {content}
     </ReactMarkdown>
-  </Box>
+  </div>
 );
 
 export default MessageContent; 

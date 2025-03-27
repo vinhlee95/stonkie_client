@@ -1,11 +1,9 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Box, Button, Paper, Typography } from '@mui/material';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import MessageContent from './MessageContent';
-import ChatInput from './ChatInput';
-import LoadingInput from './LoadingInput';
+import { useTheme as useNextTheme } from 'next-themes';
 
 interface Message {
   type: 'user' | 'bot';
@@ -32,6 +30,14 @@ const FinancialChatbox = () => {
   const [isMaximized, setIsMaximized] = useState(false);
   const params = useParams();
   const ticker = params.ticker
+  const { resolvedTheme } = useNextTheme();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  const isDarkMode = mounted && resolvedTheme === 'dark';
 
   useEffect(() => {
     setMessages([]);
@@ -253,155 +259,68 @@ const FinancialChatbox = () => {
     }
   };
 
-  // Modify the useEffect for body overflow control
-  useEffect(() => {
-    if (isMaximized || (isVisible && window.innerWidth <= 600)) { // Check for mobile viewport
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed'; // Prevent bounce effect on iOS
-      document.body.style.width = '100%';
-      document.body.style.height = '100%';
-    } else {
-      document.body.style.overflow = 'auto';
-      document.body.style.position = 'static';
-      document.body.style.width = 'auto';
-      document.body.style.height = 'auto';
-    }
-
-    // Cleanup function
-    return () => {
-      document.body.style.overflow = 'auto';
-      document.body.style.position = 'static';
-      document.body.style.width = 'auto';
-      document.body.style.height = 'auto';
-    };
-  }, [isMaximized, isVisible]);
-
   return (
-    <Box sx={{ 
-      position: 'fixed', 
-      top: isMaximized ? 0 : 'auto',
-      bottom: { xs: 0, sm: isMaximized ? 0 : 20 },
-      right: { xs: 0, sm: isMaximized ? 0 : 20 },
-      maxWidth: { xs: '100%', sm: isMaximized ? '100%' : '90%' },
-      width: { xs: '100%', sm: isMaximized ? '100%' : 800 },
-      px: { xs: 0, sm: 0 },
-    }}>
+    <div className={`
+      fixed 
+      ${isVisible ? 'top-0 left-0 right-0 bottom-0' : 'bottom-5 right-5'} 
+      ${isVisible ? 'w-full h-full' : 'w-auto h-auto'} 
+      z-50
+    `}>
       {!isVisible && (
-        <Button 
-          onClick={handleChatOpen}
-          variant="contained" 
-          sx={{ 
-            minWidth: 'auto',
-            width: 56,
-            height: 56,
-            borderRadius: '50%',
-            float: 'right',
-            mr: { xs: 4, sm: 0 },
-            mb: { xs: 4, sm: 0 }
-          }}
+        <button
+          onClick={() => handleChatOpen()}
+          className="fixed bottom-0 right-0 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-full p-3 shadow-lg transition-colors m-4"
+          aria-label="Open chat"
         >
           <ChatBubbleIcon />
-        </Button>
+        </button>
       )}
       
       {isVisible && (
-        <Paper elevation={3} sx={{ 
-          p: { xs: '0', sm: '4px 0 4px 0' },
-          clear: 'both', 
-          position: 'relative',
-          borderRadius: { 
-            xs: '16px 16px 0 0', 
-            sm: isMaximized ? 0 : 4 
-          },
-          height: isMaximized ? '100%' : { xs: '100vh', sm: '80vh' },
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden'
-        }}>
-          {/* Maximize button - desktop only */}
-          <Button 
-            onClick={() => setIsMaximized(prev => !prev)}
-            sx={{ 
-              minWidth: 'auto',
-              width: 32,
-              height: 32,
-              p: 0,
-              position: 'absolute',
-              top: { xs: 8, sm: 8 },
-              right: { xs: 48, sm: 48 },
-              borderRadius: '50%',
-              backgroundColor: 'background.paper',
-              boxShadow: 1,
-              zIndex: 1200,
-              display: { xs: 'none', sm: 'flex' },
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-              }
-            }}
-          >
-            <Typography sx={{ fontSize: '32px' }}>
-              {isMaximized ? '-' : '⤢'}
-            </Typography>
-          </Button>
-          
-          {/* Close button */}
-          <Button 
-            onClick={() => {
-              setIsMaximized(false);  // Reset maximized state when closing
-              setIsVisible(false);
-            }}
-            sx={{ 
-              minWidth: 'auto',
-              width: 32,
-              height: 32,
-              p: 0,
-              position: 'absolute',
-              top: { xs: 8, sm: 8 },
-              right: { xs: 8, sm: 8 },
-              borderRadius: '50%',
-              backgroundColor: 'background.paper',
-              boxShadow: 1,
-              zIndex: 1200,
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-              }
-            }}
-          >
-            <Typography sx={{ fontSize: '20px' }}>✕</Typography>
-          </Button>
-          
-          <Box sx={{ 
-            height: 'auto',
-            overflowY: 'auto',
-            mb: 1,
-            position: 'relative',
-            px: 0,
-            flex: 1,
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: '#f1f1f1',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: '#888',
-              borderRadius: '4px',
-            },
-            '&::-webkit-scrollbar-thumb:hover': {
-              background: '#555',
-            },
-            pb: 10
-          }}>
-            {messages.map((message, index) => (
-              <Box
-                key={index}
-                sx={{
-                  mb: 1,
-                  position: 'relative',
-                  mt: index === 0 ? 2 : 0,
-                  px: { xs: 4, sm: 4 },
-                }}
+        <div className={`
+          bg-white dark:bg-gray-900 
+          text-gray-900 dark:text-white 
+          rounded-lg shadow-lg 
+          flex flex-col 
+          h-screen w-screen
+          overflow-hidden
+        `}>
+          <div className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                <span className="text-amber-500">🐕</span>
+              </div>
+              <span className="text-lg font-medium">Stonkie</span>
+            </div>
+            
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setIsMaximized(!isMaximized)}
+                className="hidden sm:block rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                aria-label={isMaximized ? "Minimize" : "Maximize"}
               >
+                {isMaximized ? '-' : '⤢'}
+              </button>
+              
+              <button
+                onClick={() => setIsVisible(false)}
+                className="rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex-grow overflow-y-auto">
+            <div className="p-4">
+              <p className="text-xl mb-4 text-gray-900 dark:text-white">
+                Here are some frequently asked questions about this ticker symbol:
+              </p>
+              
+              {messages.map((message, index) => (
                 <MessageContent 
                   content={message.content} 
                   isUser={message.type === 'user'}
@@ -409,26 +328,37 @@ const FinancialChatbox = () => {
                   suggestions={message.suggestions}
                   onFAQClick={handleFAQClick}
                 />
-              </Box>
-            ))}
-            <div ref={messagesEndRef} />
-          </Box>
-
-          {isLoading ? (
-            <LoadingInput />
-          ) : (
-            <ChatInput
-              input={input}
-              isLoading={isLoading}
-              ticker={ticker}
-              messagesExist={messages.length > 0}
-              onInputChange={setInput}
-              onSubmit={handleSubmit}
-            />
-          )}
-        </Paper>
+              ))}
+            </div>
+          </div>
+          
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                <span className="font-medium text-gray-800 dark:text-white">N</span>
+              </div>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
+                placeholder="Ask follow up..."
+                className="w-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 placeholder-gray-500 rounded-full py-4 pl-12 pr-12 focus:outline-none"
+              />
+              <button
+                onClick={handleSubmit}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                aria-label="Submit question"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-    </Box>
+    </div>
   );
 };
 
