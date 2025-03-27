@@ -315,6 +315,7 @@ const FinancialChatbox = () => {
                   content={message.content} 
                   isUser={message.type === 'user'}
                   isFAQ={message.isFAQ}
+                  isLoading={isLoading}
                   suggestions={message.suggestions}
                   onFAQClick={handleFAQClick}
                 />

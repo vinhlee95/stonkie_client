@@ -5,6 +5,7 @@ import Image from 'next/image';
 interface MessageContentProps {
   content: string;
   isUser: boolean;
+  isLoading: boolean;
   isFAQ?: boolean;
   suggestions?: string[];
   onFAQClick?: (question: string) => void;
@@ -13,6 +14,7 @@ interface MessageContentProps {
 const MessageContent: React.FC<MessageContentProps> = ({ 
   content, 
   isUser, 
+  isLoading,
   isFAQ, 
   suggestions,
   onFAQClick 
@@ -60,17 +62,17 @@ const MessageContent: React.FC<MessageContentProps> = ({
     );
   }
 
-  return <BotMessage content={content} />;
+  return <BotMessage content={content} isLoading={isLoading} />;
 };
 
-const BotMessage: React.FC<{ content: string }> = ({ content }) => (
+const BotMessage: React.FC<{ content: string, isLoading: boolean }> = ({ content, isLoading }) => (
   <div>
-    <BotHeader />
+    <BotHeader isLoading={isLoading} />
     <MarkdownContent content={content} />
   </div>
 );
 
-const BotHeader: React.FC = () => (
+const BotHeader = ({isLoading}: {isLoading: boolean}) => (
   <div
     className="flex items-center gap-1 bg-gray-200 dark:bg-gray-800 rounded-full p-2 px-4 shadow-sm inline-flex max-w-max"
   >
@@ -82,7 +84,7 @@ const BotHeader: React.FC = () => (
       className="rounded-full"
     />
     <p className="text-gray-500 font-bold">
-      Stonkie
+      {isLoading ? 'Stonkie is thinking...' : 'Stonkie'}
     </p>
   </div>
 );
