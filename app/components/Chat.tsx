@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import MessageContent from './MessageContent';
-import { useTheme as useNextTheme } from 'next-themes';
 
 interface Message {
   type: 'user' | 'bot';
@@ -27,18 +26,9 @@ const FinancialChatbox = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [hasFetchedFAQs, setHasFetchedFAQs] = useState(false);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  const [isMaximized, setIsMaximized] = useState(false);
   const params = useParams();
   const ticker = params.ticker
-  const { resolvedTheme } = useNextTheme();
-  const [mounted, setMounted] = useState(false);
   
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  
-  const isDarkMode = mounted && resolvedTheme === 'dark';
-
   useEffect(() => {
     setMessages([]);
     setHasFetchedFAQs(false);
@@ -259,6 +249,22 @@ const FinancialChatbox = () => {
     }
   };
 
+  // Add this effect to toggle body scroll
+  useEffect(() => {
+    if (isVisible) {
+      // When chat is visible, disable body scroll
+      document.body.style.overflow = 'hidden';
+    } else {
+      // When chat is hidden, restore body scroll
+      document.body.style.overflow = '';
+    }
+    
+    // Cleanup on component unmount
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isVisible]);
+
   return (
     <div className={`
       fixed 
@@ -278,40 +284,23 @@ const FinancialChatbox = () => {
       
       {isVisible && (
         <div className={`
-          bg-white dark:bg-gray-900 
-          text-gray-900 dark:text-white 
+          bg-[var(--background)]
+          text-[var(--foreground)]
           rounded-lg shadow-lg 
           flex flex-col 
-          h-screen w-screen
+          h-[100vh]
           overflow-hidden
         `}>
-          <div className="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-                <span className="text-amber-500">🐕</span>
-              </div>
-              <span className="text-lg font-medium">Stonkie</span>
-            </div>
-            
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setIsMaximized(!isMaximized)}
-                className="hidden sm:block rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                aria-label={isMaximized ? "Minimize" : "Maximize"}
-              >
-                {isMaximized ? '-' : '⤢'}
-              </button>
-              
-              <button
-                onClick={() => setIsVisible(false)}
-                className="rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-                aria-label="Close"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
+          <div className="fixed top-2 right-2 z-50">
+            <button
+              onClick={() => setIsVisible(false)}
+              className="rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 shadow-md"
+              aria-label="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
           </div>
           
           <div className="flex-grow overflow-y-auto">
@@ -333,30 +322,32 @@ const FinancialChatbox = () => {
             </div>
           </div>
           
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
-                <span className="font-medium text-gray-800 dark:text-white">N</span>
+          {!isLoading && (
+            <div className="p-4 flex-shrink-0">
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                  <span className="font-medium text-gray-800 dark:text-white">N</span>
+                </div>
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
+                  placeholder="Ask follow up..."
+                  className="w-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 placeholder-gray-500 rounded-full py-4 pl-12 pr-12 focus:outline-none"
+                />
+                <button
+                  onClick={handleSubmit}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  aria-label="Submit question"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
-                placeholder="Ask follow up..."
-                className="w-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 placeholder-gray-500 rounded-full py-4 pl-12 pr-12 focus:outline-none"
-              />
-              <button
-                onClick={handleSubmit}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                aria-label="Submit question"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>
