@@ -132,7 +132,7 @@ const FinancialChatbox = () => {
         return newMessages;
       });
 
-    } catch (error) {
+    } catch {
       // Add error message to chat
       const errorMessage: Message = {
         type: 'bot',
