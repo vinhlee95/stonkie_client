@@ -322,6 +322,7 @@ const FinancialChatbox = () => {
               
               {messages.map((message, index) => (
                 <MessageContent 
+                  key={index}
                   content={message.content} 
                   isUser={message.type === 'user'}
                   isFAQ={message.isFAQ}
