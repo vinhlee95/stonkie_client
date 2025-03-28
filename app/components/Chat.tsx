@@ -168,7 +168,6 @@ const FinancialChatbox = () => {
       }
       
       const questions: string[] = [];
-      let hasAddedInitialStatus = false;
 
       // eslint-disable-next-line no-constant-condition
       while (true) {
@@ -202,14 +201,6 @@ const FinancialChatbox = () => {
                 });
                 break;
               case 'status':
-                if (!hasAddedInitialStatus) {
-                  // Add first status message as a separate chat message
-                  setMessages(prev => [...prev, {
-                    type: 'bot',
-                    content: data.message
-                  }]);
-                  hasAddedInitialStatus = true;
-                }
                 break;
               case 'error':
                 console.error('Error:', data.message);
@@ -306,8 +297,12 @@ const FinancialChatbox = () => {
           
           <div className="flex-grow overflow-y-auto">
             <div className="p-4">
-              <p className="text-xl mb-4 text-gray-900 dark:text-white">
-                Here are some frequently asked questions about this ticker symbol:
+              <p className="text-gray-900 dark:text-white text-2xl font-medium pb-4">
+                {
+                  ticker ? 
+                  'Here are some frequently asked questions about this ticker symbol:' : 
+                  'Here are some frequently asked questions:'
+                }
               </p>
               
               {messages.map((message, index) => (
