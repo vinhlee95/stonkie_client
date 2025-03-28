@@ -30,7 +30,7 @@ export default async function Page() {
             <Link 
               key={company.ticker} 
               href={`/tickers/${company.ticker}`}
-              className="bg-gray-800 rounded-lg p-4 flex items-center shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              className="bg-gray-200 dark:bg-gray-800 rounded-xl p-4 flex items-center shadow-md hover:shadow-lg transition-shadow cursor-pointer"
             >
               {company.logo_url && (
                 <div className="w-12 h-12 mr-4 flex-shrink-0">
@@ -42,8 +42,8 @@ export default async function Page() {
                 </div>
               )}
               <div>
-                <h3 className="text-white text-lg font-medium">{company.name}</h3>
-                <p className="text-gray-400">{company.ticker}</p>
+                <h3 className="text-gray-800 dark:text-white text-lg font-medium">{company.name}</h3>
+                <p className="text-gray-600 dark:text-gray-400">{company.ticker}</p>
               </div>
             </Link>
           ))}
