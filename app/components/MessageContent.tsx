@@ -21,7 +21,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
 }) => {
   if (isUser) {
     return (
-      <p className="text-gray-900 dark:text-white text-2xl font-medium pb-4">
+      <p className="text-gray-900 dark:text-white text-2xl font-medium mb-4 mt-4">
         {content}
       </p>
     );
@@ -74,7 +74,7 @@ const BotMessage: React.FC<{ content: string, isLoading: boolean }> = ({ content
 
 const BotHeader = ({isLoading}: {isLoading: boolean}) => (
   <div
-    className="flex items-center gap-1 bg-gray-200 dark:bg-gray-800 rounded-full p-2 px-4 shadow-sm inline-flex max-w-max"
+    className="flex items-center gap-1 bg-gray-200 dark:bg-gray-800 rounded-full p-2 px-4 shadow-sm inline-flex max-w-max mb-2"
   >
     <Image
       src="/stonkie.png"
