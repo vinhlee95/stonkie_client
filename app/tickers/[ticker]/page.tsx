@@ -11,11 +11,12 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
     // Cache for 15 minutes
     next: {revalidate: 15*60}
   })
-  const keyStats = (await keyStatsResponse.json()).data as KeyStatsType
+  
+  const keyStats = keyStatsResponse.status === 200 ? (await keyStatsResponse.json()).data as KeyStatsType : null
 
   return (
     <>
-      <KeyStats keyStats={keyStats} />
+      {keyStats && <KeyStats keyStats={keyStats} />}
       <Suspense fallback={<p>Loading growth chart...</p>}>
         <GrowthChart ticker={ticker} />
       </Suspense>
