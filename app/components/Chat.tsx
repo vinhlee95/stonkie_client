@@ -201,6 +201,15 @@ const FinancialChatbox = () => {
                 });
                 break;
               case 'status':
+                setMessages(prev => {
+                  const newMessages = [...prev]
+                  newMessages.push({
+                    type: 'user',
+                    content: data.message,
+                    isFAQ: false
+                  })
+                  return newMessages
+                })
                 break;
               case 'error':
                 console.error('Error:', data.message);
@@ -297,14 +306,6 @@ const FinancialChatbox = () => {
           
           <div className="flex-grow overflow-y-auto">
             <div className="p-4">
-              <p className="text-gray-900 dark:text-white text-2xl font-medium pb-4">
-                {
-                  ticker ? 
-                  'Here are some frequently asked questions about this ticker symbol:' : 
-                  'Here are some frequently asked questions:'
-                }
-              </p>
-              
               {messages.map((message, index) => (
                 <MessageContent 
                   key={index}
@@ -327,11 +328,11 @@ const FinancialChatbox = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask follow-up..."
-                  className="w-full bg-[#f2f2f2] dark:bg-[#1C1C1C] text-gray-700 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 rounded-full py-3 pl-12 pr-12 focus:outline-none border border-gray-200 dark:border-[#333333] shadow-sm dark:shadow-inner focus:ring-1 focus:ring-gray-300 dark:focus:ring-[#333333] transition-colors duration-200"
+                  className="w-full bg-[#1C1C1C] text-gray-200 placeholder-gray-400 rounded-full py-3 pl-12 pr-12 focus:outline-none focus:ring-1 focus:ring-[#333333] border border-[#333333] shadow-inner transition-colors duration-200"
                 />
                 <button
                   onClick={handleSubmit}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-200"
                   aria-label="Submit question"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
