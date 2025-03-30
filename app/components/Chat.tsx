@@ -328,7 +328,7 @@ const FinancialChatbox = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask follow-up..."
-                  className="w-full bg-[#1C1C1C] text-gray-200 placeholder-gray-400 rounded-full py-3 pl-12 pr-12 focus:outline-none focus:ring-1 focus:ring-[#333333] border border-[#333333] shadow-inner transition-colors duration-200"
+                  className="w-full text-gray-200 placeholder-gray-400 rounded-full py-3 pl-12 pr-12 focus:outline-none focus:ring-1 focus:ring-[#333333] border border-[#333333] shadow-inner transition-colors duration-200"
                 />
                 <button
                   onClick={handleSubmit}
