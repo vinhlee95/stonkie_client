@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import MessageContent from './MessageContent';
@@ -29,6 +29,7 @@ const FinancialChatbox = () => {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const params = useParams();
   const ticker = params.ticker
+  const latestMessageRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     setMessages([]);
@@ -146,15 +147,6 @@ const FinancialChatbox = () => {
     }
   };
 
-  // Add this useEffect to scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const fetchFAQsStream = async() => {    
     setIsLoading(true);
     try {
@@ -266,6 +258,16 @@ const FinancialChatbox = () => {
     };
   }, [isVisible]);
 
+  useEffect(() => {
+    if (messages.length > 0) {
+      const latestMessage = messages[messages.length - 1];
+      if (latestMessage.type === 'user' && latestMessageRef.current) {
+        console.log("Scroll", latestMessageRef.current)
+        latestMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [messages]);
+
   return (
     <div className={`
       fixed 
@@ -304,20 +306,22 @@ const FinancialChatbox = () => {
             </button>
           </div>
           
-          <div className="flex-grow overflow-y-auto">
-            <div className="p-4">
-              {messages.map((message, index) => (
-                <MessageContent 
-                  key={index}
-                  content={message.content} 
-                  isUser={message.type === 'user'}
-                  isFAQ={message.isFAQ}
-                  isLoading={isLoading}
-                  suggestions={message.suggestions}
-                  onFAQClick={handleFAQClick}
-                />
-              ))}
-            </div>
+          <div className="flex-grow overflow-y-auto p-4">
+            {messages.map((message, index) => {
+              const isLatest = index === messages.length - 1
+              return (
+                <div ref={isLatest && message.type === 'user' ? latestMessageRef : null} key={index}>
+                  <MessageContent 
+                    content={message.content} 
+                    isUser={message.type === 'user'}
+                    isFAQ={message.isFAQ}
+                    isLoading={isLoading}
+                    suggestions={message.suggestions}
+                    onFAQClick={handleFAQClick}
+                  />
+                </div>
+              )
+            })}
           </div>
           
           {!isLoading && (
