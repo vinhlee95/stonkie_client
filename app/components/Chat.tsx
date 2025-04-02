@@ -261,7 +261,6 @@ const FinancialChatbox = () => {
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1];
       if (latestMessage.type === 'user' && latestMessageRef.current) {
-        console.log("Scroll", latestMessageRef.current)
         latestMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
