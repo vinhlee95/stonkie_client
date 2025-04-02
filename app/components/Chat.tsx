@@ -26,7 +26,6 @@ const FinancialChatbox = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [hasFetchedFAQs, setHasFetchedFAQs] = useState(false);
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const params = useParams();
   const ticker = params.ticker
   const latestMessageRef = useRef<HTMLDivElement>(null);
