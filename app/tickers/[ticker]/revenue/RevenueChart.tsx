@@ -10,7 +10,7 @@ import {
   type ChartOptions,
 } from "chart.js"
 import { Bar } from "react-chartjs-2"
-import { useTheme } from '@mui/material/styles';
+import { useEffect, useState } from "react"
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
@@ -31,7 +31,26 @@ interface RevenueChartProps {
 }
 
 export default function RevenueChart({ revenueData }: RevenueChartProps) {
-  const theme = useTheme();
+  const [textColor, setTextColor] = useState('#333')
+  const [gridColor, setGridColor] = useState('rgba(0, 0, 0, 0.1)')
+  
+  // Detect dark mode
+  useEffect(() => {
+    const updateColors = () => {
+      const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      setTextColor(isDarkMode ? '#fff' : '#333')
+      setGridColor(isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)')
+    }
+    
+    updateColors()
+    
+    // Listen for changes in color scheme
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    mediaQuery.addEventListener('change', updateColors)
+    
+    return () => mediaQuery.removeEventListener('change', updateColors)
+  }, [])
+
   const years = revenueData.map((item) => item.year.toString())
 
   // Color palette for different labels
@@ -71,19 +90,19 @@ export default function RevenueChart({ revenueData }: RevenueChartProps) {
           display: false,
         },
         ticks: {
-          color: theme.palette.text.primary,
+          color: textColor,
         },
       },
       y: {
         stacked: true,
         grid: {
-          color: theme.palette.divider,
+          color: gridColor,
         },
         border: {
           display: false,
         },
         ticks: {
-          color: theme.palette.text.primary,
+          color: textColor,
           callback: (value) => `${value}B`,
         },
       },
@@ -96,10 +115,10 @@ export default function RevenueChart({ revenueData }: RevenueChartProps) {
         callbacks: {
           label: (context) => `${context.dataset.label}: ${context.parsed.y}B`,
         },
-        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: 'rgba(51, 51, 51, 0.9)',
         padding: 12,
-        titleColor: theme.palette.text.primary,
-        bodyColor: theme.palette.text.primary,
+        titleColor: 'white',
+        bodyColor: 'white',
       },
     },
   }
