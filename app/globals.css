@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --accent-hover: #065f46; /* emerald-800 */
+  --accent-hover-dark: #10b981; /* emerald-500 */
 }
 
 @theme inline {
