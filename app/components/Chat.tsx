@@ -335,7 +335,7 @@ const FinancialChatbox = () => {
                     }
                   }}
                   placeholder="Ask follow-up..."
-                  className="w-full bg-[#f5f5f5] dark:bg-[#1C1C1C] text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 rounded-full py-3 pl-12 pr-12 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-[#333333] border border-gray-200 dark:border-[#333333] shadow-inner transition-colors duration-200"
+                  className="w-full bg-[#f5f5f5] dark:bg-[#1C1C1C] text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 rounded-full py-3 pl-6 pr-12 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-[#333333] border border-gray-200 dark:border-[#333333] shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.05)] transition-colors duration-200"
                 />
                 <button
                   onClick={handleSubmit}
