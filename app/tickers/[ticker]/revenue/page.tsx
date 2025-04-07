@@ -1,4 +1,5 @@
 import { formatNumber } from "@/utils/formatter";
+import RevenueChart from "./RevenueChart";
 
 interface ProductRevenueBreakdown {
   product: string;
@@ -74,6 +75,10 @@ export default async function Revenue({params}: {params: Promise<{ticker: string
   }
 
   const revenueData = json.data as RevenueData[]
+  if(!revenueData || revenueData.length === 0) {
+    return <p>Revenue data is not available for the ticker</p>
+  }
+
   const productRevenueData = revenueData.map(data => ({
     year: data.year,
     breakdown: data.product_breakdown.map(item => ({
@@ -95,8 +100,10 @@ export default async function Revenue({params}: {params: Promise<{ticker: string
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Product revenue breakdown: {ticker.toUpperCase()}</h1>
+      <RevenueChart revenueData={productRevenueData} />
       <ProductRevenueTable revenueData={productRevenueData} />
-      <h1 className="text-2xl font-bold mb-4">Region revenue breakdown: {ticker.toUpperCase()}</h1>
+      <h1 className="text-2xl font-bold mb-4 mt-4">Region revenue breakdown: {ticker.toUpperCase()}</h1>
+      <RevenueChart revenueData={regionRevenueData} />
       <ProductRevenueTable revenueData={regionRevenueData} />
     </div>
   )
