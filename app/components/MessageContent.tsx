@@ -22,7 +22,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
   if (isUser) {
     return (
       <div className="max-w-4xl mx-auto w-full">
-        <p className="text-gray-900 dark:text-white text-xl font-medium mb-4 mt-4">
+        <p className="text-gray-900 dark:text-white text-xl font-medium mb-4 mt-4 leading-relaxed">
           {content}
         </p>
       </div>
@@ -101,7 +101,7 @@ const MarkdownContent: React.FC<{ content: string }> = ({ content }) => (
           </h3>
         ),
         p: ({ children }) => (
-          <p className="mb-2 text-gray-900 dark:text-white text-base">
+          <p className="mb-3 text-gray-900 dark:text-white text-base leading-relaxed">
             {children}
           </p>
         ),
@@ -116,7 +116,7 @@ const MarkdownContent: React.FC<{ content: string }> = ({ content }) => (
           </ul>
         ),
         li: ({ children }) => (
-          <li className="mb-0.5 text-base">
+          <li className="mb-2 text-base leading-relaxed">
             {children}
           </li>
         ),

@@ -275,7 +275,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose }) => {
         overflow-hidden
         fixed inset-0
       `}>
-        <div className="fixed top-2 right-2 z-50">
+        <div className="fixed top-2 right-2 z-50 pr-4">
           <button
             onClick={onClose}
             className="rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 shadow-md"
@@ -287,7 +287,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose }) => {
           </button>
         </div>
         
-        <div className="flex-grow overflow-y-auto p-4 pt-2 w-full">
+        <div className="flex-grow overflow-y-auto pt-2 px-4 pb-16 w-full">
           {messages.map((message, index) => {
             const isLatest = index === messages.length - 1
             return (
@@ -306,7 +306,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose }) => {
         </div>
         
         {!isLoading && (
-          <div className="p-4 flex-shrink-0 w-full">
+          <div className="flex-shrink-0 pb-4 px-4 pr-8 w-full fixed bottom-0 bg-transparent">
             <div className="relative max-w-4xl mx-auto">
               <input
                 type="text"
@@ -318,7 +318,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose }) => {
                   }
                 }}
                 placeholder="Ask follow-up..."
-                className="w-full bg-[#f5f5f5] dark:bg-[#1C1C1C] text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 rounded-full py-3 pl-6 pr-12 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-[#333333] border border-gray-200 dark:border-[#333333] shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.05)] transition-colors duration-200"
+                className="w-full bg-[#f5f5f5]/90 dark:bg-[#1C1C1C]/90 text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 rounded-full py-3 pl-6 pr-12 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-[#333333] border border-gray-200/50 dark:border-[#333333]/50 shadow-lg backdrop-blur-sm transition-all duration-200"
               />
               <button
                 onClick={handleSubmit}
