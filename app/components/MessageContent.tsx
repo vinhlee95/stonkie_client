@@ -21,22 +21,24 @@ const MessageContent: React.FC<MessageContentProps> = ({
 }) => {
   if (isUser) {
     return (
-      <p className="text-gray-900 dark:text-white text-2xl font-medium mb-4 mt-4">
-        {content}
-      </p>
+      <div className="max-w-4xl mx-auto w-full">
+        <p className="text-gray-900 dark:text-white text-xl font-medium mb-4 mt-4">
+          {content}
+        </p>
+      </div>
     );
   }
 
   if (isFAQ && suggestions) {
     return (
-      <div className="py-2 w-full">
+      <div className="py-2 w-full max-w-4xl mx-auto">
         {content && <p className="mb-2 text-gray-900 dark:text-white">{content}</p>}
         <div className="flex flex-col">
           {suggestions.map((suggestion, index) => (
             <div
               key={index}
               onClick={() => onFAQClick?.(suggestion)}
-              className="flex justify-between items-center py-1.5 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="flex justify-between items-center py-1.5 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-2"
             >
               <p className="text-gray-900 dark:text-white flex-1 pr-2">
                 {suggestion}
@@ -66,7 +68,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
 };
 
 const BotMessage: React.FC<{ content: string, isLoading: boolean }> = ({ content, isLoading }) => (
-  <div>
+  <div className="max-w-4xl mx-auto w-full">
     <BotHeader isLoading={isLoading} />
     <MarkdownContent content={content} />
   </div>
@@ -90,7 +92,7 @@ const BotHeader = ({isLoading}: {isLoading: boolean}) => (
 );
 
 const MarkdownContent: React.FC<{ content: string }> = ({ content }) => (
-  <div>
+  <div className="prose prose-sm dark:prose-invert max-w-none">
     <ReactMarkdown
       components={{
         h2: ({ children }) => (
@@ -99,7 +101,9 @@ const MarkdownContent: React.FC<{ content: string }> = ({ content }) => (
           </h3>
         ),
         p: ({ children }) => (
-          <p className="mb-1.5 text-gray-900 dark:text-white">{children}</p>
+          <p className="mb-2 text-gray-900 dark:text-white text-base">
+            {children}
+          </p>
         ),
         strong: ({ children }) => (
           <span className="font-bold">
@@ -112,7 +116,7 @@ const MarkdownContent: React.FC<{ content: string }> = ({ content }) => (
           </ul>
         ),
         li: ({ children }) => (
-          <li className="mb-0.5">
+          <li className="mb-0.5 text-base">
             {children}
           </li>
         ),
@@ -124,12 +128,12 @@ const MarkdownContent: React.FC<{ content: string }> = ({ content }) => (
           </div>
         ),
         th: ({ children }) => (
-          <th className="border border-gray-300 p-2 bg-gray-100 text-left">
+          <th className="border border-gray-300 p-2 bg-gray-100 dark:bg-gray-800 text-left">
             {children}
           </th>
         ),
         td: ({ children }) => (
-          <td className="border border-gray-300 p-2">
+          <td className="border border-gray-300 dark:border-gray-700 p-2">
             {children}
           </td>
         ),

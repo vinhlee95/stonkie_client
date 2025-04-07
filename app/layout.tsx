@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Chat from "./components/Chat";
 import { Suspense } from "react";
+import BottomNavigation from "./components/BottomNavigation";
 
 export const metadata: Metadata = {
   title: "Stonkie 🚀",
@@ -15,10 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="pb-16">
         {children}
         <Suspense>
-          <Chat />
+          <BottomNavigation />
         </Suspense>
       </body>
     </html>

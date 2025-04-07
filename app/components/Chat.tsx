@@ -1,7 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import MessageContent from './MessageContent';
 
 interface Message {
@@ -17,22 +16,24 @@ interface MessageChunk {
   body: string;
 }
 
+interface FinancialChatboxProps {
+  onClose: () => void
+}
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
-const FinancialChatbox = () => {
+const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  const [hasFetchedFAQs, setHasFetchedFAQs] = useState(false);
   const params = useParams();
   const ticker = params.ticker
   const latestMessageRef = useRef<HTMLDivElement>(null);
-  
+
+  const hasFetchedFAQs = useRef(false);
+
   useEffect(() => {
     setMessages([]);
-    setHasFetchedFAQs(false);
   }, [ticker]);
 
   const handleFAQClick = async (question: string) => {
@@ -233,29 +234,20 @@ const FinancialChatbox = () => {
     }
   };
 
-  const handleChatOpen = () => {
-    setIsVisible(true);
-    if (!hasFetchedFAQs) {
-      fetchFAQsStream();
-      setHasFetchedFAQs(true);
-    }
-  };
-
-  // Add this effect to toggle body scroll
   useEffect(() => {
-    if (isVisible) {
-      // When chat is visible, disable body scroll
-      document.body.style.overflow = 'hidden';
-    } else {
+    // When chat is visible, disable body scroll
+    document.body.style.overflow = 'hidden';
+
+    if (!hasFetchedFAQs.current) {
+      hasFetchedFAQs.current = true;
+      fetchFAQsStream();
+    }
+
+    return () => {
       // When chat is hidden, restore body scroll
       document.body.style.overflow = '';
-    }
-    
-    // Cleanup on component unmount
-    return () => {
-      document.body.style.overflow = '';
     };
-  }, [isVisible]);
+  }, [])
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -269,88 +261,78 @@ const FinancialChatbox = () => {
   return (
     <div className={`
       fixed 
-      ${isVisible ? 'top-0 left-0 right-0 bottom-0' : 'bottom-5 right-5'} 
-      ${isVisible ? 'w-full h-full' : 'w-auto h-auto'} 
+      top-0 left-0 right-0 bottom-0
+      w-full h-full
       z-50
     `}>
-      {!isVisible && (
-        <button
-          onClick={() => handleChatOpen()}
-          className="fixed bottom-0 right-0 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-white rounded-full p-3 shadow-lg transition-colors m-4"
-          aria-label="Open chat"
-        >
-          <ChatBubbleIcon />
-        </button>
-      )}
-      
-      {isVisible && (
-        <div className={`
-          bg-[var(--background)]
-          text-[var(--foreground)]
-          rounded-lg shadow-lg 
-          flex flex-col 
-          h-[100vh]
-          overflow-hidden
-        `}>
-          <div className="fixed top-2 right-2 z-50">
-            <button
-              onClick={() => setIsVisible(false)}
-              className="rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 shadow-md"
-              aria-label="Close"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-          
-          <div className="flex-grow overflow-y-auto p-4">
-            {messages.map((message, index) => {
-              const isLatest = index === messages.length - 1
-              return (
-                <div ref={isLatest && message.type === 'user' ? latestMessageRef : null} key={index}>
-                  <MessageContent 
-                    content={message.content} 
-                    isUser={message.type === 'user'}
-                    isFAQ={message.isFAQ}
-                    isLoading={isLoading}
-                    suggestions={message.suggestions}
-                    onFAQClick={handleFAQClick}
-                  />
-                </div>
-              )
-            })}
-          </div>
-          
-          {!isLoading && (
-            <div className="p-4 flex-shrink-0">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSubmit(e);
-                    }
-                  }}
-                  placeholder="Ask follow-up..."
-                  className="w-full bg-[#f5f5f5] dark:bg-[#1C1C1C] text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 rounded-full py-3 pl-6 pr-12 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-[#333333] border border-gray-200 dark:border-[#333333] shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.05)] transition-colors duration-200"
-                />
-                <button
-                  onClick={handleSubmit}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-200"
-                  aria-label="Submit question"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
+      <div className={`
+        bg-[var(--background)]
+        text-[var(--foreground)]
+        rounded-none
+        shadow-lg 
+        flex flex-col 
+        h-full w-full
+        overflow-hidden
+        fixed inset-0
+      `}>
+        <div className="fixed top-2 right-2 z-50">
+          <button
+            onClick={onClose}
+            className="rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 shadow-md"
+            aria-label="Close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
-      )}
+        
+        <div className="flex-grow overflow-y-auto p-4 pt-2 w-full">
+          {messages.map((message, index) => {
+            const isLatest = index === messages.length - 1
+            return (
+              <div ref={isLatest && message.type === 'user' ? latestMessageRef : null} key={index}>
+                <MessageContent 
+                  content={message.content} 
+                  isUser={message.type === 'user'}
+                  isFAQ={message.isFAQ}
+                  isLoading={isLoading}
+                  suggestions={message.suggestions}
+                  onFAQClick={handleFAQClick}
+                />
+              </div>
+            )
+          })}
+        </div>
+        
+        {!isLoading && (
+          <div className="p-4 flex-shrink-0 w-full">
+            <div className="relative max-w-4xl mx-auto">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSubmit(e);
+                  }
+                }}
+                placeholder="Ask follow-up..."
+                className="w-full bg-[#f5f5f5] dark:bg-[#1C1C1C] text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 rounded-full py-3 pl-6 pr-12 focus:outline-none focus:ring-1 focus:ring-gray-300 dark:focus:ring-[#333333] border border-gray-200 dark:border-[#333333] shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.05)] transition-colors duration-200"
+              />
+              <button
+                onClick={handleSubmit}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-200"
+                aria-label="Submit question"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
