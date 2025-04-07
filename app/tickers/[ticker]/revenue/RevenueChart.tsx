@@ -10,7 +10,6 @@ import {
   type ChartOptions,
 } from "chart.js"
 import { Bar } from "react-chartjs-2"
-import { useEffect, useState } from "react"
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
@@ -31,26 +30,6 @@ interface RevenueChartProps {
 }
 
 export default function RevenueChart({ revenueData }: RevenueChartProps) {
-  const [textColor, setTextColor] = useState('#333')
-  const [gridColor, setGridColor] = useState('rgba(0, 0, 0, 0.1)')
-  
-  // Detect dark mode
-  useEffect(() => {
-    const updateColors = () => {
-      const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-      setTextColor(isDarkMode ? '#fff' : '#333')
-      setGridColor(isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)')
-    }
-    
-    updateColors()
-    
-    // Listen for changes in color scheme
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    mediaQuery.addEventListener('change', updateColors)
-    
-    return () => mediaQuery.removeEventListener('change', updateColors)
-  }, [])
-
   const years = revenueData.map((item) => item.year.toString())
 
   // Color palette for different labels
@@ -88,21 +67,14 @@ export default function RevenueChart({ revenueData }: RevenueChartProps) {
         },
         border: {
           display: false,
-        },
-        ticks: {
-          color: textColor,
-        },
+        }
       },
       y: {
         stacked: true,
-        grid: {
-          color: gridColor,
-        },
         border: {
           display: false,
         },
         ticks: {
-          color: textColor,
           callback: (value) => `${value}B`,
         },
       },
