@@ -109,10 +109,6 @@ const FinancialChart: React.FC<ChartProps> = ({
         labels: {
           padding: 20,
           usePointStyle: true,
-          font: {
-            family: "'Inter', sans-serif",
-            size: 12,
-          },
         },
       },
       title: {
@@ -138,11 +134,6 @@ const FinancialChart: React.FC<ChartProps> = ({
           color: 'rgba(255, 255, 255, 0.1)',
         },
         ticks: {
-          font: {
-            family: "'Inter', sans-serif",
-            size: 12,
-          },
-          
           callback: function(value: any): string {
             return formatYAxisValue(value);
           },
@@ -156,10 +147,6 @@ const FinancialChart: React.FC<ChartProps> = ({
             display: false,
           },
           ticks: {
-            font: {
-              family: "'Inter', sans-serif",
-              size: 12,
-            },
             callback: function(value: any): string {
               return `${Number(value).toFixed(0)}%`;
             },
