@@ -22,8 +22,8 @@ export default function TabNavigation({ticker}: {ticker: string}) {
             href={tab.path}
             className={`py-2 mr-6 text-lg transition-colors duration-200 ${
               isActive 
-                ? 'text-white-600 border-b-2 border-white-600' 
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'border-b-2 text-[var(--accent-active)] dark:text-[var(--accent-active-dark)] font-semibold' 
+                : 'hover:text-[var(--accent-hover)] dark:hover:text-[var(--accent-hover-dark)] font-medium'
             }`}
           >
             {tab.label}
