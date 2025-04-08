@@ -5,10 +5,10 @@
   --foreground: #171717;
   --dark-background: rgb(37, 35, 35);
   --dark-foreground: #ededed;
-  --accent-hover: #065f46; /* emerald-800 */
-  --accent-active: #044e39; /* emerald-900 */
-  --accent-active-dark: #42a287; /* emerald-900 */
-  --accent-hover-dark: #10b981; /* emerald-500 */
+  --accent-hover: #318970;
+  --accent-active: #044e39;
+  --accent-active-dark: #42a287;
+  --accent-hover-dark: #10b981;
   --button-background: #e5e8e7;
   --button-background-dark: #414443; 
   --button-hover: #cdd1d0;
