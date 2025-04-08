@@ -23,7 +23,7 @@ function Tabs({ticker}: {ticker: string}) {
           <Link key={tab.label} href={`/tickers/${ticker}/statements${tab.path}`}>
             <button
               key={tab.label}
-              className={'px-6 py-3 rounded-full bg-slate-800 text-white font-medium flex-shrink-0'}
+              className={'px-6 py-3 rounded-full text-gray-900 dark:text-white font-medium flex-shrink-0 transition-colors duration-200 bg-[var(--button-background)] dark:bg-[var(--button-background-dark)] hover:bg-[var(--button-hover)] dark:hover:bg-[var(--button-hover-dark)]'}
             >
               {tab.label}
             </button>
