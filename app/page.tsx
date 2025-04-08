@@ -30,7 +30,7 @@ export default async function Page() {
             <Link 
               key={company.ticker} 
               href={`/tickers/${company.ticker}`}
-              className="bg-gray-200 dark:bg-gray-800 rounded-xl p-4 flex items-center shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              className="bg-[var(--button-background)] hover:bg-[var(--button-hover)] dark:bg-[var(--button-background-dark)] dark:hover:bg-[var(--button-hover-dark)] transition-colors duration-200 rounded-xl p-4 flex items-center cursor-pointer"
             >
               {company.logo_url && (
                 <div className="w-12 h-12 mr-4 flex-shrink-0">

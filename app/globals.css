@@ -5,6 +5,10 @@
   --foreground: #171717;
   --accent-hover: #065f46; /* emerald-800 */
   --accent-hover-dark: #10b981; /* emerald-500 */
+  --button-background: #e5e8e7;
+  --button-background-dark: #414443; 
+  --button-hover: #cdd1d0;
+  --button-hover-dark: #333535;
 }
 
 @theme inline {
