@@ -88,7 +88,7 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
           <thead>
             <tr>
               {reversedColumns.map((column, index) => (
-                <th key={index} className="px-4 py-2 text-left border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
+                <th key={index} className="px-4 py-2 text-left border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-[var(--dark-background)]">
                   {column}
                 </th>
               ))}
@@ -96,7 +96,7 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
           </thead>
           <tbody>
             {filteredData.map((row, rowIndex) => (
-              <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-50 dark:bg-gray-900" : "bg-white dark:bg-black"}>
+              <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-50 dark:bg-[var(--dark-background)]" : "bg-white dark:bg-[var(--dark-background)]"}>
                 {reversedColumns.map((column, colIndex) => (
                   <td key={colIndex} className="px-4 py-2 border-b border-gray-300 dark:border-gray-700">
                     {colIndex === 0 ? row[column] : formatNumber(Number(row[column]))}

@@ -34,9 +34,9 @@ function ProductRevenueTable({revenueData}: {revenueData: RevenueDataType[]}) {
       <table className="min-w-full bg-white dark:bg-black border border-gray-300 dark:border-gray-700">
         <thead>
           <tr>
-            <th className="px-4 py-2 text-left border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">Products</th>
+            <th className="px-4 py-2 text-left border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-[var(--dark-background)]">Products</th>
             {revenueData.map(yearData => (
-              <th key={yearData.year} className="px-4 py-2 text-right border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
+              <th key={yearData.year} className="px-4 py-2 text-right border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-[var(--dark-background)]">
                 {yearData.year}
               </th>
             ))}
@@ -46,7 +46,7 @@ function ProductRevenueTable({revenueData}: {revenueData: RevenueDataType[]}) {
           {Array.from(new Set(revenueData.flatMap(yearData => 
             yearData.breakdown.map(item => item.label)
           ))).sort().map((product, rowIndex) => (
-            <tr key={product} className={rowIndex % 2 === 0 ? "bg-gray-50 dark:bg-gray-900" : "bg-white dark:bg-black"}>
+            <tr key={product} className={rowIndex % 2 === 0 ? "bg-gray-50 dark:bg-[var(--dark-background)]" : "bg-white dark:bg-[var(--dark-background)]"}>
               <td className="px-4 py-2 border-b border-gray-300 dark:border-gray-700">{product}</td>
               {revenueData.map(yearData => {
                 const productData = yearData.breakdown.find(item => item.label === product);
