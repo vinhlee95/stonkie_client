@@ -1,38 +1,4 @@
-import Link from "next/link";
-
-const TABS = [
-  {
-    label: 'Income statements',
-    path: ''
-  },
-  {
-    label: 'Balance sheet',
-    path: '/balance_sheet'
-  },
-  {
-    label: 'Cash flow',
-    path: '/cash_flow'
-  }
-]
-
-function Tabs({ticker}: {ticker: string}) {
-  return (
-    <>      
-      <div className="flex space-x-4 mb-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
-        {TABS.map((tab) => (
-          <Link key={tab.label} href={`/tickers/${ticker}/statements${tab.path}`}>
-            <button
-              key={tab.label}
-              className={'px-6 py-3 rounded-full text-gray-900 dark:text-white font-medium flex-shrink-0 transition-colors duration-200 bg-[var(--button-background)] dark:bg-[var(--button-background-dark)] hover:bg-[var(--button-hover)] dark:hover:bg-[var(--button-hover-dark)]'}
-            >
-              {tab.label}
-            </button>
-          </Link>
-        ))}
-      </div>
-    </>
-  );
-}
+import Tabs from "./Tab";
 
 export default async function RootLayout({ children, params }: { children: React.ReactNode, params: Promise<{ticker: string}> }) {
   const {ticker} = await params

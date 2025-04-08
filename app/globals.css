@@ -9,6 +9,8 @@
   --button-background-dark: #414443; 
   --button-hover: #cdd1d0;
   --button-hover-dark: #333535;
+  --tab-active: #286956;
+  --tab-active-dark: #146a4e;
 }
 
 @theme inline {
