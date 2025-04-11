@@ -1,113 +1,96 @@
 import FinancialChart from "@/app/components/FinancialChart";
 
-interface FinancialData {
-  data: Record<string, string | number>[];
-  columns: string[];
+type Statement = {
+  year: number;
+  data: Record<string, number | null>;
 }
 
-const REPORT_TYPE = ['balance_sheet', 'cash_flow']
+export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balanceSheet: Statement[], cashFlow: Statement[]}) {
+  // Sort statements by year in ascending order
+  const sortedBalanceSheet = [...balanceSheet].filter(item => !!item.data).sort((a, b) => a.year - b.year);
+  const sortedCashFlow = [...cashFlow].sort((a, b) => a.year - b.year);
+  
+  // Find keys from the first statement (should be consistent across years)
+  const firstBalanceSheet = sortedBalanceSheet[0];
+  const firstCashFlow = sortedCashFlow[0];
 
-export default async function DebtCoverageChart({ticker}: {ticker: string}) {
-  const responses = await Promise.all(REPORT_TYPE.map(type => {
-    return fetch(`${process.env.BACKEND_URL}/api/financial-data/${ticker.toLowerCase()}/${type}`, {
-      // Cache for 15 minutes
-      next: {revalidate: 15*60}
-    })
-  }))
+  const totalDebtKey = Object.keys(firstBalanceSheet.data).find(key => 
+    key.toLowerCase().includes('total debt')
+  );
 
-  const [balanceSheet, cashFlow] = await Promise.all(responses.map(res => {
-    return res.json()
-  })) as [FinancialData, FinancialData]
+  const cashKey = Object.keys(firstBalanceSheet.data).find(key => 
+    key.toLowerCase() === 'cash'
+  );
 
-  const totalDebt = balanceSheet.data.find(row => {
-    const metric = row[balanceSheet.columns[0]];
-    return typeof metric === 'string' && 
-      metric.toLowerCase().includes('total debt');
-  });
+  const cashEquivalentsKey = Object.keys(firstBalanceSheet.data).find(key => 
+    key.toLowerCase() === 'cash equivalents'
+  );
 
-  const cash = balanceSheet.data.find(row => {
-    const metric = row[balanceSheet.columns[0]];
-    return typeof metric === 'string' && 
-      metric.toLowerCase() === 'cash';
-  });
+  const cashAndCashEquivalentsKey = Object.keys(firstBalanceSheet.data).find(key => 
+    key.toLowerCase().includes('cash and cash')
+  );
 
-  const cashEquivalents = balanceSheet.data.find(row => {
-    const metric = row[balanceSheet.columns[0]];
-    return typeof metric === 'string' && 
-      metric.toLowerCase() === 'cash equivalents';
-  });
+  const freeCashFlowKey = Object.keys(firstCashFlow.data).find(key => 
+    key.toLowerCase().includes('free cash flow')
+  );
 
-  const cashAndCashEquivalents = balanceSheet.data.find(row => {
-    const metric = row[balanceSheet.columns[0]];
-    return typeof metric === 'string' && 
-      metric.toLowerCase().includes('cash and cash');
-  });
+  if (!totalDebtKey || !freeCashFlowKey) return null;
 
-  const freeCashFlow = cashFlow.data.find(row => {
-    const metric = row[cashFlow.columns[0]];
-    return typeof metric === 'string' && 
-      metric.toLowerCase().includes('free cash flow');
-  });
+  const years = sortedBalanceSheet.map(statement => statement.year.toString());
 
-  if (!totalDebt || !freeCashFlow) return null;
-
-  const years = balanceSheet.columns.slice(1).reverse();
-
-  const chartData = {
-    labels: years,
-    datasets: [
-      {
-        type: 'bar' as const,
-        label: 'Total Debt',
-        data: years.map(year => {
-          if(!totalDebt[year]) return 0;
-          return parseFloat(totalDebt[year].toString().replace(/[^0-9.-]+/g, ''));
-        }),
-        backgroundColor: '#4287f5',
-        borderColor: '#4287f5',
-        borderWidth: 0,
-        borderRadius: 4,
-      },
-      {
-        type: 'bar' as const,
-        label: 'Free Cash Flow',
-        data: years.map(year => {
-          if(!freeCashFlow[year]) return 0;
-          return parseFloat(freeCashFlow[year].toString().replace(/[^0-9.-]+/g, ''));
-        }),
-        backgroundColor: '#63e6e2',
-        borderColor: '#63e6e2',
-        borderWidth: 0,
-        borderRadius: 4,
-      },
-      {
-        type: 'bar' as const,
-        label: 'Cash and Cash Equivalents',
-        data: years.map(year => {
-          if(!cash && !cashEquivalents && !cashAndCashEquivalents) return 0;
-          if(cash && cashEquivalents) {
-            if(!cash[year] || !cashEquivalents[year]) return 0;
-            const cashValue = parseFloat(cash[year].toString().replace(/[^0-9.-]+/g, ''));
-            const equivalentsValue = parseFloat(cashEquivalents[year].toString().replace(/[^0-9.-]+/g, ''));
-            return cashValue + equivalentsValue;
-          }
-          if(!cashAndCashEquivalents || !cashAndCashEquivalents[year]) return 0;
-          return parseFloat(cashAndCashEquivalents[year].toString().replace(/[^0-9.-]+/g, ''));
-        }),
-        backgroundColor: '#ff9f40',
-        borderColor: '#ff9f40',
-        borderWidth: 0,
-        borderRadius: 4,
-      },
-    ],
-  };
+  const datasets = [
+    {
+      type: 'bar' as const,
+      label: 'Total Debt',
+      data: sortedBalanceSheet.map(statement => 
+        parseFloat((statement.data[totalDebtKey] ?? 0).toString())
+      ),
+      backgroundColor: '#4287f5',
+      borderColor: '#4287f5',
+      borderWidth: 0,
+      borderRadius: 4,
+      yAxisID: 'y',
+    },
+    {
+      type: 'bar' as const,
+      label: 'Free Cash Flow',
+      data: sortedCashFlow.map(statement => 
+        parseFloat((statement.data[freeCashFlowKey] ?? 0).toString())
+      ),
+      backgroundColor: '#63e6e2',
+      borderColor: '#63e6e2',
+      borderWidth: 0,
+      borderRadius: 4,
+      yAxisID: 'y',
+    },
+    {
+      type: 'bar' as const,
+      label: 'Cash and Cash Equivalents',
+      data: sortedBalanceSheet.map(statement => {
+        if (cashAndCashEquivalentsKey) {
+          return parseFloat((statement.data[cashAndCashEquivalentsKey] ?? 0).toString());
+        }
+        if (cashKey && cashEquivalentsKey) {
+          const cash = parseFloat((statement.data[cashKey] ?? 0).toString());
+          const equivalents = parseFloat((statement.data[cashEquivalentsKey] ?? 0).toString());
+          return cash + equivalents;
+        }
+        return 0;
+      }),
+      backgroundColor: '#ff9f40',
+      borderColor: '#ff9f40',
+      borderWidth: 0,
+      borderRadius: 4,
+      yAxisID: 'y',
+    }
+  ];
 
   return (
     <FinancialChart
       title="Debt and Coverage"
       labels={years}
-      datasets={chartData.datasets}
-      yAxisConfig={{ formatAsCurrency: true, showPercentage: false }}
+      datasets={datasets}
+      yAxisConfig={{ formatAsCurrency: true }}
     />
   );
 }

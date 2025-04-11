@@ -29,6 +29,16 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
     data: statement.income_statement
   })) : null
 
+  const balanceSheet = statements && statements.length > 0 ? statements.map((statement) => ({
+    year: statement.period_end_year,
+    data: statement.balance_sheet
+  })) : null
+
+  const cashFlow = statements && statements.length > 0 ? statements.map((statement) => ({
+    year: statement.period_end_year,
+    data: statement.cash_flow
+  })) : null
+
   return (
     <>
       {keyStats && <KeyStats keyStats={keyStats} />}
@@ -39,7 +49,7 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
         {incomeStatements && <EpsChart incomeStatements={incomeStatements} />}
       </Suspense>
       <Suspense fallback={<p>Loading Debt and coverage chart...</p>}>
-        <DebtCoverageChart ticker={ticker} />
+        {balanceSheet && cashFlow && <DebtCoverageChart balanceSheet={balanceSheet} cashFlow={cashFlow} />}
       </Suspense>
     </>
   )
