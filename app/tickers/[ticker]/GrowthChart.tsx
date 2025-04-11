@@ -1,62 +1,33 @@
 import FinancialChart from "@/app/components/FinancialChart";
 
-interface FinancialData {
-  data: Record<string, string | number>[];
-  columns: string[];
+type IncomeStatement = {
+  year: number;
+  data: Record<string, number | null>;
 }
 
-export default async function GrowthChart({ticker}: {ticker: string}) {
-  const res = await fetch(`${process.env.BACKEND_URL}/api/financial-data/${ticker.toLowerCase()}/income_statement`, {
-    // Cache for 15 minutes
-    next: {revalidate: 15*60}
-  })
-  let data = await res.json() as FinancialData
-
-  if (!data) return null;
-  const columns = data.columns;
+export default async function GrowthChart({incomeStatements}: {incomeStatements: IncomeStatement[]}) {
+  // Sort income statements by year in ascending order
+  const sortedStatements = [...incomeStatements].sort((a, b) => a.year - b.year);
   
-  const revenueRow = data.data.find(row => {
-    const metric = row[columns[0]];
-    return typeof metric === 'string' && 
-      metric.toLowerCase().includes('revenue') && 
-      !metric.toLowerCase().includes('cost');
-  });
-  const netIncome = data.data.find(row => {
-    const metric = row[columns[0]];
-    return typeof metric === 'string' && 
-      metric.toLowerCase().includes('net income');
-  });
-
-  // Reverse the columns array (except the first column which contains metrics)
-  const reversedColumns = [data.columns[0], ...data.columns.slice(1).reverse()];
+  // Find revenue and net income keys from the first statement (they should be consistent across years)
+  const firstStatement = sortedStatements[0];
+  const revenueKey = Object.keys(firstStatement.data).find(key => 
+    key.toLowerCase().includes('revenue') && 
+    !key.toLowerCase().includes('cost')
+  );
   
-  // Update the data rows to match the reversed column order
-  const reversedData = data.data.map(row => {
-    const rowValues = Object.values(row);
-    return [rowValues[0], ...rowValues.slice(1).reverse()];
-  });
+  const netIncomeKey = Object.keys(firstStatement.data).find(key => 
+    key.toLowerCase().includes('net income')
+  );
 
-  // Update the data object with reversed columns and data
-  data = {
-    ...data,
-    columns: reversedColumns,
-    data: reversedData.map(row => {
-      const obj: Record<string, string | number> = {};
-      reversedColumns.forEach((col, i) => {
-        obj[col] = row[i];
-      });
-      return obj;
-    })
-  };
+  if (!revenueKey || !netIncomeKey) return null;
 
-  if (!revenueRow || !netIncome) return null;
-
-  const years = data.columns.slice(1);
+  const years = sortedStatements.map(statement => statement.year.toString());
   
   // Calculate net margin with 2 decimal places
-  const netMarginData = years.map(year => {
-    const revenue = parseFloat(revenueRow[year].toString().replace(/[^0-9.-]+/g, ''));
-    const income = parseFloat(netIncome[year].toString().replace(/[^0-9.-]+/g, ''));
+  const netMarginData = sortedStatements.map(statement => {
+    const revenue = parseFloat((statement.data[revenueKey] ?? 0).toString().replace(/[^0-9.-]+/g, ''));
+    const income = parseFloat((statement.data[netIncomeKey] ?? 0).toString().replace(/[^0-9.-]+/g, ''));
     return Number(((income / revenue) * 100).toFixed(2));
   });
 
@@ -64,7 +35,9 @@ export default async function GrowthChart({ticker}: {ticker: string}) {
     {
       type: 'bar' as const,
       label: 'Revenue',
-      data: years.map(year => parseFloat(revenueRow[year].toString().replace(/[^0-9.-]+/g, ''))),
+      data: sortedStatements.map(statement => 
+        parseFloat((statement.data[revenueKey] ?? 0).toString().replace(/[^0-9.-]+/g, ''))
+      ),
       backgroundColor: '#4287f5',
       borderColor: '#4287f5',
       borderWidth: 0,
@@ -74,7 +47,9 @@ export default async function GrowthChart({ticker}: {ticker: string}) {
     {
       type: 'bar' as const,
       label: 'Net income',
-      data: years.map(year => parseFloat(netIncome[year].toString().replace(/[^0-9.-]+/g, ''))),
+      data: sortedStatements.map(statement => 
+        parseFloat((statement.data[netIncomeKey] ?? 0).toString().replace(/[^0-9.-]+/g, ''))
+      ),
       backgroundColor: '#63e6e2',
       borderColor: '#63e6e2',
       borderWidth: 0,
