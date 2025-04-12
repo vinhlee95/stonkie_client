@@ -1,38 +1,50 @@
 import FinancialChart from "@/app/components/FinancialChart";
+import { FinancialStatement } from "@/app/types";
 import { formatNumber } from "@/utils/formatter";
 
-interface FinancialData {
-  data: Record<string, string | number>[];
-  columns: string[];
-}
+const HIGHLIGHTED_METRICS = [
+  'Operating cash flow',
+  'Financing cash flow',
+  'Investing cash flow',
+  'Repurchase of Capital Stock',
+  'Free cash flow'
+];
 
-const HIGHLIGHTED_CASH_FLOW_ROWS = ['Operating cash flow', 'Financing cash flow', 'Investing cash flow', 'Repurchase of Capital Stock', 'Free cash flow'];
+export default async function CashFlow({ params }: { params: Promise<{ ticker: string }> }) {
+  const { ticker } = await params;
+  const res = await fetch(
+    `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=cash_flow`,
+    { next: { revalidate: 15 * 60 } }
+  );
+  const statements = await res.json() as FinancialStatement[];
 
-export default async function IncomeStatement({ params }: { params: Promise<{ ticker: string }> }) {
-  const {ticker} = await params
-  const res = await fetch(`${process.env.BACKEND_URL}/api/financial-data/${ticker.toLowerCase()}/cash_flow`, {
-    // Cache for 15 minutes
-    next: {revalidate: 15*60}
-  })
-  const data = await res.json() as FinancialData
+  if (!statements || statements.length === 0) {
+    return (
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-4">Cash Flow: {ticker.toUpperCase()}</h1>
+        <p className="text-gray-600 dark:text-gray-400">No cash flow data available for this company.</p>
+      </div>
+    );
+  }
 
-  // Reverse the columns array (except the first column which is the metric name)
-  const firstColumn = data.columns[0];
-  const reversedColumns = [firstColumn, ...data.columns.slice(1).reverse()];
+  // Get all years from the statements
+  const years = statements.map(s => s.period_end_year).sort((a, b) => a - b);
   
-  const isHighlightedRow = (metric: string): boolean => {
-    return HIGHLIGHTED_CASH_FLOW_ROWS.some(row => {
-      return metric.toLowerCase() === row.toLowerCase()
-    });
-  };
-
-  // Filter rows based on showAllMetrics state
-  const filteredData = data.data.filter(row => {
-    return isHighlightedRow(String(row[data.columns[0]]))
+  // Get all unique metrics from the statements
+  const allMetrics = new Set<string>();
+  statements.forEach(statement => {
+    Object.keys(statement.data).forEach(metric => allMetrics.add(metric));
   });
 
+  // Filter metrics based on highlighted metrics
+  const filteredMetrics = Array.from(allMetrics).filter(metric => 
+    HIGHLIGHTED_METRICS.some(highlighted => 
+      metric.toLowerCase() === highlighted.toLowerCase()
+    )
+  );
+
   const renderCashFlowChart = () => {
-    if (!data.data) return null;
+    if (!statements || statements.length === 0) return null;
 
     const metrics = [
       { label: 'Operating cash flow', key: 'operating cash flow', color: '#3b82f6' },
@@ -40,35 +52,46 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
       { label: 'Financing cash flow', key: 'financing cash flow', color: '#f59e0b' },
     ];
 
-    // Get all years from the data (excluding 'Breakdown' and 'TTM' columns)
-    const years = Object.keys(data.data[0])
-      .filter(key => key !== 'Breakdown' && key !== 'TTM')
-      .sort();
+    // First, let's verify which metrics actually exist in the data
+    const availableMetrics = new Set<string>();
+    statements.forEach(statement => {
+      Object.keys(statement.data).forEach(key => availableMetrics.add(key));
+    });
 
-    const datasets = metrics.map(metric => ({
+    // Filter metrics to only include those that exist in the data
+    const validMetrics = metrics.filter(metric => 
+      Array.from(availableMetrics).some(available => 
+        metric.key.toLowerCase().includes(available.toLowerCase()) || 
+        available.toLowerCase().includes(metric.key.toLowerCase())
+      )
+    );
+
+    const datasets = validMetrics.map(metric => ({
       type: 'bar' as const,
       label: metric.label,
       data: years.map(year => {
-        const row = data.data.find(
-          row => {
-            if(!row['Breakdown'] || typeof row['Breakdown'] !== 'string') return false;
-            return row['Breakdown'].trim().toLowerCase().includes(metric.key);
-          }
+        const statement = statements.find(s => s.period_end_year === year);
+        if (!statement) return 0;
+        // Find the exact key that matches (case-insensitive)
+        const exactKey = Object.keys(statement.data).find(
+          key => key.toLowerCase().includes(metric.key.toLowerCase()) || 
+                 metric.key.toLowerCase().includes(key.toLowerCase())
         );
-        return row ? Number(row[year]) / 1000000 : 0; // Convert to billions
+        if (!exactKey) return 0;
+        const value = statement.data[exactKey];
+        return value ? Number(value) / 1000000 : 0; // Convert to billions
       }),
       backgroundColor: metric.color,
       borderColor: metric.color,
       borderRadius: 4,
-      barPercentage: 0.6,
-      categoryPercentage: 0.75,
+      barPercentage: 0.7,
     }));
 
     return (
-      <div className='mb-2'>
+      <div className="mb-2">
         <FinancialChart
-          title="Cash flow"
-          labels={years.map(year => year.split('/')[2])}
+          title=""
+          labels={years.map(String)}
           datasets={datasets}
           height={200}
           marginTop={0}
@@ -78,35 +101,44 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
   };
 
   return (
-    <>
-      <h1 className="text-2xl font-bold mb-4">Cash flow: {ticker.toUpperCase()}</h1>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Cash Flow: {ticker.toUpperCase()}</h1>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">All numbers are in billions of USD.</p>
       {renderCashFlowChart()}
-      
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white dark:bg-black border border-gray-300 dark:border-gray-700">
           <thead>
             <tr>
-              {reversedColumns.map((column, index) => (
-                <th key={index} className="px-4 py-2 text-left border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-[var(--dark-background)]">
-                  {column}
+              <th className="px-4 py-2 text-left border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-[var(--dark-background)]">
+                Metric
+              </th>
+              {years.map(year => (
+                <th key={year} className="px-4 py-2 text-left border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-[var(--dark-background)]">
+                  {year}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((row, rowIndex) => (
-              <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-50 dark:bg-[var(--dark-background)]" : "bg-white dark:bg-[var(--dark-background)]"}>
-                {reversedColumns.map((column, colIndex) => (
-                  <td key={colIndex} className="px-4 py-2 border-b border-gray-300 dark:border-gray-700">
-                    {colIndex === 0 ? row[column] : formatNumber(Number(row[column]))}
-                  </td>
-                ))}
+            {filteredMetrics.map((metric, index) => (
+              <tr key={metric} className={index % 2 === 0 ? "bg-gray-50 dark:bg-[var(--dark-background)]" : "bg-white dark:bg-[var(--dark-background)]"}>
+                <td className="px-4 py-2 border-b border-gray-300 dark:border-gray-700">
+                  {metric}
+                </td>
+                {years.map(year => {
+                  const statement = statements.find(s => s.period_end_year === year);
+                  const value = statement?.data[metric];
+                  return (
+                    <td key={year} className="px-4 py-2 border-b border-gray-300 dark:border-gray-700">
+                      {value ? formatNumber(Number(value)) : '-'}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </>
-  )
+    </div>
+  );
 }
