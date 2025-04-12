@@ -6,6 +6,7 @@ async function LogoAndTickerBlock({ ticker }: { ticker: string }) {
     next: { revalidate: 15*60 }
   });
   const keyStats = keyStatsResponse.status === 200 ? (await keyStatsResponse.json()).data as KeyStatsType : null;
+  console.log({keyStats})
 
   return (
     <div className="flex items-center gap-4 p-4 pb-0">
