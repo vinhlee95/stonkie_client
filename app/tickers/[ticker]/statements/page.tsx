@@ -15,7 +15,6 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
   if (!statements || statements.length === 0) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Financial Statements: {ticker.toUpperCase()}</h1>
         <p className="text-gray-600 dark:text-gray-400">No financial statements available for this company.</p>
       </div>
     );
@@ -78,7 +77,6 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Financial Statements: {ticker.toUpperCase()}</h1>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">All numbers are in billions of USD.</p>
       {renderIncomeStatementChart()}
       <div className="overflow-x-auto">

@@ -21,7 +21,6 @@ export default async function CashFlow({ params }: { params: Promise<{ ticker: s
   if (!statements || statements.length === 0) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Cash Flow: {ticker.toUpperCase()}</h1>
         <p className="text-gray-600 dark:text-gray-400">No cash flow data available for this company.</p>
       </div>
     );
@@ -102,7 +101,6 @@ export default async function CashFlow({ params }: { params: Promise<{ ticker: s
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Cash Flow: {ticker.toUpperCase()}</h1>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">All numbers are in billions of USD.</p>
       {renderCashFlowChart()}
       <div className="overflow-x-auto">

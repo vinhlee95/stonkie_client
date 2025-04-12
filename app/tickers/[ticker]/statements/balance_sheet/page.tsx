@@ -25,7 +25,6 @@ export default async function BalanceSheet({ params }: { params: Promise<{ ticke
   if (!statements || statements.length === 0) {
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">Balance Sheet: {ticker.toUpperCase()}</h1>
         <p className="text-gray-600 dark:text-gray-400">No balance sheet data available for this company.</p>
       </div>
     );
@@ -105,7 +104,6 @@ export default async function BalanceSheet({ params }: { params: Promise<{ ticke
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Balance Sheet: {ticker.toUpperCase()}</h1>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">All numbers are in billions of USD.</p>
       {renderBalanceSheetChart()}
       <div className="overflow-x-auto">
