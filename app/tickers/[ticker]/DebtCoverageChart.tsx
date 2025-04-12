@@ -1,10 +1,12 @@
 import FinancialChart from "@/app/components/FinancialChart";
 import { FinancialStatement } from "@/app/types";
 
-export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balanceSheet: FinancialStatement[], cashFlow: Statement[]}) {
+type Props = Pick<FinancialStatement, 'period_end_year' | 'data'>
+
+export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balanceSheet: Props[], cashFlow: Props[]}) {
   // Sort statements by year in ascending order
-  const sortedBalanceSheet = [...balanceSheet].filter(item => !!item.data).sort((a, b) => a.year - b.year);
-  const sortedCashFlow = [...cashFlow].sort((a, b) => a.year - b.year);
+  const sortedBalanceSheet = [...balanceSheet].filter(item => !!item.data).sort((a, b) => a.period_end_year - b.period_end_year);
+  const sortedCashFlow = [...cashFlow].sort((a, b) => a.period_end_year - b.period_end_year);
   
   // Find keys from the first statement (should be consistent across years)
   const firstBalanceSheet = sortedBalanceSheet[0];
@@ -32,7 +34,7 @@ export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balan
 
   if (!totalDebtKey || !freeCashFlowKey) return null;
 
-  const years = sortedBalanceSheet.map(statement => statement.year.toString());
+  const years = sortedBalanceSheet.map(statement => statement.period_end_year.toString());
 
   const datasets = [
     {

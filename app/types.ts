@@ -6,6 +6,8 @@ export type CompanyFinancialStatement = {
 }
 
 export type FinancialStatement = {
-  year: number;
+  period_end_year: number;
+  period_type: 'annually' | 'quarterly';
+  is_ttm: boolean;
   data: Record<string, number | null>;
 }

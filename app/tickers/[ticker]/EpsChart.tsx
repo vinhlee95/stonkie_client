@@ -1,9 +1,11 @@
 import FinancialChart from "@/app/components/FinancialChart";
 import { FinancialStatement } from "@/app/types";
 
-export default async function EpsChart({incomeStatements}: {incomeStatements: FinancialStatement[]}) {
+type Props = Pick<FinancialStatement, 'period_end_year' | 'data'>
+
+export default async function EpsChart({incomeStatements}: {incomeStatements: Props[]}) {
   // Sort income statements by year in ascending order
-  const sortedStatements = [...incomeStatements].sort((a, b) => a.year - b.year);
+  const sortedStatements = [...incomeStatements].sort((a, b) => a.period_end_year - b.period_end_year);
   
   // Find EPS keys from the first statement (should be consistent across years)
   const firstStatement = sortedStatements[0];
@@ -16,7 +18,7 @@ export default async function EpsChart({incomeStatements}: {incomeStatements: Fi
 
   if (!basicEpsKey || !dilutedEpsKey) return null;
 
-  const years = sortedStatements.map(statement => statement.year.toString());
+  const years = sortedStatements.map(statement => statement.period_end_year.toString());
   
   const datasets = [
     {
