@@ -3,13 +3,7 @@ import KeyStats, {KeyStatsType} from "./KeyStats";
 import GrowthChart from "./GrowthChart";
 import EpsChart from "./EpsChart";
 import DebtCoverageChart from "./DebtCoverageChart";
-
-type FinancialStatement = {
-  period_end_year: number
-  income_statement: Record<string, number | null>
-  balance_sheet: Record<string, number | null>
-  cash_flow: Record<string, number | null>
-}
+import { CompanyFinancialStatement } from "@/app/types";
 
 export default async function TickerDetails({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = await params;
@@ -23,7 +17,7 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
     next: {revalidate: 15*60}
   })
   
-  const statements = statementsResponse.status === 200 ? await statementsResponse.json() as FinancialStatement[] : null
+  const statements = statementsResponse.status === 200 ? await statementsResponse.json() as CompanyFinancialStatement[] : null
   const incomeStatements = statements && statements.length > 0 ? statements.map((statement) => ({
     year: statement.period_end_year,
     data: statement.income_statement

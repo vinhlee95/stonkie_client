@@ -1,11 +1,7 @@
 import FinancialChart from "@/app/components/FinancialChart";
+import { FinancialStatement } from "@/app/types";
 
-type Statement = {
-  year: number;
-  data: Record<string, number | null>;
-}
-
-export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balanceSheet: Statement[], cashFlow: Statement[]}) {
+export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balanceSheet: FinancialStatement[], cashFlow: Statement[]}) {
   // Sort statements by year in ascending order
   const sortedBalanceSheet = [...balanceSheet].filter(item => !!item.data).sort((a, b) => a.year - b.year);
   const sortedCashFlow = [...cashFlow].sort((a, b) => a.year - b.year);

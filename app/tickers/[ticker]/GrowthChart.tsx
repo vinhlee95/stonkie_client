@@ -1,11 +1,7 @@
 import FinancialChart from "@/app/components/FinancialChart";
+import { FinancialStatement } from "@/app/types";
 
-type IncomeStatement = {
-  year: number;
-  data: Record<string, number | null>;
-}
-
-export default async function GrowthChart({incomeStatements}: {incomeStatements: IncomeStatement[]}) {
+export default async function GrowthChart({incomeStatements}: {incomeStatements: FinancialStatement[]}) {
   // Sort income statements by year in ascending order
   const sortedStatements = [...incomeStatements].sort((a, b) => a.year - b.year);
   
