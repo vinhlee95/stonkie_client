@@ -7,6 +7,7 @@ export type KeyStatsType = {
   net_income: number;
   basic_eps: number;
   dividend_yield: number;
+  logo_url: string | null;
 }
 
 export default function KeyStats({keyStats}: {keyStats: KeyStatsType}) {
