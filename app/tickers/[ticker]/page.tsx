@@ -36,15 +36,17 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
   return (
     <>
       {keyStats && <KeyStats keyStats={keyStats} />}
-      <Suspense fallback={<p>Loading growth chart...</p>}>
-        {incomeStatements && <GrowthChart incomeStatements={incomeStatements} />}
-      </Suspense>
-      <Suspense fallback={<p>Loading EPS chart...</p>}>
-        {incomeStatements && <EpsChart incomeStatements={incomeStatements} />}
-      </Suspense>
-      <Suspense fallback={<p>Loading Debt and coverage chart...</p>}>
-        {balanceSheet && cashFlow && <DebtCoverageChart balanceSheet={balanceSheet} cashFlow={cashFlow} />}
-      </Suspense>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <Suspense fallback={<p>Loading growth chart...</p>}>
+          {incomeStatements && <GrowthChart incomeStatements={incomeStatements} />}
+        </Suspense>
+        <Suspense fallback={<p>Loading EPS chart...</p>}>
+          {incomeStatements && <EpsChart incomeStatements={incomeStatements} />}
+        </Suspense>
+        <Suspense fallback={<p>Loading Debt and coverage chart...</p>}>
+          {balanceSheet && cashFlow && <DebtCoverageChart balanceSheet={balanceSheet} cashFlow={cashFlow} />}
+        </Suspense>
+      </div>
     </>
   )
 } 
