@@ -16,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="pb-16">
-        {children}
+        <div className="px-1 md:px-8">
+          {children}
+        </div>
         <Suspense>
           <BottomNavigation />
         </Suspense>
