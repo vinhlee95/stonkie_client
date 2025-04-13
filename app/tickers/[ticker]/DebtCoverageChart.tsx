@@ -43,7 +43,7 @@ export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balan
       type: 'bar' as const,
       label: 'Total Debt',
       data: sortedBalanceSheet.map(statement => 
-        parseFloat((statement.data[totalDebtKey] ?? 0).toString())
+        parseFloat((statement.data[totalDebtKey] ? statement.data[totalDebtKey]*1000 : 0).toString())
       ),
       backgroundColor: '#4287f5',
       borderColor: '#4287f5',
@@ -55,7 +55,7 @@ export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balan
       type: 'bar' as const,
       label: 'Free Cash Flow',
       data: sortedCashFlow.map(statement => 
-        parseFloat((statement.data[freeCashFlowKey] ?? 0).toString())
+        parseFloat((statement.data[freeCashFlowKey] ? statement.data[freeCashFlowKey]*1000 : 0).toString())
       ),
       backgroundColor: '#63e6e2',
       borderColor: '#63e6e2',
@@ -68,7 +68,7 @@ export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balan
       label: 'Cash and Cash Equivalents',
       data: sortedBalanceSheet.map(statement => {
         if (cashAndCashEquivalentsKey) {
-          return parseFloat((statement.data[cashAndCashEquivalentsKey] ?? 0).toString());
+          return parseFloat((statement.data[cashAndCashEquivalentsKey] ? statement.data[cashAndCashEquivalentsKey]*1000 : 0).toString());
         }
         if (cashKey && cashEquivalentsKey) {
           const cash = parseFloat((statement.data[cashKey] ?? 0).toString());

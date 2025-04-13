@@ -36,7 +36,7 @@ export default async function GrowthChart({incomeStatements}: {incomeStatements:
       type: 'bar' as const,
       label: 'Revenue',
       data: sortedStatements.map(statement => 
-        parseFloat((statement.data[revenueKey] ?? 0).toString().replace(/[^0-9.-]+/g, ''))
+        parseFloat((statement.data[revenueKey] ? statement.data[revenueKey]*1000 : 0).toString().replace(/[^0-9.-]+/g, ''))
       ),
       backgroundColor: '#4287f5',
       borderColor: '#4287f5',
@@ -48,7 +48,7 @@ export default async function GrowthChart({incomeStatements}: {incomeStatements:
       type: 'bar' as const,
       label: 'Net income',
       data: sortedStatements.map(statement => 
-        parseFloat((statement.data[netIncomeKey] ?? 0).toString().replace(/[^0-9.-]+/g, ''))
+        parseFloat((statement.data[netIncomeKey] ? statement.data[netIncomeKey]*1000 : 0).toString().replace(/[^0-9.-]+/g, ''))
       ),
       backgroundColor: '#63e6e2',
       borderColor: '#63e6e2',
