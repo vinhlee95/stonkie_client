@@ -103,7 +103,7 @@ export default async function BalanceSheet({ params }: { params: Promise<{ ticke
   };
 
   return (
-    <div className="p-4">
+    <>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">All numbers are in billions of USD.</p>
       {renderBalanceSheetChart()}
       <div className="overflow-x-auto">
@@ -140,6 +140,6 @@ export default async function BalanceSheet({ params }: { params: Promise<{ ticke
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   );
 }

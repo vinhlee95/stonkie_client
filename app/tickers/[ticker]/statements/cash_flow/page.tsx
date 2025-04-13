@@ -100,7 +100,7 @@ export default async function CashFlow({ params }: { params: Promise<{ ticker: s
   };
 
   return (
-    <div className="p-4">
+    <>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">All numbers are in billions of USD.</p>
       {renderCashFlowChart()}
       <div className="overflow-x-auto">
@@ -137,6 +137,6 @@ export default async function CashFlow({ params }: { params: Promise<{ ticker: s
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   );
 }

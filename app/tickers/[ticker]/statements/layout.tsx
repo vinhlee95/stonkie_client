@@ -6,9 +6,7 @@ export default async function RootLayout({ children, params }: { children: React
     <>
       <Tabs ticker={ticker} />
       <main>
-        <div className='p-4'>
-          {children}
-        </div>
+        {children}
       </main>
     </>
   );

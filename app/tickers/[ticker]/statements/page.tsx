@@ -76,7 +76,7 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
   };
 
   return (
-    <div className="p-4">
+    <>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">All numbers are in billions of USD.</p>
       {renderIncomeStatementChart()}
       <div className="overflow-x-auto">
@@ -113,6 +113,6 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   );
 }
