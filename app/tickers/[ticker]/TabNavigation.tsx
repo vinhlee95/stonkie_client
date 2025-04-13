@@ -12,7 +12,7 @@ export default function TabNavigation({ticker}: {ticker: string}) {
   ];
 
   return (
-    <div className="flex p-4">
+    <div className="flex p-4 overflow-x-auto whitespace-nowrap">
       {tabs.map((tab) => {
         // statements route has multiple sub-routes
         const isActive = tab.path.includes('statements') ? pathname.includes(tab.path) : pathname === tab.path;
@@ -20,7 +20,7 @@ export default function TabNavigation({ticker}: {ticker: string}) {
           <Link
             key={tab.path}
             href={tab.path}
-            className={`py-2 mr-6 text-lg transition-colors duration-200 ${
+            className={`py-2 mr-4 sm:mr-6 text-lg transition-colors duration-200 ${
               isActive 
                 ? 'border-b-2 text-[var(--accent-active)] dark:text-[var(--accent-active-dark)] font-semibold' 
                 : 'hover:text-[var(--accent-hover)] dark:hover:text-[var(--accent-hover-dark)] font-medium'
