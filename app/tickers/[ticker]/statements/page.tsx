@@ -80,14 +80,14 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">All numbers are in billions of USD.</p>
       {renderIncomeStatementChart()}
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white dark:bg-black border border-gray-300 dark:border-gray-700">
+        <table className="min-w-full">
           <thead>
             <tr>
-              <th className="px-4 py-2 text-left border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-[var(--dark-background)]">
+              <th className="px-4 py-2 text-left border-b border-gray-200">
                 Metric
               </th>
               {years.map(year => (
-                <th key={year} className="px-4 py-2 text-left border-b border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-[var(--dark-background)]">
+                <th key={year} className="px-4 py-2 text-left border-b border-gray-200">
                   {year}
                 </th>
               ))}
@@ -95,15 +95,15 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
           </thead>
           <tbody>
             {filteredMetrics.map((metric, index) => (
-              <tr key={metric} className={index % 2 === 0 ? "bg-gray-50 dark:bg-[var(--dark-background)]" : "bg-white dark:bg-[var(--dark-background)]"}>
-                <td className="px-4 py-2 border-b border-gray-300 dark:border-gray-700">
+              <tr key={index}>
+                <td className="px-4 py-2 border-b border-gray-200">
                   {metric}
                 </td>
                 {years.map(year => {
                   const statement = statements.find(s => s.period_end_year === year);
                   const value = statement?.data[metric];
                   return (
-                    <td key={year} className="px-4 py-2 border-b border-gray-300 dark:border-gray-700">
+                    <td key={year} className="px-4 py-2 border-b border-gray-200">
                       {value ? formatNumber(Number(value)) : '-'}
                     </td>
                   );
