@@ -20,17 +20,20 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
   const statements = statementsResponse.status === 200 ? await statementsResponse.json() as CompanyFinancialStatement[] : null
   const incomeStatements = statements && statements.length > 0 ? statements.map((statement) => ({
     period_end_year: statement.period_end_year,
-    data: statement.income_statement
+    data: statement.income_statement,
+    is_ttm: statement.is_ttm
   })) : null
 
   const balanceSheet = statements && statements.length > 0 ? statements.map((statement) => ({
     period_end_year: statement.period_end_year,
-    data: statement.balance_sheet
+    data: statement.balance_sheet,
+    is_ttm: statement.is_ttm
   })) : null
 
   const cashFlow = statements && statements.length > 0 ? statements.map((statement) => ({
     period_end_year: statement.period_end_year,
-    data: statement.cash_flow
+    data: statement.cash_flow,
+    is_ttm: statement.is_ttm
   })) : null
 
   return (

@@ -1,7 +1,7 @@
 import FinancialChart from "@/app/components/FinancialChart";
 import { FinancialStatement } from "@/app/types";
 
-type Props = Pick<FinancialStatement, 'period_end_year' | 'data'>
+type Props = Pick<FinancialStatement, 'period_end_year' | 'data' | 'is_ttm'>
 
 export default async function GrowthChart({incomeStatements}: {incomeStatements: Props[]}) {
   // Sort income statements by year in ascending order
@@ -20,7 +20,9 @@ export default async function GrowthChart({incomeStatements}: {incomeStatements:
 
   if (!revenueKey || !netIncomeKey) return null;
 
-  const years = sortedStatements.map(statement => statement.period_end_year.toString());
+  const years = sortedStatements.map(statement => 
+    statement.is_ttm ? 'TTM' : statement.period_end_year.toString()
+  );
   
   // Calculate net margin with 2 decimal places
   const netMarginData = sortedStatements.map(statement => {

@@ -27,7 +27,11 @@ export default async function CashFlow({ params }: { params: Promise<{ ticker: s
   }
 
   // Get all years from the statements
-  const years = statements.map(s => s.period_end_year).sort((a, b) => a - b);
+  const years = statements.map(s => s.is_ttm ? 'TTM' : s.period_end_year.toString()).sort((a, b) => {
+    if (a === 'TTM') return 1;
+    if (b === 'TTM') return -1;
+    return Number(a) - Number(b);
+  });
   
   // Get all unique metrics from the statements
   const allMetrics = new Set<string>();
@@ -69,7 +73,9 @@ export default async function CashFlow({ params }: { params: Promise<{ ticker: s
       type: 'bar' as const,
       label: metric.label,
       data: years.map(year => {
-        const statement = statements.find(s => s.period_end_year === year);
+        const statement = statements.find(s => 
+          year === 'TTM' ? s.is_ttm : s.period_end_year.toString() === year
+        );
         if (!statement) return 0;
         // Find the exact key that matches (case-insensitive)
         const exactKey = Object.keys(statement.data).find(
@@ -124,7 +130,9 @@ export default async function CashFlow({ params }: { params: Promise<{ ticker: s
                   {metric}
                 </td>
                 {years.map(year => {
-                  const statement = statements.find(s => s.period_end_year === year);
+                  const statement = statements.find(s => 
+                    year === 'TTM' ? s.is_ttm : s.period_end_year.toString() === year
+                  );
                   const value = statement?.data[metric];
                   return (
                     <td key={year} className="px-4 py-2 border-b border-gray-200">

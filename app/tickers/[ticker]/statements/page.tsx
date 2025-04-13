@@ -66,7 +66,10 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
       <div className="mb-2">
         <FinancialChart
           title=""
-          labels={years.map(String)}
+          labels={years.map(year => {
+            const statement = statements.find(s => s.period_end_year === year);
+            return statement?.is_ttm ? 'TTM' : year.toString();
+          })}
           datasets={datasets}
           height={200}
           marginTop={0}
@@ -86,11 +89,14 @@ export default async function IncomeStatement({ params }: { params: Promise<{ ti
               <th className="px-4 py-2 text-left border-b border-gray-200">
                 Metric
               </th>
-              {years.map(year => (
-                <th key={year} className="px-4 py-2 text-left border-b border-gray-200">
-                  {year}
-                </th>
-              ))}
+              {years.map(year => {
+                const statement = statements.find(s => s.period_end_year === year);
+                return (
+                  <th key={year} className="px-4 py-2 text-left border-b border-gray-200">
+                    {statement?.is_ttm ? 'TTM' : year}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>

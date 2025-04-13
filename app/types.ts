@@ -3,6 +3,7 @@ export type CompanyFinancialStatement = {
   income_statement: Record<string, number | null>
   balance_sheet: Record<string, number | null>
   cash_flow: Record<string, number | null>
+  is_ttm: boolean
 }
 
 export type FinancialStatement = {
