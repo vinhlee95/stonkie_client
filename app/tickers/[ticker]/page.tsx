@@ -18,19 +18,19 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
   })
   
   const statements = statementsResponse.status === 200 ? await statementsResponse.json() as CompanyFinancialStatement[] : null
-  const incomeStatements = statements && statements.length > 0 ? statements.map((statement) => ({
+  const incomeStatements = statements && statements.length > 0 ? statements.filter((statement) => statement.income_statement).map((statement) => ({
     period_end_year: statement.period_end_year,
     data: statement.income_statement,
     is_ttm: statement.is_ttm
   })) : null
 
-  const balanceSheet = statements && statements.length > 0 ? statements.map((statement) => ({
+  const balanceSheet = statements && statements.length > 0 ? statements.filter((statement) => statement.balance_sheet).map((statement) => ({
     period_end_year: statement.period_end_year,
     data: statement.balance_sheet,
     is_ttm: statement.is_ttm
   })) : null
 
-  const cashFlow = statements && statements.length > 0 ? statements.map((statement) => ({
+  const cashFlow = statements && statements.length > 0 ? statements.filter((statement) => statement.cash_flow).map((statement) => ({
     period_end_year: statement.period_end_year,
     data: statement.cash_flow,
     is_ttm: statement.is_ttm
@@ -41,13 +41,13 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
       {keyStats && <KeyStats keyStats={keyStats} />}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Suspense fallback={<p>Loading growth chart...</p>}>
-          {incomeStatements && <GrowthChart incomeStatements={incomeStatements} />}
+          {incomeStatements && incomeStatements.length > 0 && <GrowthChart incomeStatements={incomeStatements} />}
         </Suspense>
         <Suspense fallback={<p>Loading EPS chart...</p>}>
-          {incomeStatements && <EpsChart incomeStatements={incomeStatements} />}
+          {incomeStatements && incomeStatements.length > 0 && <EpsChart incomeStatements={incomeStatements} />}
         </Suspense>
         <Suspense fallback={<p>Loading Debt and coverage chart...</p>}>
-          {balanceSheet && cashFlow && <DebtCoverageChart balanceSheet={balanceSheet} cashFlow={cashFlow} />}
+          {balanceSheet && cashFlow && balanceSheet.length > 0 && cashFlow.length > 0 && <DebtCoverageChart balanceSheet={balanceSheet} cashFlow={cashFlow} />}
         </Suspense>
       </div>
     </>
