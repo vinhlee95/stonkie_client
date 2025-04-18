@@ -1,9 +1,7 @@
 import FinancialChart from "@/app/components/FinancialChart";
-import { FinancialStatement } from "@/app/types";
+import { AnnualFinancialStatement } from "@/app/types";
 
-type Props = Pick<FinancialStatement, 'period_end_year' | 'data' | 'is_ttm'>
-
-export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balanceSheet: Props[], cashFlow: Props[]}) {
+export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balanceSheet: AnnualFinancialStatement[], cashFlow: AnnualFinancialStatement[]}) {
   // Sort statements by year in ascending order
   const sortedBalanceSheet = [...balanceSheet].filter(item => !!item.data).sort((a, b) => a.period_end_year - b.period_end_year);
   const sortedCashFlow = [...cashFlow].sort((a, b) => a.period_end_year - b.period_end_year);

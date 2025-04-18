@@ -1,9 +1,7 @@
 import FinancialChart from "@/app/components/FinancialChart";
-import { FinancialStatement } from "@/app/types";
-
-type Props = Pick<FinancialStatement, 'period_end_year' | 'data' | 'is_ttm'>
-
-export default async function EpsChart({incomeStatements}: {incomeStatements: Props[]}) {
+import { AnnualFinancialStatement } from "@/app/types";
+  
+export default async function EpsChart({incomeStatements}: {incomeStatements: AnnualFinancialStatement[]}) {
   // Sort income statements by year in ascending order
   const sortedStatements = [...incomeStatements].sort((a, b) => a.period_end_year - b.period_end_year);
   

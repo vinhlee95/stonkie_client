@@ -6,7 +6,7 @@ export type CompanyFinancialStatement = {
   is_ttm: boolean
 }
 
-type AnnualFinancialStatement = {
+export type AnnualFinancialStatement = {
   period_end_year: number;
   is_ttm: boolean;
   data: Record<string, number | null>;
