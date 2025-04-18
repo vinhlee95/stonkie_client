@@ -1,15 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface FinancialPeriodTabProps {
   onPeriodChange?: (period: 'Annual' | 'Quarterly') => void;
 }
 
 export default function FinancialPeriodTab({ onPeriodChange }: FinancialPeriodTabProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'Annual' | 'Quarterly'>('Annual');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [selectedPeriod, setSelectedPeriod] = useState<'Annual' | 'Quarterly'>(
+    searchParams.get('period') === 'quarterly' ? 'Quarterly' : 'Annual'
+  );
+
+  // Update selected period when URL changes
+  useEffect(() => {
+    const period = searchParams.get('period') === 'quarterly' ? 'Quarterly' : 'Annual';
+    setSelectedPeriod(period);
+  }, [searchParams]);
 
   const handlePeriodChange = (period: 'Annual' | 'Quarterly') => {
+    // Create new URLSearchParams
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('period', period.toLowerCase());
+    
+    // Update URL with new period
+    router.push(`?${newSearchParams.toString()}`, { scroll: false });
+    
     setSelectedPeriod(period);
     onPeriodChange?.(period);
   };
