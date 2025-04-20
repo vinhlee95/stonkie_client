@@ -176,6 +176,14 @@ const FinancialChart: React.FC<ChartProps> = ({
     },
   };
 
+  const getInsightTypeByTitle = (title: string) => {
+    if (title.includes('Growth')) return 'growth';
+    if (title.includes('Earning')) return 'earning';
+    if (title.includes('Debt')) return 'cash_flow';
+    
+    throw new Error('Failed to get insight type by title');
+  }
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
@@ -200,7 +208,7 @@ const FinancialChart: React.FC<ChartProps> = ({
         <InsightModal
           closeModal={closeModal}
         >
-          <InsightContent />
+          <InsightContent type={getInsightTypeByTitle(title)} />
         </InsightModal>
       )}
     </div>
