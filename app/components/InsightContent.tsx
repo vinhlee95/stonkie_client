@@ -2,26 +2,65 @@
 import { useParams } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
+import Image from 'next/image'
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
+const UNSPLASH_ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
 
 interface Insight {
   content: string;
   source?: string;
+  imageUrl?: string;
 }
 
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
 export default function InsightContent({type}: {type: 'growth' | 'earning' | 'cash_flow'}) {
-  const ticker = useParams().ticker
+  const params = useParams()
+  const ticker = params.ticker as string
   const [insights, setInsights] = useState<Insight[]>([])
   const [currentInsight, setCurrentInsight] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
   const isFetching = useRef(false)
   const contentRef = useRef<HTMLDivElement>(null)
 
+  const getCachedImages = (insightType: string): string[] => {
+    try {
+      const cached = localStorage.getItem(`unsplash_${ticker}_${insightType}`)
+      if (!cached) return []
+
+      const { urls, timestamp }: { urls: string[], timestamp: number } = JSON.parse(cached)
+      if (Date.now() - timestamp > CACHE_DURATION) {
+        localStorage.removeItem(`unsplash_${ticker}_${insightType}`)
+        return []
+      }
+
+      return urls
+    } catch (error) {
+      console.error('Error reading from cache:', error)
+      return []
+    }
+  }
+
+  const setCachedImages = (insightType: string, urls: string[]) => {
+    try {
+      const cache = {
+        urls,
+        timestamp: Date.now()
+      }
+      localStorage.setItem(`unsplash_${ticker}_${insightType}`, JSON.stringify(cache))
+    } catch (error) {
+      console.error('Error writing to cache:', error)
+    }
+  }
+
   useEffect(() => {
     const fetchInsights = async () => {
       if (isFetching.current) return
       isFetching.current = true
+      setIsLoading(true)
+      setInsights([])
+      setCurrentInsight('')
 
       try {
         const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/insights/${type}`)
@@ -29,6 +68,7 @@ export default function InsightContent({type}: {type: 'growth' | 'earning' | 'ca
         if (!reader) return
 
         const decoder = new TextDecoder()
+        let insightCount = 0
 
         while (true) {
           const { done, value } = await reader.read()
@@ -49,9 +89,44 @@ export default function InsightContent({type}: {type: 'growth' | 'earning' | 'ca
                   const content = parsed.data.content
                   const sourceMatch = content.match(/Source: (.*)$/m)
                   const insightContent = sourceMatch ? content.slice(0, sourceMatch.index).trim() : content
-                  const source = sourceMatch ? sourceMatch[1].trim() : undefined
+                  const source = sourceMatch ? sourceMatch[1].trim() : ''
 
-                  setInsights(prev => [...prev, { content: insightContent, source }])
+                  // Get cached images or fetch new ones if needed
+                  const cachedImages = getCachedImages(type)
+                  let imageUrl = ''
+                  
+                  if (cachedImages.length > insightCount) {
+                    imageUrl = cachedImages[insightCount]
+                  } else {
+                    // Fetch a single new image
+                    const query = `${ticker} ${['stock', 'product', 'headquarters'][Math.floor(Math.random() * 3)]}`
+                    const params = new URLSearchParams({
+                      query: query,
+                      per_page: '1',
+                      orientation: 'landscape'
+                    })
+
+                    const imageResponse = await fetch(
+                      `https://api.unsplash.com/search/photos?${params.toString()}`,
+                      {
+                        headers: {
+                          'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`,
+                        }
+                      }
+                    )
+                    const imageData = await imageResponse.json()
+                    imageUrl = imageData.results[0]?.urls.regular || ''
+                    
+                    // Update cache with new image
+                    setCachedImages(type, [...cachedImages, imageUrl])
+                  }
+
+                  setInsights(prev => [...prev, { 
+                    content: insightContent, 
+                    source,
+                    imageUrl
+                  }])
+                  insightCount++
                   setCurrentInsight('')
                 } else if (parsed.type === 'stream' && parsed.content) {
                   setCurrentInsight(prev => prev + parsed.content)
@@ -74,7 +149,7 @@ export default function InsightContent({type}: {type: 'growth' | 'earning' | 'ca
   }, [ticker, type])
 
   return (
-    <div className="overflow-y-auto pr-4 px-4 mt-4">
+    <div className="overflow-y-auto pr-4">
       <div className="space-y-4">
         <h1 className="text-2xl font-bold">{type.charAt(0).toUpperCase() + type.slice(1)} Insights for {ticker}</h1>
         {isLoading && insights.length === 0 ? (
@@ -86,18 +161,30 @@ export default function InsightContent({type}: {type: 'growth' | 'earning' | 'ca
             {insights.map((insight, index) => (
               <div 
                 key={index} 
-                className="rounded-xl shadow-sm p-6 whitespace-pre-wrap border border-gray-100"
+                className="rounded-lg shadow-sm border border-gray-100 overflow-hidden"
               >
-                <ReactMarkdown>{insight.content}</ReactMarkdown>
-                {insight.source && (
-                  <div className="mt-2 text-sm text-gray-500">
-                    Source: {insight.source}
+                {insight.imageUrl && (
+                  <div className="relative h-48 w-full">
+                    <Image
+                      src={insight.imageUrl}
+                      alt="Insight illustration"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 )}
+                <div className="p-6 whitespace-pre-wrap">
+                  <ReactMarkdown>{insight.content}</ReactMarkdown>
+                  {insight.source && (
+                    <div className="mt-2 text-sm text-gray-500">
+                      Source: {insight.source}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
             {currentInsight && (
-              <div className="rounded-xl shadow-sm p-6 whitespace-pre-wrap border border-gray-100">
+              <div className="rounded-lg shadow-sm p-6 whitespace-pre-wrap border border-gray-100">
                 <ReactMarkdown>{currentInsight}</ReactMarkdown>
               </div>
             )}
