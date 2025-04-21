@@ -149,9 +149,8 @@ export default function InsightContent({type}: {type: 'growth' | 'earning' | 'ca
   }, [ticker, type])
 
   return (
-    <div className="overflow-y-auto pr-4">
+    <div className="overflow-y-auto px-4">
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">{type.charAt(0).toUpperCase() + type.slice(1)} Insights for {ticker}</h1>
         {isLoading && insights.length === 0 ? (
           <div className="flex items-center justify-center min-h-[200px]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -161,7 +160,7 @@ export default function InsightContent({type}: {type: 'growth' | 'earning' | 'ca
             {insights.map((insight, index) => (
               <div 
                 key={index} 
-                className="rounded-lg shadow-sm border border-gray-100 overflow-hidden"
+                className="rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-700/50 overflow-hidden transition-all hover:shadow-md"
               >
                 {insight.imageUrl && (
                   <div className="relative h-48 w-full">
@@ -176,7 +175,7 @@ export default function InsightContent({type}: {type: 'growth' | 'earning' | 'ca
                 <div className="p-6 whitespace-pre-wrap">
                   <ReactMarkdown>{insight.content}</ReactMarkdown>
                   {insight.source && (
-                    <div className="mt-2 text-sm text-gray-500">
+                    <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                       Source: {insight.source}
                     </div>
                   )}
@@ -184,7 +183,7 @@ export default function InsightContent({type}: {type: 'growth' | 'earning' | 'ca
               </div>
             ))}
             {currentInsight && (
-              <div className="rounded-lg shadow-sm p-6 whitespace-pre-wrap border border-gray-100">
+              <div className="rounded-lg shadow-sm p-6 whitespace-pre-wrap border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-700/50">
                 <ReactMarkdown>{currentInsight}</ReactMarkdown>
               </div>
             )}
