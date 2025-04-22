@@ -150,7 +150,7 @@ export default function InsightsPage() {
   }, [ticker])
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto">
       <div className="overflow-y-auto">
         <div className="space-y-4">
           {isLoading && insights.length === 0 ? (
@@ -162,7 +162,7 @@ export default function InsightsPage() {
               {insights.map((insight, index) => (
                 <div 
                   key={index} 
-                  className="rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-700/50 overflow-hidden transition-all hover:shadow-md"
+                  className="rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-700/50 overflow-hidden transition-all hover:shadow-md cursor-pointer"
                 >
                   {insight.imageUrl && (
                     <div className="relative h-48 w-full">
@@ -176,11 +176,6 @@ export default function InsightsPage() {
                   )}
                   <div className="p-6 whitespace-pre-wrap">
                     <ReactMarkdown>{insight.content}</ReactMarkdown>
-                    {insight.source && (
-                      <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                        Source: {insight.source}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
