@@ -9,6 +9,7 @@ export default function TabNavigation({ticker}: {ticker: string}) {
     { label: 'Overview', path: `/tickers/${ticker}` },
     { label: 'Financial statements', path: `/tickers/${ticker}/statements` },
     { label: 'Revenue', path: `/tickers/${ticker}/revenue` },
+    { label: 'Insights', path: `/tickers/${ticker}/insights` },
   ];
 
   return (
