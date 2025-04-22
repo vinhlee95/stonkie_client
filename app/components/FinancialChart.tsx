@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -16,8 +16,8 @@ import {
   LineController
 } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
-import InsightModal from './InsightModal';
-import InsightContent from './InsightContent';
+import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 
 // Register the required components
 ChartJS.register(
@@ -76,23 +76,9 @@ const FinancialChart: React.FC<ChartProps> = ({
   yAxisFormatType = 'currency',
   yAxisFormatOptions = { decimals: 1 },
 }) => {
-  const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    if (showModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [showModal]);
-
-  const closeModal = () => {
-    setShowModal(false);
-  };
+  const router = useRouter();
+  const params = useParams();
+  const ticker = params.ticker as string;
 
   const chartData = {
     labels,
@@ -176,21 +162,13 @@ const FinancialChart: React.FC<ChartProps> = ({
     },
   };
 
-  const getInsightTypeByTitle = (title: string) => {
-    if (title.includes('Growth')) return 'growth';
-    if (title.includes('Earning')) return 'earning';
-    if (title.includes('Debt')) return 'cash_flow';
-    
-    throw new Error('Failed to get insight type by title');
-  }
-
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
         <h1 className="text-2xl font-bold">
           {title}
         </h1>
-        <button className="cursor-pointer" onClick={() => setShowModal(true)}>
+        <button className="cursor-pointer" onClick={() => router.push(`/tickers/${ticker}/insights`)}>
           <svg 
             className="h-5 w-5 text-gray-400 mt-1" 
             viewBox="0 0 20 20" 
@@ -203,14 +181,6 @@ const FinancialChart: React.FC<ChartProps> = ({
       <div style={{ height }}>
         <Chart type='bar' data={chartData} options={options} />
       </div>
-
-      {showModal && (
-        <InsightModal
-          closeModal={closeModal}
-        >
-          <InsightContent type={getInsightTypeByTitle(title)} />
-        </InsightModal>
-      )}
     </div>
   );
 };
