@@ -99,7 +99,8 @@ export default function InsightContent({type}: {type: 'growth' | 'earning' | 'ca
                     imageUrl = cachedImages[insightCount]
                   } else {
                     // Fetch a single new image
-                    const query = `${ticker} ${['stock', 'product', 'headquarters'][Math.floor(Math.random() * 3)]}`
+                    const imageTypes = ['stock', 'product', 'headquarters']
+                    const query = `${ticker} ${imageTypes[insightCount % imageTypes.length]}`
                     const params = new URLSearchParams({
                       query: query,
                       per_page: '1',
