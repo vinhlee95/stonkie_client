@@ -162,13 +162,21 @@ const FinancialChart: React.FC<ChartProps> = ({
     },
   };
 
+  const getInsightTypeByTitle = (title: string) => {
+    if (title.includes('Growth')) return 'growth';
+    if (title.includes('Earning')) return 'earnings';
+    if (title.includes('Debt')) return 'cash_flow';
+
+    return 'growth'
+  }
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
         <h1 className="text-2xl font-bold">
           {title}
         </h1>
-        <button className="cursor-pointer" onClick={() => router.push(`/tickers/${ticker}/insights`)}>
+        <button className="cursor-pointer" onClick={() => router.push(`/tickers/${ticker}/insights?type=${getInsightTypeByTitle(title)}`)}>
           <svg 
             className="h-5 w-5 text-gray-400 mt-1" 
             viewBox="0 0 20 20" 
