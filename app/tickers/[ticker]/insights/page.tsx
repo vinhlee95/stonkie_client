@@ -22,7 +22,6 @@ export default function InsightsPage() {
   const [currentInsight, setCurrentInsight] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
   const isFetching = useRef(false)
-  const contentRef = useRef<HTMLDivElement>(null)
 
   const getCachedImages = (insightType: string): string[] => {
     try {
@@ -152,13 +151,13 @@ export default function InsightsPage() {
   return (
     <div className="container mx-auto">
       <div className="overflow-y-auto">
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading && insights.length === 0 ? (
-            <div className="flex items-center justify-center min-h-[200px]">
+            <div className="flex items-center justify-center min-h-[200px] col-span-full">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             </div>
-          ) : insights.length > 0 || currentInsight ? (
-            <div ref={contentRef} className="space-y-4">
+          ) : insights.length > 0 ? (
+            <>
               {insights.map((insight, index) => (
                 <div 
                   key={index} 
@@ -184,9 +183,9 @@ export default function InsightsPage() {
                   <ReactMarkdown>{currentInsight}</ReactMarkdown>
                 </div>
               )}
-            </div>
+            </>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 col-span-full">
               No insights available for this company.
             </div>
           )}
