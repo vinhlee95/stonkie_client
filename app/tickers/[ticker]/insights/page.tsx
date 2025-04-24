@@ -7,6 +7,12 @@ import Image from 'next/image'
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 const UNSPLASH_ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
 
+const truncateContent = (content: string, maxWords: number = 30): string => {
+  const words = content.split(/\s+/)
+  if (words.length <= maxWords) return content
+  return words.slice(0, maxWords).join(' ') + '...'
+}
+
 interface Insight {
   content: string;
   source?: string;
@@ -174,7 +180,7 @@ export default function InsightsPage() {
                     </div>
                   )}
                   <div className="p-6 whitespace-pre-wrap">
-                    <ReactMarkdown>{insight.content}</ReactMarkdown>
+                    <ReactMarkdown>{truncateContent(insight.content)}</ReactMarkdown>
                   </div>
                 </div>
               ))}
