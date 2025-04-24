@@ -3,6 +3,7 @@ import { useParams } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Image from 'next/image'
+import Chat from '@/app/components/Chat'
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 const UNSPLASH_ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
@@ -15,6 +16,7 @@ const truncateContent = (content: string, maxWords: number = 30): string => {
 
 interface Insight {
   content: string;
+  slug: string;
   source?: string;
   imageUrl?: string;
 }
@@ -25,8 +27,9 @@ export default function InsightsPage() {
   const params = useParams()
   const ticker = params.ticker as string
   const [insights, setInsights] = useState<Insight[]>([])
-  const [currentInsight, setCurrentInsight] = useState<string>('')
+  const [currentInsight, setCurrentInsight] = useState<Insight | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isChatOpen, setIsChatOpen] = useState(false)
   const isFetching = useRef(false)
 
   const getCachedImages = (insightType: string): string[] => {
@@ -65,7 +68,7 @@ export default function InsightsPage() {
       isFetching.current = true
       setIsLoading(true)
       setInsights([])
-      setCurrentInsight('')
+      setCurrentInsight(null)
 
       try {
         const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/insights/growth`)
@@ -130,12 +133,21 @@ export default function InsightsPage() {
                   setInsights(prev => [...prev, { 
                     content: insightContent, 
                     source,
-                    imageUrl
+                    imageUrl,
+                    slug: parsed.data.slug
                   }])
                   insightCount++
-                  setCurrentInsight('')
+                  setCurrentInsight(null)
                 } else if (parsed.type === 'stream' && parsed.content) {
-                  setCurrentInsight(prev => prev + parsed.content)
+                  setCurrentInsight(prev => {
+                    if (prev) {
+                      return {
+                        ...prev,
+                        content: prev.content + parsed.content
+                      }
+                    }
+                    return null
+                  })
                 }
               } catch (e) {
                 console.error('Error parsing data:', e)
@@ -153,6 +165,10 @@ export default function InsightsPage() {
 
     fetchInsights()
   }, [ticker])
+  
+  if (isChatOpen && currentInsight) {
+    return <Chat onClose={() => setIsChatOpen(false)} />
+  }
 
   return (
     <div className="container mx-auto">
@@ -168,6 +184,10 @@ export default function InsightsPage() {
                 <div 
                   key={index} 
                   className="rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-700/50 overflow-hidden transition-all hover:shadow-md cursor-pointer"
+                  onClick={() => {
+                    setIsChatOpen(true)
+                    setCurrentInsight(insight)
+                  }}
                 >
                   {insight.imageUrl && (
                     <div className="relative h-48 w-full">
@@ -184,11 +204,6 @@ export default function InsightsPage() {
                   </div>
                 </div>
               ))}
-              {currentInsight && (
-                <div className="rounded-lg shadow-sm p-6 whitespace-pre-wrap border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-700/50">
-                  <ReactMarkdown>{currentInsight}</ReactMarkdown>
-                </div>
-              )}
             </>
           ) : (
             <div className="text-center py-8 text-gray-500 col-span-full">
