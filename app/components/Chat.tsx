@@ -17,12 +17,16 @@ interface MessageChunk {
 }
 
 interface FinancialChatboxProps {
+  initialState?: {
+    content: string
+    slug: string
+  }
   onClose: () => void
 }
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
-const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose }) => {
+const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, initialState }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,6 +35,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose }) => {
   const latestMessageRef = useRef<HTMLDivElement>(null);
 
   const hasFetchedFAQs = useRef(false);
+  const hasFetchedDetailedReport = useRef(false);   
 
   useEffect(() => {
     setMessages([]);
@@ -234,11 +239,94 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose }) => {
     }
   };
 
+  const fetchDetailedReport = async (slug: string) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/reports/${slug}`);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('Failed to get reader');
+      }
+
+      // Add initial streaming message
+      const streamingMessage: Message = {
+        type: 'bot',
+        content: '',
+        isStreaming: true
+      };
+      setMessages(prev => [...prev, streamingMessage]);
+
+      let accumulatedContent = '';
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        try {
+          const jsonStrings = chunk.split('\n').filter(str => str.trim());
+          for (const jsonStr of jsonStrings) {
+            const parsedChunk = JSON.parse(jsonStr);
+            accumulatedContent += parsedChunk || '';
+            
+            // Update the streaming message content
+            setMessages(prev => {
+              const newMessages = [...prev];
+              const lastMessage = newMessages[newMessages.length - 1];
+              if (lastMessage && lastMessage.isStreaming) {
+                return newMessages.map((msg, idx) => 
+                  idx === newMessages.length - 1 
+                    ? { ...msg, content: accumulatedContent }
+                    : msg
+                );
+              }
+              return newMessages;
+            });
+          }
+        } catch (e) {
+          console.error('Error parsing chunk:', e);
+        }
+      }
+
+      // Mark message as no longer streaming once complete
+      setMessages(prev => {
+        const newMessages = [...prev];
+        const lastMessage = newMessages[newMessages.length - 1];
+        if (lastMessage && lastMessage.isStreaming) {
+          return newMessages.map((msg, idx) => 
+            idx === newMessages.length - 1 
+              ? { ...msg, isStreaming: false }
+              : msg
+          );
+        }
+        return newMessages;
+      });
+
+    } catch (error) {
+      console.error('Error fetching detailed report:', error);
+      // Add error message to chat
+      const errorMessage: Message = {
+        type: 'bot',
+        content: 'Sorry, I encountered an error fetching the detailed report.'
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
   useEffect(() => {
     // When chat is visible, disable body scroll
     document.body.style.overflow = 'hidden';
 
-    if (!hasFetchedFAQs.current) {
+    // If initial state is provided, call a separate API endpoint to get the analysis content of the initial state
+    if(initialState && !hasFetchedDetailedReport.current) {
+      hasFetchedDetailedReport.current = true;
+      fetchDetailedReport(initialState.slug);
+      return
+    }
+
+
+    if (!hasFetchedFAQs.current && !initialState) {
       hasFetchedFAQs.current = true;
       fetchFAQsStream();
     }

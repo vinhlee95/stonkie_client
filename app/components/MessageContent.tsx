@@ -7,6 +7,7 @@ interface MessageContentProps {
   isUser: boolean;
   isLoading: boolean;
   isFAQ?: boolean;
+  isStreaming?: boolean;
   suggestions?: string[];
   onFAQClick?: (question: string) => void;
 }
@@ -16,6 +17,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
   isUser, 
   isLoading,
   isFAQ, 
+  isStreaming,
   suggestions,
   onFAQClick 
 }) => {
@@ -64,7 +66,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
     );
   }
 
-  return <BotMessage content={content} isLoading={isLoading} />;
+  return <BotMessage content={content} isLoading={isLoading || (isStreaming ?? false)} />;
 };
 
 const BotMessage: React.FC<{ content: string, isLoading: boolean }> = ({ content, isLoading }) => (

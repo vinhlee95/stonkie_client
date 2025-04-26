@@ -167,7 +167,7 @@ export default function InsightsPage() {
   }, [ticker])
   
   if (isChatOpen && currentInsight) {
-    return <Chat onClose={() => setIsChatOpen(false)} />
+    return <Chat onClose={() => setIsChatOpen(false)} initialState={{ content: currentInsight.content, slug: currentInsight.slug }} />
   }
 
   return (
