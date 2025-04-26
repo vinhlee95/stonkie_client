@@ -1,5 +1,6 @@
 import TabNavigation from "./TabNavigation";
 import { KeyStatsType } from "./KeyStats";
+import Link from "next/link";
 
 async function LogoAndTickerBlock({ ticker }: { ticker: string }) {
   const keyStatsResponse = await fetch(`${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/key-stats`, {
@@ -8,16 +9,18 @@ async function LogoAndTickerBlock({ ticker }: { ticker: string }) {
   const keyStats = keyStatsResponse.status === 200 ? (await keyStatsResponse.json()).data as KeyStatsType : null;
 
   return (
-    <div className="flex items-center gap-4 p-4 pb-0">
-      {keyStats?.logo_url && (
-        <img 
-          src={keyStats.logo_url} 
-          alt={`${ticker} logo`} 
-          className="w-12 h-12 object-contain rounded-full"
-        />
-      )}
-      <h1 className="text-2xl font-bold">{ticker.toUpperCase()}</h1>
-    </div>
+    <Link href={`/tickers/${ticker}`}>
+      <div className="flex items-center gap-4 p-4 pb-0">
+        {keyStats?.logo_url && (
+          <img 
+            src={keyStats.logo_url} 
+            alt={`${ticker} logo`} 
+            className="w-12 h-12 object-contain rounded-full"
+          />
+        )}
+        <h1 className="text-2xl font-bold">{ticker.toUpperCase()}</h1>
+      </div>
+    </Link>
   );
 }
 
