@@ -6,7 +6,6 @@ import Image from 'next/image'
 import Chat from '@/app/components/Chat'
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
-const UNSPLASH_ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
 
 const truncateContent = (content: string, maxWords: number = 30): string => {
   const words = content.split(/\s+/)
@@ -21,8 +20,6 @@ interface Insight {
   imageUrl?: string;
 }
 
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
 export default function InsightsPage() {
   const params = useParams()
   const ticker = params.ticker as string
@@ -31,36 +28,6 @@ export default function InsightsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const isFetching = useRef(false)
-
-  const getCachedImages = (insightType: string): string[] => {
-    try {
-      const cached = localStorage.getItem(`unsplash_${ticker}_${insightType}`)
-      if (!cached) return []
-
-      const { urls, timestamp }: { urls: string[], timestamp: number } = JSON.parse(cached)
-      if (Date.now() - timestamp > CACHE_DURATION) {
-        localStorage.removeItem(`unsplash_${ticker}_${insightType}`)
-        return []
-      }
-
-      return urls
-    } catch (error) {
-      console.error('Error reading from cache:', error)
-      return []
-    }
-  }
-
-  const setCachedImages = (insightType: string, urls: string[]) => {
-    try {
-      const cache = {
-        urls,
-        timestamp: Date.now()
-      }
-      localStorage.setItem(`unsplash_${ticker}_${insightType}`, JSON.stringify(cache))
-    } catch (error) {
-      console.error('Error writing to cache:', error)
-    }
-  }
 
   useEffect(() => {
     const fetchInsights = async () => {
@@ -76,7 +43,6 @@ export default function InsightsPage() {
         if (!reader) return
 
         const decoder = new TextDecoder()
-        let insightCount = 0
 
         while (true) {
           const { done, value } = await reader.read()
@@ -99,44 +65,12 @@ export default function InsightsPage() {
                   const insightContent = sourceMatch ? content.slice(0, sourceMatch.index).trim() : content
                   const source = sourceMatch ? sourceMatch[1].trim() : ''
 
-                  // Get cached images or fetch new ones if needed
-                  const cachedImages = getCachedImages('growth')
-                  let imageUrl = ''
-                  
-                  if (cachedImages.length > insightCount) {
-                    imageUrl = cachedImages[insightCount]
-                  } else {
-                    // Fetch a single new image
-                    const imageTypes = ['stock', 'product', 'headquarters']
-                    const query = `${ticker} ${imageTypes[insightCount % imageTypes.length]}`
-                    const params = new URLSearchParams({
-                      query: query,
-                      per_page: '1',
-                      orientation: 'landscape'
-                    })
-
-                    const imageResponse = await fetch(
-                      `https://api.unsplash.com/search/photos?${params.toString()}`,
-                      {
-                        headers: {
-                          'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`,
-                        }
-                      }
-                    )
-                    const imageData = await imageResponse.json()
-                    imageUrl = imageData.results[0]?.urls.regular || ''
-                    
-                    // Update cache with new image
-                    setCachedImages('growth', [...cachedImages, imageUrl])
-                  }
-
                   setInsights(prev => [...prev, { 
                     content: insightContent, 
                     source,
-                    imageUrl,
+                    imageUrl: parsed.data.imageUrl,
                     slug: parsed.data.slug
                   }])
-                  insightCount++
                   setCurrentInsight(null)
                 } else if (parsed.type === 'stream' && parsed.content) {
                   setCurrentInsight(prev => {
