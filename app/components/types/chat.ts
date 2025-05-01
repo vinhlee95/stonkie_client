@@ -15,6 +15,7 @@ export interface FinancialChatboxProps {
   initialState?: {
     content: string;
     slug: string;
+    imageUrl?: string;
   };
   onClose: () => void;
 } 
