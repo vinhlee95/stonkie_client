@@ -18,4 +18,5 @@ export interface FinancialChatboxProps {
     imageUrl?: string;
   };
   onClose: () => void;
+  children?: React.ReactNode;
 } 

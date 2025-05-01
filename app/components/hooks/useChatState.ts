@@ -6,7 +6,6 @@ export const useChatState = (ticker: string | undefined) => {
   const [input, setInput] = useState('');
   const latestMessageRef = useRef<HTMLDivElement>(null);
   const hasFetchedFAQs = useRef(false);
-  const hasFetchedDetailedReport = useRef(false);
 
   useEffect(() => {
     setMessages([]);
@@ -28,6 +27,5 @@ export const useChatState = (ticker: string | undefined) => {
     setInput,
     latestMessageRef,
     hasFetchedFAQs,
-    hasFetchedDetailedReport
   };
 }; 

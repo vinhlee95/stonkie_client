@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Image from 'next/image'
 import Chat from '@/app/components/Chat'
+import InsightReport from './InsightReport'
+import InsightHeader from './InsightHeader'
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -17,7 +19,7 @@ interface Insight {
   content: string;
   slug: string;
   source?: string;
-  imageUrl?: string;
+  imageUrl: string;
 }
 
 export default function InsightsPage() {
@@ -101,7 +103,23 @@ export default function InsightsPage() {
   }, [ticker])
   
   if (isChatOpen && currentInsight) {
-    return <Chat onClose={() => setIsChatOpen(false)} initialState={{ content: currentInsight.content, slug: currentInsight.slug, imageUrl: currentInsight.imageUrl }} />
+    const title = currentInsight.content.split('\n')[0];
+    const titleWithoutMarkdown = title.replace(/^#+\s*|\*\*/g, '').trim();
+    const contentWithoutTitle = currentInsight.content.split('\n').slice(1).join('\n');
+
+    return (
+      <Chat 
+        onClose={() => setIsChatOpen(false)} 
+        initialState={{ 
+          content: currentInsight.content, 
+          slug: currentInsight.slug, 
+          imageUrl: currentInsight.imageUrl
+        }} 
+      >
+        <InsightHeader imageUrl={currentInsight.imageUrl} title={titleWithoutMarkdown} recap={contentWithoutTitle} />
+        <InsightReport ticker={ticker} slug={currentInsight.slug} />
+      </Chat>
+    )
   }
 
   return (
