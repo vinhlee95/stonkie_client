@@ -16,7 +16,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   onFAQClick
 }) => {
   return (
-    <div className="flex-grow overflow-y-auto pt-2 px-4 pb-16 w-full">
+    <div className="flex-grow overflow-y-auto pb-16 w-full">
       {messages.map((message, index) => {
         const isLatest = index === messages.length - 1;
         return (
