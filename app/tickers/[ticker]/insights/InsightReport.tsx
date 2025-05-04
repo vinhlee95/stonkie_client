@@ -39,21 +39,40 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
   }, [slug]);
 
   const renderChart = (data: ChartData[], title: string) => {
-    const dataset = {
-      type: 'bar' as const,
-      label: data[0]?.metric || 'Value',
-      data: data.map(item => item.value),
-      backgroundColor: '#42a287',
-      borderColor: '#10b981',
-      borderWidth: 1,
-      borderRadius: 4
-    };
+    // Group data by metric
+    const metrics = Array.from(new Set(data.map(item => item.metric)));
+    const periods = Array.from(new Set(data.map(item => item.period))).sort();
+
+    // Create a dataset for each metric
+    const datasets = metrics.map((metric, index) => {
+      // Use different colors for each metric
+      const colors = [
+        { backgroundColor: '#42a287', borderColor: '#10b981' },
+        { backgroundColor: '#3b82f6', borderColor: '#2563eb' },
+        { backgroundColor: '#f59e0b', borderColor: '#d97706' },
+        { backgroundColor: '#ef4444', borderColor: '#dc2626' }
+      ];
+      const colorIndex = index % colors.length;
+
+      return {
+        type: 'bar' as const,
+        label: metric.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+        data: periods.map(period => {
+          const dataPoint = data.find(item => item.period === period && item.metric === metric);
+          return dataPoint ? dataPoint.value : 0;
+        }),
+        backgroundColor: colors[colorIndex].backgroundColor,
+        borderColor: colors[colorIndex].borderColor,
+        borderWidth: 1,
+        borderRadius: 4
+      };
+    });
 
     return (
       <FinancialChart
         title={title}
-        labels={data.map(item => item.period)}
-        datasets={[dataset]}
+        labels={periods}
+        datasets={datasets}
         yAxisFormatType="currency"
         yAxisFormatOptions={{ decimals: 1 }}
       />
