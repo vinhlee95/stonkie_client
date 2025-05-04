@@ -8,6 +8,8 @@ type ChartData = {
   period: string;
   value: number;
   metric: string;
+  value_type: 'currency' | 'percentage'
+
 };
 
 type ContentItem = {
@@ -15,6 +17,7 @@ type ContentItem = {
   title: string;
   content: string;
   data: ChartData[] | null;
+  source: string[];
 };
 
 export default function InsightReport({ticker, slug}: {ticker: string, slug: string}) {
@@ -65,29 +68,51 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
       return a.localeCompare(b);
     });
 
+    // Determine the value type from the first data point
+    const valueType = data[0]?.value_type || 'currency';
+    const isPercentage = valueType === 'percentage';
+
     // Create a dataset for each metric
     const datasets = metrics.map((metric, index) => {
       // Use different colors for each metric
       const colors = [
-        { backgroundColor: '#42a287', borderColor: '#10b981' },
-        { backgroundColor: '#3b82f6', borderColor: '#2563eb' },
-        { backgroundColor: '#f59e0b', borderColor: '#d97706' },
-        { backgroundColor: '#ef4444', borderColor: '#dc2626' }
+        { backgroundColor: '#34d399', borderColor: '#059669' }, // green
+        { backgroundColor: '#3b82f6', borderColor: '#2563eb' }, // blue
+        { backgroundColor: '#f59e0b', borderColor: '#d97706' }, // yellow/orange
+        { backgroundColor: '#ef4444', borderColor: '#dc2626' }  // red
       ];
       const colorIndex = index % colors.length;
 
-      return {
-        type: 'bar' as const,
+      const baseConfig = {
         label: metric.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
         data: periods.map(period => {
           const dataPoint = data.find(item => item.period === period && item.metric === metric);
-          // *1000 since the data is in thousands
-          return dataPoint ? dataPoint.value * 1000 : 0;
+          if (!dataPoint) return 0;
+          
+          // Only multiply by 1000 for currency values
+          return valueType === 'currency' ? dataPoint.value * 1000 : dataPoint.value;
         }),
-        backgroundColor: colors[colorIndex].backgroundColor,
         borderColor: colors[colorIndex].borderColor,
-        borderWidth: 1,
-        borderRadius: 4
+        borderWidth: 2,
+      };
+
+      if (isPercentage) {
+        return {
+          ...baseConfig,
+          type: 'line' as const,
+          pointBackgroundColor: colors[colorIndex].borderColor,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: false,
+          tension: 0.4,
+        };
+      }
+
+      return {
+        ...baseConfig,
+        type: 'bar' as const,
+        backgroundColor: colors[colorIndex].backgroundColor,
+        borderRadius: 4,
       };
     });
 
@@ -96,8 +121,10 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
         title={title}
         labels={periods}
         datasets={datasets}
-        yAxisFormatType="currency"
-        yAxisFormatOptions={{ decimals: 1 }}
+        yAxisFormatType={valueType}
+        yAxisFormatOptions={{ 
+          decimals: 1,
+        }}
       />
     );
   };
@@ -118,6 +145,17 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{item.content}</p>
             </div>
           )}
+          <div className="flex flex-wrap gap-2 mt-2">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Sources:</p>
+            {item.source.map((src, idx) => (
+              <span
+                key={idx}
+                className="inline-block bg-[#2d6e5b] text-white text-xs px-3 py-1 rounded-full"
+              >
+                {src}
+              </span>
+            ))}
+          </div>
         </div>
       ))}
     </div>
