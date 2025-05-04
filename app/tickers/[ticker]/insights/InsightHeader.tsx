@@ -3,7 +3,7 @@ import MarkdownContent from '@/app/components/MarkdownContent'
 
 export default function InsightHeader({imageUrl, title, recap}: {imageUrl: string, title: string, recap: string}) {
   return (
-    <div>
+    <div className='mb-4'>
       <h1 className="text-2xl font-bold">{title}</h1>
       <MarkdownContent content={recap} />
       <Image 

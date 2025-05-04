@@ -41,7 +41,29 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
   const renderChart = (data: ChartData[], title: string) => {
     // Group data by metric
     const metrics = Array.from(new Set(data.map(item => item.metric)));
-    const periods = Array.from(new Set(data.map(item => item.period))).sort();
+    
+    // Sort periods chronologically
+    const periods = Array.from(new Set(data.map(item => item.period))).sort((a, b) => {
+      // Check if the period is a date string (e.g., "12/31/2024")
+      const isDateA = /\d{1,2}\/\d{1,2}\/\d{4}/.test(a);
+      const isDateB = /\d{1,2}\/\d{1,2}\/\d{4}/.test(b);
+      
+      if (isDateA && isDateB) {
+        // Parse dates and compare
+        const [monthA, dayA, yearA] = a.split('/').map(Number);
+        const [monthB, dayB, yearB] = b.split('/').map(Number);
+        const dateA = new Date(yearA, monthA - 1, dayA);
+        const dateB = new Date(yearB, monthB - 1, dayB);
+        return dateA.getTime() - dateB.getTime();
+      }
+      
+      // If one is a date and the other isn't, put the date first
+      if (isDateA) return -1;
+      if (isDateB) return 1;
+      
+      // If neither is a date, compare as strings
+      return a.localeCompare(b);
+    });
 
     // Create a dataset for each metric
     const datasets = metrics.map((metric, index) => {
@@ -59,7 +81,8 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
         label: metric.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
         data: periods.map(period => {
           const dataPoint = data.find(item => item.period === period && item.metric === metric);
-          return dataPoint ? dataPoint.value : 0;
+          // *1000 since the data is in thousands
+          return dataPoint ? dataPoint.value * 1000 : 0;
         }),
         backgroundColor: colors[colorIndex].backgroundColor,
         borderColor: colors[colorIndex].borderColor,
@@ -85,13 +108,14 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
         <div key={index} className="mb-8">
           {item.type === 'text' && (
             <>
-              <h2 className="text-xl font-bold mb-4">{item.title}</h2>
+              <h1 className="text-2xl font-bold mb-4">{item.title}</h1>
               <p className="mb-4">{item.content}</p>
             </>
           )}
           {item.type === 'chart' && item.data && (
             <div className="w-full">
               {renderChart(item.data, item.title)}
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{item.content}</p>
             </div>
           )}
         </div>
