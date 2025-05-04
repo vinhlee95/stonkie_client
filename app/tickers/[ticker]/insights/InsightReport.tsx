@@ -22,15 +22,61 @@ type ContentItem = {
 
 export default function InsightReport({ticker, slug}: {ticker: string, slug: string}) {
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
   const hasFetchedDetailedReport = useRef(false);   
 
   const fetchDetailedReport = async (slug: string) => {
     try {
+      setIsStreaming(true);
       const response = await fetch(`${BACKEND_URL}/api/companies/${ticker.toUpperCase()}/dynamic-report/${slug}`);
-      const data = await response.json();
-      setContentItems(data);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      if (!response.body) {
+        throw new Error('ReadableStream not yet supported in this browser.');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          console.log('Done streaming');
+          setIsStreaming(false);
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Process complete JSON objects from the buffer
+        let startIndex = 0;
+        while (true) {
+          const endIndex = buffer.indexOf('\n', startIndex);
+          if (endIndex === -1) {
+            buffer = buffer.slice(startIndex);
+            break;
+          }
+
+          const jsonStr = buffer.slice(startIndex, endIndex).trim();
+          if (jsonStr) {
+            try {
+              const contentItem = JSON.parse(jsonStr);
+              setContentItems(prevItems => [...prevItems, contentItem]);
+            } catch (e) {
+              console.error('Error parsing JSON chunk:', e);
+            }
+          }
+          startIndex = endIndex + 1;
+        }
+      }
     } catch (error) {
       console.error('Error fetching detailed report:', error);
+      setIsStreaming(false);
     }
   };
 
@@ -129,6 +175,24 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
     );
   };
 
+  const LoadingSkeleton = () => (
+    <div className="space-y-8">
+      <div className="space-y-4">
+        {/* Title skeleton */}
+        <div className="h-8 w-3/4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        
+        {/* Content skeleton */}
+        <div className="space-y-2">
+          <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-5/6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-4/6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-3/6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-2/6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="prose max-w-none space-y-8">
       {contentItems.map((item, index) => (
@@ -158,6 +222,7 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
           </div>
         </div>
       ))}
+      {isStreaming && <LoadingSkeleton />}
     </div>
   )
 }
