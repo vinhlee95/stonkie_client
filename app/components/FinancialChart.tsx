@@ -18,6 +18,7 @@ import {
 import { Chart } from 'react-chartjs-2';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
+import FinancialPeriodTab from '@/app/components/FinancialPeriodTab'; 
 
 // Register the required components
 ChartJS.register(
@@ -176,6 +177,7 @@ const FinancialChart: React.FC<ChartProps> = ({
         <h1 className="text-2xl font-bold">
           {title}
         </h1>
+        
         <button className="cursor-pointer" onClick={() => router.push(`/tickers/${ticker}/insights?type=${getInsightTypeByTitle(title)}`)}>
           <svg 
             className="h-5 w-5 text-gray-400 mt-1" 
@@ -186,6 +188,7 @@ const FinancialChart: React.FC<ChartProps> = ({
           </svg>
         </button>
       </div>
+      <FinancialPeriodTab selectedPeriod='Annual' onPeriodChange={() => {}} /> 
       <div style={{ height }}>
         <Chart type='bar' data={chartData} options={options} />
       </div>
@@ -193,4 +196,4 @@ const FinancialChart: React.FC<ChartProps> = ({
   );
 };
 
-export default FinancialChart; 
+export default FinancialChart;

@@ -1,5 +1,5 @@
 import FinancialChart from "@/app/components/FinancialChart";
-import FinancialPeriodTab from "@/app/components/FinancialPeriodTab";
+import FinancialPeriodTabWithRouterChange from "@/app/components/FinancialPeriodTabWithRouterChange";
 import { isAnnualStatement, isQuarterlyStatement, type FinancialStatement } from "@/app/types";
 import { formatNumber } from "@/utils/formatter";
 
@@ -117,7 +117,7 @@ export default async function IncomeStatement({
 
   return (
     <>
-      <FinancialPeriodTab />
+      <FinancialPeriodTabWithRouterChange />
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">All numbers are in billions of USD.</p>
       {renderIncomeStatementChart()}
       <div className="overflow-x-auto">

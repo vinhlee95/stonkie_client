@@ -1,41 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-
 interface FinancialPeriodTabProps {
-  onPeriodChange?: (period: 'Annual' | 'Quarterly') => void;
+  selectedPeriod: 'Annual' | 'Quarterly';
+  onPeriodChange: (period: 'Annual' | 'Quarterly') => void;
 }
 
-export default function FinancialPeriodTab({ onPeriodChange }: FinancialPeriodTabProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [selectedPeriod, setSelectedPeriod] = useState<'Annual' | 'Quarterly'>(
-    searchParams.get('period') === 'quarterly' ? 'Quarterly' : 'Annual'
-  );
-
-  // Update selected period when URL changes
-  useEffect(() => {
-    const period = searchParams.get('period') === 'quarterly' ? 'Quarterly' : 'Annual';
-    setSelectedPeriod(period);
-  }, [searchParams]);
-
-  const handlePeriodChange = (period: 'Annual' | 'Quarterly') => {
-    // Create new URLSearchParams
-    const newSearchParams = new URLSearchParams(searchParams.toString());
-    newSearchParams.set('period', period.toLowerCase());
-    
-    // Update URL with new period
-    router.push(`?${newSearchParams.toString()}`, { scroll: false });
-    
-    setSelectedPeriod(period);
-    onPeriodChange?.(period);
-  };
-
+export default function FinancialPeriodTab({ selectedPeriod, onPeriodChange }: FinancialPeriodTabProps) {
   return (
     <div className="flex mb-4">
       <button
-        onClick={() => handlePeriodChange('Annual')}
+        onClick={() => onPeriodChange('Annual')}
         className={`
           py-2 px-2 mr-4 text-sm font-medium transition-all relative cursor-pointer
           ${
@@ -48,7 +22,7 @@ export default function FinancialPeriodTab({ onPeriodChange }: FinancialPeriodTa
         Annual
       </button>
       <button
-        onClick={() => handlePeriodChange('Quarterly')}
+        onClick={() => onPeriodChange('Quarterly')}
         className={`
           py-2 px-2 text-sm font-medium transition-all relative cursor-pointer
           ${
