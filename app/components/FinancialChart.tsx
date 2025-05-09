@@ -69,7 +69,7 @@ interface ChartProps {
   children?: React.ReactNode;
 }
 
-const FinancialChart: React.FC<ChartProps> = ({
+const BareboneChart: React.FC<ChartProps> = ({
   labels,
   datasets,
   height = 250,
@@ -190,7 +190,7 @@ function ChartTitle({ title, onInsightButtonClick }: { title: string; ticker: st
   )
 }
 
-export default function FinancialChartWithMode({
+export default function FinancialChart({
   title,
   labels,
   datasets,
@@ -218,7 +218,7 @@ export default function FinancialChartWithMode({
   }
 
   return (
-    <FinancialChart
+    <BareboneChart
       title={title}
       labels={labels}
       datasets={datasets}
@@ -229,6 +229,6 @@ export default function FinancialChartWithMode({
     >
       <ChartTitle title={title} ticker={ticker} onInsightButtonClick={onInsightButtonClick} />
       <FinancialPeriodTab selectedPeriod={timePeriod} onPeriodChange={setTimePeriod} />
-    </FinancialChart>
+    </BareboneChart>
   );
 }
