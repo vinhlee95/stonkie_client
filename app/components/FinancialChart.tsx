@@ -66,21 +66,18 @@ interface ChartProps {
     prefix?: string;
     suffix?: string;
   };
+  children?: React.ReactNode;
 }
 
 const FinancialChart: React.FC<ChartProps> = ({
-  title,
   labels,
   datasets,
   height = 250,
   yAxisConfig = { formatAsCurrency: true, showPercentage: false },
   yAxisFormatType = 'currency',
   yAxisFormatOptions = { decimals: 1 },
+  children,
 }) => {
-  const router = useRouter();
-  const params = useParams();
-  const ticker = params.ticker as string;
-
   const chartData = {
     labels,
     datasets,
@@ -163,6 +160,50 @@ const FinancialChart: React.FC<ChartProps> = ({
     },
   };
 
+  return (
+    <div>
+      {children}
+      <div style={{ height }}>
+        <Chart type='bar' data={chartData} options={options} />
+      </div>
+    </div>
+  );
+};
+
+function ChartTitle({ title, onInsightButtonClick }: { title: string; ticker: string; onInsightButtonClick: () => void }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <h1 className="text-2xl font-bold">
+        {title}
+      </h1>
+      
+      <button className="cursor-pointer" onClick={onInsightButtonClick}>
+        <svg 
+          className="h-5 w-5 text-gray-400 mt-1" 
+          viewBox="0 0 20 20" 
+          fill="currentColor"
+        >
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
+export default function FinancialChartWithMode({
+  title,
+  labels,
+  datasets,
+  height = 250,
+  yAxisConfig = { formatAsCurrency: true, showPercentage: false },
+  yAxisFormatType = 'currency',
+  yAxisFormatOptions = { decimals: 1 },
+}: ChartProps) {
+  const [timePeriod, setTimePeriod] = React.useState<'Annual' | 'Quarterly'>('Annual');
+  const router = useRouter();
+  const params = useParams();
+  const ticker = params.ticker as string;
+
   const getInsightTypeByTitle = (title: string) => {
     if (title.includes('Growth')) return 'growth';
     if (title.includes('Earning')) return 'earnings';
@@ -171,29 +212,23 @@ const FinancialChart: React.FC<ChartProps> = ({
     return 'growth'
   }
 
-  return (
-    <div>
-      <div className="flex items-center gap-2 mb-4">
-        <h1 className="text-2xl font-bold">
-          {title}
-        </h1>
-        
-        <button className="cursor-pointer" onClick={() => router.push(`/tickers/${ticker}/insights?type=${getInsightTypeByTitle(title)}`)}>
-          <svg 
-            className="h-5 w-5 text-gray-400 mt-1" 
-            viewBox="0 0 20 20" 
-            fill="currentColor"
-          >
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-          </svg>
-        </button>
-      </div>
-      <FinancialPeriodTab selectedPeriod='Annual' onPeriodChange={() => {}} /> 
-      <div style={{ height }}>
-        <Chart type='bar' data={chartData} options={options} />
-      </div>
-    </div>
-  );
-};
+  const onInsightButtonClick = () => {
+    const insightType = getInsightTypeByTitle(title);
+    router.push(`/tickers/${ticker}/insights?type=${insightType}`);
+  }
 
-export default FinancialChart;
+  return (
+    <FinancialChart
+      title={title}
+      labels={labels}
+      datasets={datasets}
+      height={height}
+      yAxisConfig={yAxisConfig}
+      yAxisFormatType={yAxisFormatType}
+      yAxisFormatOptions={yAxisFormatOptions}
+    >
+      <ChartTitle title={title} ticker={ticker} onInsightButtonClick={onInsightButtonClick} />
+      <FinancialPeriodTab selectedPeriod={timePeriod} onPeriodChange={setTimePeriod} />
+    </FinancialChart>
+  );
+}
