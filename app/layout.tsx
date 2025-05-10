@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css";
 import { Suspense } from "react";
 import BottomNavigation from "./components/BottomNavigation";
+
 
 export const metadata: Metadata = {
   title: "Stonkie 🚀",
@@ -18,6 +20,7 @@ export default function RootLayout({
       <body className="pb-16">
         <div className="px-1 md:px-8">
           {children}
+          <SpeedInsights />
         </div>
         <Suspense>
           <BottomNavigation />
