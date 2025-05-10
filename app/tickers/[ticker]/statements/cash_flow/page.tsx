@@ -1,4 +1,4 @@
-import FinancialChart from "@/app/components/FinancialChart";
+import {Chart} from "@/app/components/FinancialChart";
 import FinancialPeriodTabWithRouterChange from "@/app/components/FinancialPeriodTabWithRouterChange";
 import { FinancialStatement, isAnnualStatement, isQuarterlyStatement } from "@/app/types";
 import { formatNumber } from "@/utils/formatter";
@@ -128,7 +128,7 @@ export default async function CashFlow({
 
     return (
       <div className="mb-2">
-        <FinancialChart
+        <Chart
           title=""
           labels={periods.map(period => getDisplayPeriod(period, statements))}
           datasets={datasets}
