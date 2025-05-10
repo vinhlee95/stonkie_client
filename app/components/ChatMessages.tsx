@@ -1,6 +1,7 @@
 import React, { RefObject } from 'react';
 import { Message } from './types/chat';
 import MessageContent from './MessageContent';
+import LoadingSkeleton from './LoadingSkeleton';
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -32,6 +33,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           </div>
         );
       })}
+      {isLoading && <LoadingSkeleton />}
     </div>
   );
 };
