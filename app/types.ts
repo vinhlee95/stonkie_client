@@ -12,7 +12,7 @@ export type AnnualFinancialStatement = {
   data: Record<string, number | null>;
 }
 
-type QuarterlyFinancialStatement = {
+export type QuarterlyFinancialStatement = {
   period_end_quarter: string;
   data: Record<string, number | null>;
 }

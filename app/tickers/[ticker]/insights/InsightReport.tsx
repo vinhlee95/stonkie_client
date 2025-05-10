@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from "react";
-import FinancialChart from '@/app/components/FinancialChart';
+import {Chart} from '@/app/components/FinancialChart';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
@@ -163,7 +163,7 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
     });
 
     return (
-      <FinancialChart
+      <Chart
         title={title}
         labels={periods}
         datasets={datasets}

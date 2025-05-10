@@ -15,7 +15,7 @@ import {
   BarController,
   LineController
 } from 'chart.js';
-import { Chart } from 'react-chartjs-2';
+import { Chart as ChartComponent } from 'react-chartjs-2';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import FinancialPeriodTab from '@/app/components/FinancialPeriodTab'; 
@@ -69,7 +69,12 @@ interface ChartProps {
   children?: React.ReactNode;
 }
 
-const BareboneChart: React.FC<ChartProps> = ({
+interface FinancialChartProps extends ChartProps {
+  quaterlyDatasets: Dataset[];
+  quarterlyLabels: string[];
+}
+
+export const Chart: React.FC<ChartProps> = ({
   labels,
   datasets,
   height = 250,
@@ -164,7 +169,7 @@ const BareboneChart: React.FC<ChartProps> = ({
     <div>
       {children}
       <div style={{ height }}>
-        <Chart type='bar' data={chartData} options={options} />
+        <ChartComponent type='bar' data={chartData} options={options} />
       </div>
     </div>
   );
@@ -190,15 +195,17 @@ function ChartTitle({ title, onInsightButtonClick }: { title: string; ticker: st
   )
 }
 
-export default function FinancialChart({
+export default function ChartWithPeriod({
   title,
-  labels,
-  datasets,
+  labels: annualLabels,
+  datasets: annualDatasets,
+  quaterlyDatasets,
+  quarterlyLabels,
   height = 250,
   yAxisConfig = { formatAsCurrency: true, showPercentage: false },
   yAxisFormatType = 'currency',
   yAxisFormatOptions = { decimals: 1 },
-}: ChartProps) {
+}: FinancialChartProps) {
   const [timePeriod, setTimePeriod] = React.useState<'Annual' | 'Quarterly'>('Annual');
   const router = useRouter();
   const params = useParams();
@@ -217,8 +224,11 @@ export default function FinancialChart({
     router.push(`/tickers/${ticker}/insights?type=${insightType}`);
   }
 
+  const labels = timePeriod === 'Quarterly' ? quarterlyLabels : annualLabels;
+  const datasets = timePeriod === 'Quarterly' ? quaterlyDatasets : annualDatasets;
+
   return (
-    <BareboneChart
+    <Chart
       title={title}
       labels={labels}
       datasets={datasets}
@@ -229,6 +239,6 @@ export default function FinancialChart({
     >
       <ChartTitle title={title} ticker={ticker} onInsightButtonClick={onInsightButtonClick} />
       <FinancialPeriodTab selectedPeriod={timePeriod} onPeriodChange={setTimePeriod} />
-    </BareboneChart>
+    </Chart>
   );
 }
