@@ -1,47 +1,70 @@
-import FinancialChart from "@/app/components/FinancialChart";
-import { AnnualFinancialStatement } from "@/app/types";
+import ChartWithPeriod from "@/app/components/FinancialChart";
+import { AnnualFinancialStatement, FinancialStatement, isAnnualStatement, isQuarterlyStatement, QuarterlyFinancialStatement} from "@/app/types";
+import { ChartDataOutput, ChartDatasetDefinition, parseFinancialValue, processAnnualStatements, processQuarterlyStatements } from "./chartUtils";
 
-export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balanceSheet: AnnualFinancialStatement[], cashFlow: AnnualFinancialStatement[]}) {
-  // Sort statements by year in ascending order
-  const sortedBalanceSheet = [...balanceSheet].filter(item => !!item.data).sort((a, b) => a.period_end_year - b.period_end_year);
-  const sortedCashFlow = [...cashFlow].sort((a, b) => a.period_end_year - b.period_end_year);
-  
-  // Find keys from the first statement (should be consistent across years)
-  const firstBalanceSheet = sortedBalanceSheet[0];
-  const firstCashFlow = sortedCashFlow[0];
+function getChartDataset(
+  balanceSheets: Array<FinancialStatement>,
+  cashFlows: Array<FinancialStatement>
+): ChartDataOutput {
+  if ((!balanceSheets || balanceSheets.length === 0) && (!cashFlows || cashFlows.length === 0)) {
+    return { labels: [], datasets: [] };
+  }
 
-  const totalDebtKey = Object.keys(firstBalanceSheet.data).find(key => 
+  let sortedBalanceSheets: AnnualFinancialStatement[] | QuarterlyFinancialStatement[];
+  let sortedCashFlows: AnnualFinancialStatement[] | QuarterlyFinancialStatement[];
+  let generatedLabels: string[];
+
+  // Assuming balanceSheets and cashFlows will always be of the same type (Annual or Quarterly)
+  // and have corresponding entries.
+  if (isAnnualStatement(balanceSheets[0] ?? cashFlows[0])) {
+    const { generatedLabels: annualLabelsBS, sortedStatements: annualSortedBS } = processAnnualStatements(balanceSheets as AnnualFinancialStatement[]);
+    const { sortedStatements: annualSortedCF } = processAnnualStatements(cashFlows as AnnualFinancialStatement[]);
+    generatedLabels = annualLabelsBS;
+    sortedBalanceSheets = annualSortedBS;
+    sortedCashFlows = annualSortedCF;
+  } else if (isQuarterlyStatement(balanceSheets[0] ?? cashFlows[0])) {
+    const { generatedLabels: quarterlyLabelsBS, sortedStatements: quarterlySortedBS } = processQuarterlyStatements(balanceSheets as QuarterlyFinancialStatement[]);
+    const { sortedStatements: quarterlySortedCF } = processQuarterlyStatements(cashFlows as QuarterlyFinancialStatement[]);
+    generatedLabels = quarterlyLabelsBS;
+    sortedBalanceSheets = quarterlySortedBS;
+    sortedCashFlows = quarterlySortedCF;
+  } else {
+    console.error("Unknown or mixed statement types in getChartDataset", balanceSheets[0] ?? cashFlows[0]);
+    return { labels: [], datasets: [] };
+  }
+
+  const firstBalanceSheetData = sortedBalanceSheets[0]?.data;
+  const firstCashFlowData = sortedCashFlows[0]?.data;
+
+  if (!firstBalanceSheetData || !firstCashFlowData) return { labels: generatedLabels, datasets: [] };
+
+  const totalDebtKey = Object.keys(firstBalanceSheetData).find(key =>
     key.toLowerCase().includes('total debt')
   );
-
-  const cashKey = Object.keys(firstBalanceSheet.data).find(key => 
+  const cashKey = Object.keys(firstBalanceSheetData).find(key =>
     key.toLowerCase() === 'cash'
   );
-
-  const cashEquivalentsKey = Object.keys(firstBalanceSheet.data).find(key => 
+  const cashEquivalentsKey = Object.keys(firstBalanceSheetData).find(key =>
     key.toLowerCase() === 'cash equivalents'
   );
-
-  const cashAndCashEquivalentsKey = Object.keys(firstBalanceSheet.data).find(key => 
+  const cashAndCashEquivalentsKey = Object.keys(firstBalanceSheetData).find(key =>
     key.toLowerCase().includes('cash and cash')
   );
-
-  const freeCashFlowKey = Object.keys(firstCashFlow.data).find(key => 
+  const freeCashFlowKey = Object.keys(firstCashFlowData).find(key =>
     key.toLowerCase().includes('free cash flow')
   );
 
-  if (!totalDebtKey || !freeCashFlowKey) return null;
+  if (!totalDebtKey || !freeCashFlowKey) {
+    console.warn("Total Debt or Free Cash Flow key not found in statement data.");
+    return { labels: generatedLabels, datasets: [] };
+  }
 
-  const years = sortedBalanceSheet.map(statement => 
-    statement.is_ttm ? 'TTM' : statement.period_end_year.toString()
-  );
-
-  const datasets = [
+  const datasets: ChartDatasetDefinition[] = [
     {
       type: 'bar' as const,
       label: 'Total Debt',
-      data: sortedBalanceSheet.map(statement => 
-        parseFloat((statement.data[totalDebtKey] ? statement.data[totalDebtKey]*1000 : 0).toString())
+      data: sortedBalanceSheets.map(statement =>
+        parseFinancialValue(statement.data[totalDebtKey!]) * 1000
       ),
       backgroundColor: '#4287f5',
       borderColor: '#4287f5',
@@ -52,8 +75,8 @@ export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balan
     {
       type: 'bar' as const,
       label: 'Free Cash Flow',
-      data: sortedCashFlow.map(statement => 
-        parseFloat((statement.data[freeCashFlowKey] ? statement.data[freeCashFlowKey]*1000 : 0).toString())
+      data: sortedCashFlows.map(statement =>
+        parseFinancialValue(statement.data[freeCashFlowKey!]) * 1000
       ),
       backgroundColor: '#63e6e2',
       borderColor: '#63e6e2',
@@ -64,14 +87,14 @@ export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balan
     {
       type: 'bar' as const,
       label: 'Cash and Cash Equivalents',
-      data: sortedBalanceSheet.map(statement => {
-        if (cashAndCashEquivalentsKey) {
-          return parseFloat((statement.data[cashAndCashEquivalentsKey] ? statement.data[cashAndCashEquivalentsKey]*1000 : 0).toString());
+      data: sortedBalanceSheets.map(statement => {
+        if (cashAndCashEquivalentsKey && statement.data[cashAndCashEquivalentsKey]) {
+          return parseFinancialValue(statement.data[cashAndCashEquivalentsKey]) * 1000;
         }
-        if (cashKey && cashEquivalentsKey) {
-          const cash = parseFloat((statement.data[cashKey] ?? 0).toString());
-          const equivalents = parseFloat((statement.data[cashEquivalentsKey] ?? 0).toString());
-          return cash + equivalents;
+        if (cashKey && cashEquivalentsKey && statement.data[cashKey] && statement.data[cashEquivalentsKey]) {
+          const cash = parseFinancialValue(statement.data[cashKey]);
+          const equivalents = parseFinancialValue(statement.data[cashEquivalentsKey]);
+          return (cash + equivalents) * 1000;
         }
         return 0;
       }),
@@ -82,12 +105,33 @@ export default async function DebtCoverageChart({balanceSheet, cashFlow}: {balan
       yAxisID: 'y',
     }
   ];
+  return { labels: generatedLabels, datasets };
+}
+
+export default async function DebtCoverageChart({balanceSheet: annualBalanceSheet, cashFlow: annualCashFlow, ticker}: {balanceSheet: AnnualFinancialStatement[], cashFlow: AnnualFinancialStatement[], ticker: string}) {
+  // Fetch quarterly data
+  const quarterlyBalanceSheetResponse = await fetch(`${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=balance_sheet&period_type=quarterly`, {
+    next: {revalidate: 15*60}
+  });
+  const quarterlyCashFlowResponse = await fetch(`${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=cash_flow&period_type=quarterly`, {
+    next: {revalidate: 15*60}
+  });
+
+  const quarterlyBalanceSheetData = await quarterlyBalanceSheetResponse.json() as QuarterlyFinancialStatement[];
+  const quarterlyCashFlowData = await quarterlyCashFlowResponse.json() as QuarterlyFinancialStatement[];
+
+  const annualData = getChartDataset(annualBalanceSheet, annualCashFlow);
+  const quarterlyData = getChartDataset(quarterlyBalanceSheetData, quarterlyCashFlowData);
+
+  if (!annualData.datasets.length && !quarterlyData.datasets.length) return null;
 
   return (
-    <FinancialChart
+    <ChartWithPeriod
       title="Debt and Coverage"
-      labels={years}
-      datasets={datasets}
+      labels={annualData.labels}
+      datasets={annualData.datasets}
+      quaterlyDatasets={quarterlyData.datasets}
+      quarterlyLabels={quarterlyData.labels}
       yAxisConfig={{ formatAsCurrency: true }}
     />
   );
