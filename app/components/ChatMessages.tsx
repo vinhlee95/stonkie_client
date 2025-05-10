@@ -6,6 +6,7 @@ import LoadingSkeleton from './LoadingSkeleton';
 interface ChatMessagesProps {
   messages: Message[];
   isLoading: boolean;
+  thinkingStatus: string | null;
   latestMessageRef: RefObject<HTMLDivElement | null>;
   onFAQClick: (question: string) => void;
 }
@@ -14,7 +15,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   messages,
   isLoading,
   latestMessageRef,
-  onFAQClick
+  onFAQClick,
+  thinkingStatus,
 }) => {
   return (
     <div className="flex-grow overflow-y-auto pb-16 w-full">
@@ -26,9 +28,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
               content={message.content}
               isUser={message.type === 'user'}
               isFAQ={message.isFAQ}
-              isLoading={isLoading}
               suggestions={message.suggestions}
               onFAQClick={onFAQClick}
+              thinkingStatus={thinkingStatus}
             />
           </div>
         );

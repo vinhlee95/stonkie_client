@@ -5,21 +5,19 @@ import MarkdownContent from './MarkdownContent';
 interface MessageContentProps {
   content: string;
   isUser: boolean;
-  isLoading: boolean;
   isFAQ?: boolean;
-  isStreaming?: boolean;
   suggestions?: string[];
   onFAQClick?: (question: string) => void;
+  thinkingStatus: string | null;
 }
 
 const MessageContent: React.FC<MessageContentProps> = ({ 
   content, 
   isUser, 
-  isLoading,
   isFAQ, 
-  isStreaming,
   suggestions,
-  onFAQClick 
+  onFAQClick,
+  thinkingStatus,
 }) => {
   if (isUser) {
     return (
@@ -66,17 +64,17 @@ const MessageContent: React.FC<MessageContentProps> = ({
     );
   }
 
-  return <BotMessage content={content} isLoading={isLoading || (isStreaming ?? false)} />;
+  return <BotMessage content={content} thinkingStatus={thinkingStatus} />;
 };
 
-const BotMessage: React.FC<{ content: string, isLoading: boolean }> = ({ content, isLoading }) => (
+const BotMessage: React.FC<{ content: string, thinkingStatus: string | null }> = ({ content, thinkingStatus }) => (
   <div className="max-w-4xl mx-auto w-full">
-    <BotHeader isLoading={isLoading} />
+    <BotHeader thinkingStatus={thinkingStatus} />
     <MarkdownContent content={content} />
   </div>
 );
 
-const BotHeader = ({isLoading}: {isLoading: boolean}) => (
+const BotHeader = ({thinkingStatus}: {thinkingStatus: string | null}) => (
   <div
     className="flex items-center gap-1 bg-gray-200 dark:bg-gray-800 rounded-full p-2 px-4 shadow-sm inline-flex max-w-max mb-2"
   >
@@ -88,7 +86,7 @@ const BotHeader = ({isLoading}: {isLoading: boolean}) => (
       className="rounded-full"
     />
     <p className="text-gray-500 font-bold">
-      {isLoading ? 'Stonkie is thinking...' : 'Stonkie'}
+      {thinkingStatus ?? 'Stonkie'}
     </p>
   </div>
 );

@@ -3,6 +3,7 @@ import { Message } from '../types/chat';
 
 export const useChatState = (ticker: string | undefined) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [thinkingStatus, setThinkingStatus] = useState<string|null>(null);
   const [input, setInput] = useState('');
   const latestMessageRef = useRef<HTMLDivElement>(null);
   const hasFetchedFAQs = useRef(false);
@@ -23,6 +24,8 @@ export const useChatState = (ticker: string | undefined) => {
   return {
     messages,
     setMessages,
+    thinkingStatus,
+    setThinkingStatus,
     input,
     setInput,
     latestMessageRef,

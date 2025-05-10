@@ -15,13 +15,15 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, initialSta
   const {
     messages,
     setMessages,
+    thinkingStatus,
+    setThinkingStatus,
     input,
     setInput,
     latestMessageRef,
     hasFetchedFAQs,
   } = useChatState(ticker);
 
-  const { handleSubmit, fetchFAQsStream, isLoading } = useChatAPI(ticker, setMessages);
+  const { handleSubmit, fetchFAQsStream, isLoading } = useChatAPI(ticker, setMessages, setThinkingStatus);
 
   const handleFAQClick = async (question: string) => {
     await handleSubmit(question);
@@ -52,6 +54,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, initialSta
           <ChatMessages
             messages={messages}
             isLoading={isLoading}
+            thinkingStatus={thinkingStatus}
             latestMessageRef={latestMessageRef}
             onFAQClick={handleFAQClick}
           />

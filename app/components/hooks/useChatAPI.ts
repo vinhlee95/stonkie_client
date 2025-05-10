@@ -4,7 +4,8 @@ import { chatService } from '../services/chatService';
 
 export const useChatAPI = (
   ticker: string | undefined, 
-  setMessages: Dispatch<SetStateAction<Message[]>>
+  setMessages: Dispatch<SetStateAction<Message[]>>,
+  setThinkingStatus: Dispatch<SetStateAction<string | null>>,
 ) => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,6 +41,8 @@ export const useChatAPI = (
             const parsedChunk = JSON.parse(jsonStr);
             if (parsedChunk.type === 'answer') {
               accumulatedContent += parsedChunk.body;
+            } else if (parsedChunk.type === 'thinking_status') {
+              setThinkingStatus(parsedChunk.body);
             } else if (parsedChunk.type === 'related_question') {
               setMessages(prev => [...prev, {
                 type: 'bot',
@@ -77,6 +80,7 @@ export const useChatAPI = (
       }]);
     } finally {
       setIsLoading(false);
+      setThinkingStatus(null);
     }
   };
 
