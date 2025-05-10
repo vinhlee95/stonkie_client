@@ -44,7 +44,7 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
           {incomeStatements && incomeStatements.length > 0 && <GrowthChart incomeStatements={incomeStatements} ticker={ticker} />}
         </Suspense>
         <Suspense fallback={<p>Loading EPS chart...</p>}>
-          {incomeStatements && incomeStatements.length > 0 && <EpsChart incomeStatements={incomeStatements} />}
+          {incomeStatements && incomeStatements.length > 0 && <EpsChart incomeStatements={incomeStatements} ticker={ticker} />}
         </Suspense>
         <Suspense fallback={<p>Loading Debt and coverage chart...</p>}>
           {balanceSheet && cashFlow && balanceSheet.length > 0 && cashFlow.length > 0 && <DebtCoverageChart balanceSheet={balanceSheet} cashFlow={cashFlow} />}
