@@ -19,7 +19,7 @@ import { Chart as ChartComponent } from 'react-chartjs-2';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import FinancialPeriodTab from '@/app/components/FinancialPeriodTab'; 
-import { Zap } from "lucide-react"
+import { Sparkles } from "lucide-react"
 
 // Register the required components
 ChartJS.register(
@@ -182,14 +182,14 @@ function ChartTitle({
 }: { title: string; onInsightButtonClick: () => void }) {
   return (
     <div className="flex items-center justify-between mb-4">
-      <h1 className="text-2xl font-bold">{title}</h1>
+      <h1 className="text-xl font-bold">{title}</h1>
 
       <button
-        className="cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium bg-[var(--accent-hover)] text-white border border-[var(--accent-hover)] hover:border-[var(--accent-hover)] transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.5)] hover:shadow-[0_0_20px_rgba(16,185,129,0.7)]"
+        className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 transition-colors cursor-pointer"
         onClick={onInsightButtonClick}
       >
-        <Zap className="w-4 h-4 text-white" />
-        <span>AI insights</span>
+        <Sparkles className="w-3.5 h-3.5" />
+        <span>Insights</span>
       </button>
     </div>
   )
