@@ -1,5 +1,5 @@
 'use client'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Image from 'next/image'
@@ -8,6 +8,12 @@ import InsightReport from './InsightReport'
 import InsightHeader from './InsightHeader'
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
+
+enum InsightType {
+  GROWTH = "growth",
+  EARNINGS = "earnings",
+  CASH_FLOW = "cash_flow"
+}
 
 const truncateContent = (content: string, maxWords: number = 30): string => {
   const words = content.split(/\s+/)
@@ -24,6 +30,8 @@ interface Insight {
 
 export default function InsightsPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
+  const type = searchParams.get('type')
   const ticker = params.ticker as string
   const [insights, setInsights] = useState<Insight[]>([])
   const [currentInsight, setCurrentInsight] = useState<Insight | null>(null)
@@ -39,8 +47,10 @@ export default function InsightsPage() {
       setInsights([])
       setCurrentInsight(null)
 
+      const insightType = Object.values(InsightType).includes(type as InsightType) ? type : InsightType.GROWTH
+
       try {
-        const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/insights/growth`)
+        const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/insights/${insightType}`)
         const reader = response.body?.getReader()
         if (!reader) return
 
