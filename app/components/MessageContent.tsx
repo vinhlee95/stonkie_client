@@ -21,17 +21,15 @@ const MessageContent: React.FC<MessageContentProps> = ({
 }) => {
   if (isUser) {
     return (
-      <div className="max-w-4xl mx-auto w-full">
-        <p className="text-gray-900 dark:text-white text-xl font-medium mb-4 mt-4 leading-relaxed">
-          {content}
-        </p>
-      </div>
+      <p className="text-gray-900 dark:text-white text-xl font-medium mb-4 mt-4 leading-relaxed">
+        {content}
+      </p>
     );
   }
 
   if (isFAQ && suggestions) {
     return (
-      <div className="py-2 w-full max-w-4xl mx-auto">
+      <>
         {content && <p className="mb-2 text-gray-900 dark:text-white">{content}</p>}
         <div className="flex flex-col">
           {suggestions.map((suggestion, index) => (
@@ -60,7 +58,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
             </div>
           ))}
         </div>
-      </div>
+      </>
     );
   }
 

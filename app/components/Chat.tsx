@@ -50,14 +50,16 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, initialSta
         <ChatHeader onClose={onClose} />
 
         <div className="flex-1 overflow-y-auto px-4 mt-4">
-          {children}
-          <ChatMessages
-            messages={messages}
-            isLoading={isLoading}
-            thinkingStatus={thinkingStatus}
-            latestMessageRef={latestMessageRef}
-            onFAQClick={handleFAQClick}
-          />
+          <div className="w-full max-w-4xl mx-auto">
+            {children}
+            <ChatMessages
+              messages={messages}
+              isLoading={isLoading}
+              thinkingStatus={thinkingStatus}
+              latestMessageRef={latestMessageRef}
+              onFAQClick={handleFAQClick}
+            />
+          </div>
         </div>
         
         <ChatInput
