@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import MarkdownContent from './MarkdownContent';
+import { Plus } from 'lucide-react';
 
 interface MessageContentProps {
   content: string;
@@ -36,25 +37,12 @@ const MessageContent: React.FC<MessageContentProps> = ({
             <div
               key={index}
               onClick={() => onFAQClick?.(suggestion)}
-              className="flex justify-between items-center py-1.5 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded px-2"
+              className="group flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 cursor-pointer rounded px-2 transition-colors duration-200"
             >
-              <p className="text-gray-900 dark:text-white flex-1 pr-2">
+              <p className="text-gray-900 dark:text-white flex-1 pr-2 transition-colors duration-200 group-hover:text-[var(--accent-hover)] dark:group-hover:text-[var(--accent-hover-dark)]">
                 {suggestion}
               </p>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5 text-blue-600 dark:text-blue-400" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M12 4v16m8-8H4" 
-                />
-              </svg>
+              <Plus className="h-5 w-5 text-[#171717] dark:text-[#ededed] transition-colors duration-200 group-hover:text-[var(--accent-hover)] dark:group-hover:text-[var(--accent-hover-dark)]" />
             </div>
           ))}
         </div>
