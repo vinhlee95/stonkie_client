@@ -3,6 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css";
 import { Suspense } from "react";
 import BottomNavigation from "./components/BottomNavigation";
+import { GeistSans } from 'geist/font/sans';
 
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={GeistSans.className}>
       <body className="pb-16">
         <div className="px-1 md:px-8">
           {children}
