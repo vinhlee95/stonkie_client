@@ -115,9 +115,10 @@ export default function InsightsPage() {
   }, [ticker])
   
   if (isChatOpen && currentInsight) {
+    // A bit complicated logic to support some old insights do not have any title
     const title = currentInsight.content.split('\n')[0];
-    const titleWithoutMarkdown = title.replace(/^#+\s*|\*\*/g, '').trim();
-    const contentWithoutTitle = currentInsight.content.split('\n').slice(1).join('\n');
+    const titleWithoutMarkdown = currentInsight.title ?? title.replace(/^#+\s*|\*\*/g, '').trim();
+    const contentWithoutTitle = currentInsight.title ? currentInsight.content : currentInsight.content.split('\n').slice(1).join('\n');
 
     return (
       <Chat 
@@ -160,6 +161,8 @@ export default function InsightsPage() {
                         alt="Insight illustration"
                         fill
                         className="object-cover"
+                        // This image is LCP -> preload the image to improve LCP
+                        priority={true}
                       />
                     </div>
                   )}
