@@ -22,6 +22,7 @@ const truncateContent = (content: string, maxWords: number = 30): string => {
 }
 
 interface Insight {
+  title?: string
   content: string;
   slug: string;
   source?: string;
@@ -78,6 +79,7 @@ export default function InsightsPage() {
                   const source = sourceMatch ? sourceMatch[1].trim() : ''
 
                   setInsights(prev => [...prev, { 
+                    title: parsed.data.title,
                     content: insightContent, 
                     source,
                     imageUrl: parsed.data.imageUrl,
@@ -162,6 +164,7 @@ export default function InsightsPage() {
                     </div>
                   )}
                   <div className="p-6 whitespace-pre-wrap">
+                    <h2 className="text-xl font-bold">{insight.title}</h2>
                     <ReactMarkdown>{truncateContent(insight.content)}</ReactMarkdown>
                   </div>
                 </div>
