@@ -1,7 +1,8 @@
 import React from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import MarkdownContent from './MarkdownContent';
 import { Plus } from 'lucide-react';
+import { ThoughtBubble } from './ThoughtBubble';
 
 interface MessageContentProps {
   content: string;
@@ -55,26 +56,26 @@ const MessageContent: React.FC<MessageContentProps> = ({
 
 const BotMessage: React.FC<{ content: string, thinkingStatus: string | null }> = ({ content, thinkingStatus }) => (
   <div className="max-w-4xl mx-auto w-full">
-    <BotHeader thinkingStatus={thinkingStatus} />
+    <ThoughtBubble thought={thinkingStatus} />
     <MarkdownContent content={content} />
   </div>
 );
 
-const BotHeader = ({thinkingStatus}: {thinkingStatus: string | null}) => (
-  <div
-    className="flex items-center gap-1 bg-gray-200 dark:bg-gray-800 rounded-full p-2 px-4 shadow-sm inline-flex max-w-max mb-2"
-  >
-    <Image
-      src="/stonkie.png"
-      alt="Stonkie Avatar"
-      width={24}
-      height={24}
-      className="rounded-full"
-    />
-    <p className="text-gray-500 font-bold">
-      {thinkingStatus ?? 'Stonkie'}
-    </p>
-  </div>
-);
+// const BotHeader = ({thinkingStatus}: {thinkingStatus: string | null}) => (
+//   <div
+//     className="flex items-center gap-1 bg-gray-200 dark:bg-gray-800 rounded-full p-2 px-4 shadow-sm inline-flex max-w-max mb-2"
+//   >
+//     <Image
+//       src="/stonkie.png"
+//       alt="Stonkie Avatar"
+//       width={24}
+//       height={24}
+//       className="rounded-full"
+//     />
+//     <p className="text-gray-500 font-bold">
+//       {thinkingStatus ?? 'Stonkie'}
+//     </p>
+//   </div>
+// );
 
 export default MessageContent; 
