@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Chat from '@/app/components/Chat'
 import InsightReport from './InsightReport'
 import InsightHeader from './InsightHeader'
+import LoadingSkeleton from '@/app/components/LoadingSkeleton'
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
@@ -140,9 +141,15 @@ export default function InsightsPage() {
       <div className="overflow-y-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading && insights.length === 0 ? (
-            <div className="flex items-center justify-center min-h-[200px] col-span-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            </div>
+          <>
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-700/50 overflow-hidden">
+                <div className="p-6">
+                  <LoadingSkeleton />
+                </div>
+              </div>
+            ))}
+          </>
           ) : insights.length > 0 ? (
             <>
               {insights.map((insight, index) => (
