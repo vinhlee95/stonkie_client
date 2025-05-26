@@ -12,8 +12,7 @@ interface Company {
 export default async function Page() {
   // Fetch data directly in the server component
   const response = await fetch(`${BACKEND_URL}/api/companies/most-viewed`, {
-    // Add cache options as needed
-    cache: 'no-store' // or { next: { revalidate: 60 } } for ISR
+    next: { revalidate: 5 * 60, tags: ['most-viewed-companies'] }
   })
   
   if (!response.ok) {
