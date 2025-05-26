@@ -9,35 +9,54 @@ export function ThoughtBubble({thought}: {thought: string | null}) {
   const [isOpen, setIsOpen] = useState(true)
   const [completedThoughts, setCompletedThoughts] = useState<string[]>([])
   const lastThoughtRef = useRef<string | null>(null)
+  const isTypingRef = useRef(false)
 
   useEffect(() => {
     if (!thought || thought === lastThoughtRef.current) {
-      setCurrentThought("")
       return
     }
 
+    // If we're currently typing, wait for it to complete
+    if (isTypingRef.current) {
+      const checkInterval = setInterval(() => {
+        if (!isTypingRef.current) {
+          clearInterval(checkInterval)
+          startTypingThought(thought)
+        }
+      }, 100)
+      return () => clearInterval(checkInterval)
+    }
+
+    startTypingThought(thought)
+  }, [thought])
+
+  const startTypingThought = (thought: string) => {
+    isTypingRef.current = true
     let charIndex = 0
     setCurrentThought("")
+
     const typeThought = () => {
       if (!thought) return
       if (charIndex < thought.length) {
         setCurrentThought(thought.slice(0, charIndex + 1))
         charIndex++
-        setTimeout(typeThought, 50)
+        setTimeout(typeThought, 10)
       } else {
         // When done, add to completedThoughts and update lastThoughtRef
         setCompletedThoughts(prev => [...prev, thought])
         lastThoughtRef.current = thought
         setCurrentThought("")
+        isTypingRef.current = false
       }
     }
-    setTimeout(typeThought, 300)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [thought])
+    setTimeout(typeThought, 50)
+  }
 
   if (!thought && completedThoughts.length === 0 && !currentThought) {
     return null
   }
+
+  const isTyping = isTypingRef.current || currentThought.length > 0
 
   return (
     <div className="bg-gray-900 text-white p-4 rounded-lg">
@@ -46,21 +65,23 @@ export function ThoughtBubble({thought}: {thought: string | null}) {
           <CollapsibleTrigger className="flex items-center gap-2 text-purple-300 hover:text-purple-200 transition-colors">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              <span className="text-sm">AI is thinking...</span>
-              <div className="flex gap-1">
-                <div
-                  className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
-                  style={{ animationDelay: "0ms" }}
-                ></div>
-                <div
-                  className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
-                  style={{ animationDelay: "150ms" }}
-                ></div>
-                <div
-                  className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
-                  style={{ animationDelay: "300ms" }}
-                ></div>
-              </div>
+              <span className="text-sm">{isTyping ? 'AI is thinking...' : 'AI thoughts'}</span>
+              {isTyping && (
+                <div className="flex gap-1">
+                  <div
+                    className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  ></div>
+                  <div
+                    className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "150ms" }}
+                  ></div>
+                  <div
+                    className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "300ms" }}
+                  ></div>
+                </div>
+              )}
             </div>
             <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
           </CollapsibleTrigger>

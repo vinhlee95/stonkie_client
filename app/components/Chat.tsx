@@ -1,32 +1,87 @@
 'use client'
 import React, { useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { FinancialChatboxProps } from './types/chat';
-import { useChatState } from './hooks/useChatState';
-import { useChatAPI } from './hooks/useChatAPI';
 import ChatHeader from './ChatHeader';
-import ChatMessages from './ChatMessages';
 import ChatInput from './ChatInput';
+import { useChatState, Thread } from './hooks/useChatState';
+import { useChatAPI } from './hooks/useChatAPI';
+import { ThoughtBubble } from './ThoughtBubble';
+import { Plus } from 'lucide-react';
+import MarkdownContent from './MarkdownContent';
+
+interface FinancialChatboxProps {
+  onClose: () => void;
+  initialState?: boolean;
+  children?: React.ReactNode;
+}
+
+interface ThreadViewProps {
+  thread: Thread;
+  onFAQClick: (question: string) => void;
+  isFirstThread: boolean;
+  isLastThread: boolean;
+}
+
+const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThread, isLastThread }) => {
+  console.log(thread.thoughts)
+  return (
+    <div className={`mb-8 ${isLastThread ? 'pb-16' : ''}`}>
+      <div className="text-xl font-medium mb-2">{thread.question}</div>
+      
+      {thread.thoughts.length > 0 && (
+        <div className="mb-4">
+          <ThoughtBubble thought={thread.thoughts[thread.thoughts.length - 1]} />
+        </div>
+      )}
+      
+      {thread.answer && (
+        <MarkdownContent content={thread.answer} />
+      )}
+      
+      {thread.relatedQuestions.length > 0 && (
+        <div>
+          {!isFirstThread && (
+            <div className="text-sm text-gray-500 mb-2">Related Questions:</div>
+          )}
+          <>
+            {thread.relatedQuestions.map((question, index) => (
+              <div
+                key={index}
+                onClick={() => onFAQClick?.(question)}
+                className="group flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 cursor-pointer rounded px-2 transition-colors duration-200"
+              >
+                <p className="text-gray-900 dark:text-white flex-1 pr-2 transition-colors duration-200 group-hover:text-[var(--accent-hover)] dark:group-hover:text-[var(--accent-hover-dark)]">
+                  {question}
+                </p>
+                <Plus className="h-5 w-5 text-[#171717] dark:text-[#ededed] transition-colors duration-200 group-hover:text-[var(--accent-hover)] dark:group-hover:text-[var(--accent-hover-dark)]" />
+              </div>
+            ))}
+          </>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, initialState, children }) => {
   const params = useParams();
   const ticker = params.ticker as string | undefined;
 
   const {
-    messages,
-    setMessages,
-    thinkingStatus,
-    setThinkingStatus,
+    threads,
     input,
     setInput,
-    latestMessageRef,
+    latestThreadRef,
     hasFetchedFAQs,
+    addThread,
+    updateThread
   } = useChatState(ticker);
 
-  const { handleSubmit, fetchFAQsStream, isLoading } = useChatAPI(ticker, setMessages, setThinkingStatus);
+  const { handleSubmit, fetchFAQsStream, isLoading } = useChatAPI(ticker, updateThread);
 
   const handleFAQClick = async (question: string) => {
-    await handleSubmit(question);
+    const threadId = addThread(question);
+    await handleSubmit(question, threadId);
   };
 
   useEffect(() => {
@@ -52,20 +107,32 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, initialSta
         <div className="flex-1 overflow-y-auto px-4 mt-4">
           <div className="w-full max-w-4xl mx-auto">
             {children}
-            <ChatMessages
-              messages={messages}
-              isLoading={isLoading}
-              thinkingStatus={thinkingStatus}
-              latestMessageRef={latestMessageRef}
-              onFAQClick={handleFAQClick}
-            />
+            {threads.map((thread, index) => (
+              <div
+                key={thread.id}
+                ref={index === threads.length - 1 ? latestThreadRef : undefined}
+              >
+                <ThreadView 
+                  thread={thread} 
+                  onFAQClick={handleFAQClick} 
+                  isFirstThread={index === 0}
+                  isLastThread={index === threads.length - 1}
+                />
+              </div>
+            ))}
           </div>
         </div>
         
         <ChatInput
           input={input}
           setInput={setInput}
-          handleSubmit={() => handleSubmit(input)}
+          handleSubmit={async () => {
+            if (input.trim()) {
+              const threadId = addThread(input);
+              await handleSubmit(input, threadId);
+              setInput('');
+            }
+          }}
           isLoading={isLoading}
         />
       </div>

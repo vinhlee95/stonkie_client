@@ -1,34 +1,79 @@
-import { useState, useRef, useEffect } from 'react';
-import { Message } from '../types/chat';
+import { useState, useRef, useEffect, useCallback } from 'react';
+
+export interface Thread {
+  id: string;
+  question: string;
+  thoughts: string[];
+  answer: string | null;
+  relatedQuestions: string[];
+}
 
 export const useChatState = (ticker: string | undefined) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [thinkingStatus, setThinkingStatus] = useState<string|null>(null);
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [input, setInput] = useState('');
-  const latestMessageRef = useRef<HTMLDivElement>(null);
+  const latestThreadRef = useRef<HTMLDivElement>(null);
   const hasFetchedFAQs = useRef(false);
 
   useEffect(() => {
-    setMessages([]);
+    setThreads([]);
+    setCurrentThreadId(null);
   }, [ticker]);
 
   useEffect(() => {
-    if (messages.length > 0) {
-      const latestMessage = messages[messages.length - 1];
-      if (latestMessage.type === 'user' && latestMessageRef.current) {
-        latestMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+    if (threads.length > 0 && latestThreadRef.current) {
+      latestThreadRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [messages]);
+  }, [threads]);
+
+  const addThread = useCallback((question: string) => {
+    const newThread: Thread = {
+      id: Date.now().toString(),
+      question,
+      thoughts: [],
+      answer: null,
+      relatedQuestions: []
+    };
+    setThreads(prev => [...prev, newThread]);
+    setCurrentThreadId(newThread.id);
+    return newThread.id;
+  }, []);
+
+  const updateThread = useCallback((threadId: string, updates: Partial<Thread>) => {
+    setThreads(prev => {
+      const threadIndex = prev.findIndex(t => t.id === threadId);
+      
+      // If thread doesn't exist, create it
+      if (threadIndex === -1) {
+        const newThread: Thread = {
+          id: threadId,
+          question: updates.question || 'New Thread',
+          thoughts: updates.thoughts || [],
+          answer: updates.answer || null,
+          relatedQuestions: updates.relatedQuestions || []
+        };
+        return [...prev, newThread];
+      }
+
+      // Update existing thread
+      const updatedThreads = [...prev];
+      updatedThreads[threadIndex] = {
+        ...updatedThreads[threadIndex],
+        ...updates
+      };
+      return updatedThreads;
+    });
+  }, []);
 
   return {
-    messages,
-    setMessages,
-    thinkingStatus,
-    setThinkingStatus,
+    threads,
+    currentThreadId,
+    setCurrentThreadId,
     input,
     setInput,
-    latestMessageRef,
+    latestThreadRef,
     hasFetchedFAQs,
+    addThread,
+    updateThread
   };
 }; 
