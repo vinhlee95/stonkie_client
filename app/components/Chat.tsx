@@ -11,7 +11,6 @@ import MarkdownContent from './MarkdownContent';
 
 interface FinancialChatboxProps {
   onClose: () => void;
-  initialState?: boolean;
   children?: React.ReactNode;
 }
 
@@ -23,7 +22,6 @@ interface ThreadViewProps {
 }
 
 const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThread, isLastThread }) => {
-  console.log(thread.thoughts)
   return (
     <div className={`mb-8 ${isLastThread ? 'pb-16' : ''}`}>
       <div className="text-xl font-medium mb-2">{thread.question}</div>
@@ -63,7 +61,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThre
   );
 };
 
-const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, initialState, children }) => {
+const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children }) => {
   const params = useParams();
   const ticker = params.ticker as string | undefined;
 
@@ -88,7 +86,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, initialSta
     // When chat is visible, disable body scroll
     document.body.style.overflow = 'hidden';
 
-    if (!hasFetchedFAQs.current && !initialState) {
+    if (!hasFetchedFAQs.current) {
       hasFetchedFAQs.current = true;
       fetchFAQsStream();
     }
@@ -97,7 +95,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, initialSta
       // When chat is hidden, restore body scroll
       document.body.style.overflow = '';
     };
-  }, [initialState, hasFetchedFAQs, fetchFAQsStream]);
+  }, [hasFetchedFAQs, fetchFAQsStream]);
 
   return (
     <div className="fixed top-0 left-0 right-0 bottom-0 w-full h-full z-50">

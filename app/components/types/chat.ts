@@ -10,13 +10,3 @@ export interface MessageChunk {
   type: 'answer' | 'related_question';
   body: string;
 }
-
-export interface FinancialChatboxProps {
-  initialState?: {
-    content: string;
-    slug: string;
-    imageUrl?: string;
-  };
-  onClose: () => void;
-  children?: React.ReactNode;
-} 
