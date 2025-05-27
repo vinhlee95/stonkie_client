@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Thread } from './useChatState';
 import { chatService } from '../services/chatService';
 
@@ -7,6 +7,7 @@ export const useChatAPI = (
   updateThread: (threadId: string, updates: Partial<Thread>) => void
 ) => {
   const [isLoading, setIsLoading] = useState(false);
+  const isThinkingRef = useRef(false)
 
   const handleSubmit = async (question: string, threadId: string) => {
     if (!ticker) return;
@@ -31,9 +32,15 @@ export const useChatAPI = (
           for (const jsonStr of jsonStrings) {
             const parsedChunk = JSON.parse(jsonStr);
             if (parsedChunk.type === 'answer') {
+              if(isThinkingRef.current) {
+                isThinkingRef.current = false
+              }
               accumulatedContent += parsedChunk.body;
               updateThread(threadId, { answer: accumulatedContent });
             } else if (parsedChunk.type === 'thinking_status') {
+              if(!isThinkingRef.current) {
+                isThinkingRef.current = true
+              }
               thoughts = [...thoughts, parsedChunk.body];
               updateThread(threadId, { thoughts });
             } else if (parsedChunk.type === 'related_question') {
@@ -126,5 +133,6 @@ export const useChatAPI = (
     handleSubmit,
     fetchFAQsStream,
     isLoading,
+    isThinking: isThinkingRef.current,
   };
 }; 

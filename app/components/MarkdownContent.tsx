@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 
-export default function MarkdownContent({ content }: { content: string }) {
+export default function MarkdownContent({ content, smallSize = false }: { content: string, smallSize?: boolean }) {
   return (
     <div className="prose prose-sm dark:prose-invert max-w-none">
       <ReactMarkdown
@@ -11,7 +11,7 @@ export default function MarkdownContent({ content }: { content: string }) {
           </h3>
         ),
         p: ({ children }) => (
-          <p className="mb-3 text-gray-900 dark:text-white text-base leading-relaxed">
+          <p className={`mb-3 text-gray-900 dark:text-white text-base leading-relaxed ${smallSize ? 'text-sm' : ''}`}>
             {children}
           </p>
         ),

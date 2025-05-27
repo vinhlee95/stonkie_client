@@ -19,16 +19,17 @@ interface ThreadViewProps {
   onFAQClick: (question: string) => void;
   isFirstThread: boolean;
   isLastThread: boolean;
+  isThinking: boolean;
 }
 
-const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThread, isLastThread }) => {
+const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThread, isLastThread, isThinking }) => {
   return (
     <div className={`mb-8 ${isLastThread ? 'pb-16' : ''}`}>
       <div className="text-xl font-medium mb-2">{thread.question}</div>
       
       {thread.thoughts.length > 0 && (
         <div className="mb-4">
-          <ThoughtBubble thought={thread.thoughts[thread.thoughts.length - 1]} />
+          <ThoughtBubble thought={thread.thoughts[thread.thoughts.length - 1]} isThinking={isThinking} />
         </div>
       )}
       
@@ -75,7 +76,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children }
     updateThread
   } = useChatState(ticker);
 
-  const { handleSubmit, fetchFAQsStream, isLoading } = useChatAPI(ticker, updateThread);
+  const { handleSubmit, fetchFAQsStream, isLoading, isThinking } = useChatAPI(ticker, updateThread);
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question);
@@ -115,6 +116,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children }
                   onFAQClick={handleFAQClick} 
                   isFirstThread={index === 0}
                   isLastThread={index === threads.length - 1}
+                  isThinking={isThinking}
                 />
               </div>
             ))}

@@ -3,13 +3,18 @@
 import { useState, useEffect, useRef } from "react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible"
 import { ChevronDown, Sparkles } from "lucide-react"
+import MarkdownContent from "./MarkdownContent"
 
-export function ThoughtBubble({thought}: {thought: string | null}) {
+export function ThoughtBubble({thought, isThinking}: {thought: string | null, isThinking: boolean}) {
   const [currentThought, setCurrentThought] = useState("")
   const [isOpen, setIsOpen] = useState(true)
   const [completedThoughts, setCompletedThoughts] = useState<string[]>([])
   const lastThoughtRef = useRef<string | null>(null)
   const isTypingRef = useRef(false)
+
+  useEffect(() => {
+    setIsOpen(isThinking)
+  }, [isThinking])
 
   useEffect(() => {
     if (!thought || thought === lastThoughtRef.current) {
@@ -56,8 +61,6 @@ export function ThoughtBubble({thought}: {thought: string | null}) {
     return null
   }
 
-  const isTyping = isTypingRef.current || currentThought.length > 0
-
   return (
     <div className="bg-gray-900 text-white p-4 rounded-lg">
       <div className="relative">
@@ -65,8 +68,8 @@ export function ThoughtBubble({thought}: {thought: string | null}) {
           <CollapsibleTrigger className="flex items-center gap-2 text-purple-300 hover:text-purple-200 transition-colors">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              <span className="text-sm">{isTyping ? 'AI is thinking...' : 'AI thoughts'}</span>
-              {isTyping && (
+              <span className="text-sm">{isThinking ? 'AI is thinking...' : 'AI thoughts'}</span>
+              {isThinking && (
                 <div className="flex gap-1">
                   <div
                     className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
@@ -91,12 +94,12 @@ export function ThoughtBubble({thought}: {thought: string | null}) {
               <div className="space-y-2">
                 {completedThoughts.map((t, index) => (
                   <div key={index} className="text-sm text-gray-300 opacity-75">
-                    • {t}
+                    <MarkdownContent content={t} smallSize />
                   </div>
                 ))}
                 {currentThought && (
                   <div className="text-sm text-purple-300 flex items-center gap-2">
-                    • {currentThought}
+                    <MarkdownContent content={currentThought} smallSize />
                     <span className="w-2 h-4 bg-purple-400 animate-pulse"></span>
                   </div>
                 )}
