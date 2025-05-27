@@ -62,25 +62,25 @@ export function ThoughtBubble({thought, isThinking}: {thought: string | null, is
   }
 
   return (
-    <div className="bg-gray-900 text-white p-4 rounded-lg">
+    <div className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-4 rounded-lg">
       <div className="relative">
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger className="flex items-center gap-2 text-purple-300 hover:text-purple-200 transition-colors">
+          <CollapsibleTrigger className="flex items-center gap-2 text-[var(--accent-hover)] dark:text-[var(--accent-hover-dark)] hover:text-[var(--accent-active)] dark:hover:text-[var(--accent-active-dark)] transition-colors">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               <span className="text-sm">{isThinking ? 'AI is thinking...' : 'AI thoughts'}</span>
               {isThinking && (
                 <div className="flex gap-1">
                   <div
-                    className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
+                    className="w-1 h-1 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] rounded-full animate-bounce"
                     style={{ animationDelay: "0ms" }}
                   ></div>
                   <div
-                    className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
+                    className="w-1 h-1 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] rounded-full animate-bounce"
                     style={{ animationDelay: "150ms" }}
-                  ></div>
+                  />
                   <div
-                    className="w-1 h-1 bg-purple-400 rounded-full animate-bounce"
+                    className="w-1 h-1 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] rounded-full animate-bounce"
                     style={{ animationDelay: "300ms" }}
                   ></div>
                 </div>
@@ -90,17 +90,17 @@ export function ThoughtBubble({thought, isThinking}: {thought: string | null, is
           </CollapsibleTrigger>
 
           <CollapsibleContent className="mt-3">
-            <div className="bg-gray-800 rounded-lg p-3 border-l-4 border-purple-500">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
               <div className="space-y-2">
                 {completedThoughts.map((t, index) => (
-                  <div key={index} className="text-sm text-gray-300 opacity-75">
+                  <div key={index} className="text-sm text-gray-600 dark:text-gray-300 opacity-75">
                     <MarkdownContent content={t} smallSize />
                   </div>
                 ))}
                 {currentThought && (
-                  <div className="text-sm text-purple-300 flex items-center gap-2">
+                  <div className="text-sm text-[var(--accent-hover)] dark:text-[var(--accent-hover-dark)] flex items-center gap-2">
                     <MarkdownContent content={currentThought} smallSize />
-                    <span className="w-2 h-4 bg-purple-400 animate-pulse"></span>
+                    <span className="w-2 h-4 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] animate-pulse"></span>
                   </div>
                 )}
               </div>
