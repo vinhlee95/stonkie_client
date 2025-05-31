@@ -27,14 +27,13 @@ const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThre
   return (
     <div className={`mb-8 ${isLastThread ? 'pb-20' : ''}`}>
       <div className="text-2xl font-medium mb-2">{thread.question}</div>
-      
-      {thread.thoughts.length > 0 && (
+      {/* Do not show AI thought in first FAQ section */}
+      {!isFirstThread && (
         <div className="mb-4">
           {/* Only show thoughts bubble in the latest thread so that bubble from previous threads do not change */}
           <ThoughtBubble thought={thread.thoughts[thread.thoughts.length - 1]} isThinking={isThinking && isLastThread} />
         </div>
       )}
-      
       {thread.answer && (
         <MarkdownContent content={thread.answer} />
       )}

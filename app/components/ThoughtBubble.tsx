@@ -57,10 +57,6 @@ export function ThoughtBubble({thought, isThinking}: {thought: string | null, is
     setTimeout(typeThought, 50)
   }
 
-  if (!thought && completedThoughts.length === 0 && !currentThought) {
-    return null
-  }
-
   return (
     <div className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-4 rounded-lg">
       <div className="relative">
@@ -89,23 +85,25 @@ export function ThoughtBubble({thought, isThinking}: {thought: string | null, is
             <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
           </CollapsibleTrigger>
 
-          <CollapsibleContent className="mt-3">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-              <div className="space-y-2">
-                {completedThoughts.map((t, index) => (
-                  <div key={index} className="text-sm text-gray-600 dark:text-gray-300 opacity-75">
-                    <MarkdownContent content={t} smallSize />
-                  </div>
-                ))}
-                {currentThought && (
-                  <div className="text-sm text-[var(--accent-hover)] dark:text-[var(--accent-hover-dark)] flex items-center gap-2">
-                    <MarkdownContent content={currentThought} smallSize />
-                    <span className="w-2 h-4 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] animate-pulse"></span>
-                  </div>
-                )}
+          {completedThoughts && completedThoughts.length > 0 && (
+            <CollapsibleContent className="mt-3">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
+                <div className="space-y-2">
+                  {completedThoughts.map((t, index) => (
+                    <div key={index} className="text-sm text-gray-600 dark:text-gray-300 opacity-75">
+                      <MarkdownContent content={t} smallSize />
+                    </div>
+                  ))}
+                  {currentThought && (
+                    <div className="text-sm text-[var(--accent-hover)] dark:text-[var(--accent-hover-dark)] flex items-center gap-2">
+                      <MarkdownContent content={currentThought} smallSize />
+                      <span className="w-2 h-4 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] animate-pulse"></span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </CollapsibleContent>
+            </CollapsibleContent>
+          )}
         </Collapsible>
       </div>
     </div>

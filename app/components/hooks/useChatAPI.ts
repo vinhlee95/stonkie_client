@@ -13,6 +13,7 @@ export const useChatAPI = (
     if (!ticker) return;
     
     setIsLoading(true);
+    isThinkingRef.current = true
     try {
       const reader = await chatService.analyzeQuestion(question, ticker);
       if (!reader) throw new Error('Failed to get reader');
