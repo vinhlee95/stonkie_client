@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { ListPlus } from 'lucide-react';
 import ChatHeader from './ChatHeader';
@@ -70,16 +70,22 @@ const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThre
 const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children }) => {
   const params = useParams();
   const ticker = params.ticker as string | undefined;
+  const latestThreadRef = useRef<HTMLDivElement>(null);
 
   const {
     threads,
     input,
     setInput,
-    latestThreadRef,
     hasFetchedFAQs,
     addThread,
     updateThread
   } = useChatState(ticker);
+  
+  useEffect(() => {
+    if(latestThreadRef.current) {
+      latestThreadRef.current.scrollIntoView({behavior: 'smooth', block: 'start'})
+    }
+  }, [threads.length])
 
   const { handleSubmit, fetchFAQsStream, isLoading, isThinking } = useChatAPI(ticker, updateThread);
 

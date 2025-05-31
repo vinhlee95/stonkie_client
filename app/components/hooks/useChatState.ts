@@ -12,19 +12,12 @@ export const useChatState = (ticker: string | undefined) => {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [input, setInput] = useState('');
-  const latestThreadRef = useRef<HTMLDivElement>(null);
   const hasFetchedFAQs = useRef(false);
 
   useEffect(() => {
     setThreads([]);
     setCurrentThreadId(null);
   }, [ticker]);
-
-  useEffect(() => {
-    if (threads.length > 0 && latestThreadRef.current) {
-      latestThreadRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [threads]);
 
   const addThread = useCallback((question: string) => {
     const newThread: Thread = {
@@ -71,7 +64,6 @@ export const useChatState = (ticker: string | undefined) => {
     setCurrentThreadId,
     input,
     setInput,
-    latestThreadRef,
     hasFetchedFAQs,
     addThread,
     updateThread
