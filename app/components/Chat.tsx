@@ -1,6 +1,7 @@
 'use client'
 import React, { useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { ListPlus } from 'lucide-react';
 import ChatHeader from './ChatHeader';
 import ChatInput from './ChatInput';
 import { useChatState, Thread } from './hooks/useChatState';
@@ -24,8 +25,8 @@ interface ThreadViewProps {
 
 const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThread, isLastThread, isThinking }) => {
   return (
-    <div className={`mb-8 ${isLastThread ? 'pb-16' : ''}`}>
-      <div className="text-xl font-medium mb-2">{thread.question}</div>
+    <div className={`mb-8 ${isLastThread ? 'pb-20' : ''}`}>
+      <div className="text-2xl font-medium mb-2">{thread.question}</div>
       
       {thread.thoughts.length > 0 && (
         <div className="mb-4">
@@ -40,7 +41,10 @@ const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThre
       {thread.relatedQuestions.length > 0 && (
         <div>
           {!isFirstThread && (
-            <div className="text-sm text-gray-500 mb-2">Related Questions:</div>
+            <div className='flex mt-6'>
+              <ListPlus />
+              <div className="font-semibold">Related</div>
+            </div>
           )}
           <>
             {thread.relatedQuestions.map((question, index) => (
