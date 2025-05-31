@@ -46,11 +46,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, is
         />
         <button
           onClick={handleSubmit}
-          className="cursor-pointer absolute right-3 bottom-3 w-8 h-8 flex items-center justify-center rounded-xl bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] transition-colors duration-200"
+          className="cursor-pointer absolute right-3 bottom-3.5 w-8 h-8 flex items-center justify-center rounded-xl bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] transition-colors duration-200"
           aria-label="Submit question"
           type="button"
         >
-          <ArrowUp className="h-4 w-4 text-[#171717] dark:text-[#ededed]" />
+          <ArrowUp className="h-4 w-4 text-white dark:text-[#ededed]" />
         </button>
       </div>
     </div>
