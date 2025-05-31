@@ -30,7 +30,8 @@ const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThre
       
       {thread.thoughts.length > 0 && (
         <div className="mb-4">
-          <ThoughtBubble thought={thread.thoughts[thread.thoughts.length - 1]} isThinking={isThinking} />
+          {/* Only show thoughts bubble in the latest thread so that bubble from previous threads do not change */}
+          <ThoughtBubble thought={thread.thoughts[thread.thoughts.length - 1]} isThinking={isThinking && isLastThread} />
         </div>
       )}
       
