@@ -6,9 +6,10 @@ interface ChatInputProps {
   setInput: (value: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
+  onCancel?: () => void;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, isLoading }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, isLoading, onCancel }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const adjustTextareaHeight = () => {
@@ -44,16 +45,20 @@ const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, is
           style={{ minHeight: '48px' }}
         />
         <button
-          onClick={handleSubmit}
-          className={`cursor-pointer absolute right-3 bottom-3.5 w-8 h-8 flex items-center justify-center rounded-xl ${isLoading ? 'bg-[var(--accent-danger)]' : 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]'} transition-colors duration-200`}
-          aria-label="Submit question"
+          onClick={isLoading ? onCancel : handleSubmit}
+          className={`cursor-pointer absolute right-3 bottom-3.5 w-8 h-8 flex items-center justify-center rounded-xl ${
+            isLoading 
+              ? 'bg-[var(--accent-danger)]' 
+              : 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]'
+          } transition-colors duration-200`}
+          aria-label={isLoading ? "Stop request" : "Submit question"}
           type="button"
         >
-          {
-            isLoading ?
-            <Square className="h-4 w-4 text-white dark:text-[#ededed]" /> :
+          {isLoading ? (
+            <Square className="h-4 w-4 text-white dark:text-[#ededed]" />
+          ) : (
             <ArrowUp className="h-4 w-4 text-white dark:text-[#ededed]" />
-          }
+          )}
         </button>
       </div>
     </div>

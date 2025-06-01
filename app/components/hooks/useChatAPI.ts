@@ -7,15 +7,29 @@ export const useChatAPI = (
   updateThread: (threadId: string, updates: Partial<Thread>) => void
 ) => {
   const [isLoading, setIsLoading] = useState(false);
-  const isThinkingRef = useRef(false)
+  const isThinkingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const cancelRequest = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
+      isThinkingRef.current = false;
+    }
+  };
 
   const handleSubmit = async (question: string, threadId: string) => {
     if (!ticker) return;
     
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    
     setIsLoading(true);
-    isThinkingRef.current = true
+    isThinkingRef.current = true;
     try {
-      const reader = await chatService.analyzeQuestion(question, ticker);
+      const reader = await chatService.analyzeQuestion(question, ticker, signal);
       if (!reader) throw new Error('Failed to get reader');
 
       const decoder = new TextDecoder();
@@ -54,6 +68,15 @@ export const useChatAPI = (
         }
       }
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        updateThread(threadId, {
+          answer: 'Request cancelled.',
+          thoughts: [],
+          relatedQuestions: []
+        });
+        return
+      }
+      
       console.error('Error in chat:', error);
       updateThread(threadId, {
         answer: 'Sorry, I encountered an error analyzing the data.',
@@ -62,6 +85,7 @@ export const useChatAPI = (
       });
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -135,5 +159,6 @@ export const useChatAPI = (
     fetchFAQsStream,
     isLoading,
     isThinking: isThinkingRef.current,
+    cancelRequest,
   };
 }; 

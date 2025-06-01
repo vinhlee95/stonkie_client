@@ -86,7 +86,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children }
     }
   }, [threads.length])
 
-  const { handleSubmit, fetchFAQsStream, isLoading, isThinking } = useChatAPI(ticker, updateThread);
+  const { handleSubmit, fetchFAQsStream, isLoading, isThinking, cancelRequest } = useChatAPI(ticker, updateThread);
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question);
@@ -144,6 +144,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children }
             }
           }}
           isLoading={isLoading}
+          onCancel={cancelRequest}
         />
       </div>
     </div>
