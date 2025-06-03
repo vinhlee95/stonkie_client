@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -88,6 +88,7 @@ export const Chart: React.FC<ChartProps> = ({
     labels,
     datasets,
   };
+  const activeLegendRef = useRef<string | null>(null)
 
   const formatYAxisValue = (value: any): string => {
     if (typeof value !== 'number') return '';
@@ -119,6 +120,35 @@ export const Chart: React.FC<ChartProps> = ({
         labels: {
           padding: 20,
           usePointStyle: true,
+        },
+        onClick: (e: any, legendItem: any, legend: any) => {
+          const chart = legend.chart;
+
+          // Reset chart when re-clicking active legend
+          if(activeLegendRef.current !== null && legendItem.datasetIndex === activeLegendRef.current) {
+            chart.data.datasets.forEach((dataset: any) => {
+              dataset.hidden = false
+            });
+
+            activeLegendRef.current = null
+            chart.update();
+            return
+          }
+
+          // If selecting a new legend -> show that legend and hide the rest
+          chart.data.datasets.forEach((dataset: any, index: number) => {
+            // Only show the clicked metric on the chart
+            if (index === legendItem.datasetIndex) {
+              dataset.hidden = false;
+            } else {
+              // Hide the rest of the metrics
+              dataset.hidden = true
+            }
+          });
+
+          activeLegendRef.current = legendItem.datasetIndex
+          chart.update();
+          return
         },
       },
       title: {
