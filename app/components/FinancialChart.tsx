@@ -103,12 +103,14 @@ export const Chart: React.FC<ChartProps> = ({
       return `${prefix}${value.toFixed(decimals)}${suffix}`;
     }
     
-    // Default currency formatting
-    return value >= 1e9 
-      ? `$${(value / 1e9).toFixed(decimals)}B`
-      : value >= 1e6
-      ? `$${(value / 1e6).toFixed(decimals)}M`
-      : `$${value}`;
+    const absValue = Math.abs(value);
+    const formattedValue = absValue >= 1e9 
+      ? `$${(absValue / 1e9).toFixed(decimals)}B`
+      : absValue >= 1e6
+      ? `$${(absValue / 1e6).toFixed(decimals)}M`
+      : `$${absValue}`;
+    
+    return value < 0 ? `-${formattedValue}` : formattedValue;
   };
 
   const options = {
