@@ -20,8 +20,6 @@ export const useChatAPI = (
   };
 
   const handleSubmit = async (question: string, threadId: string) => {
-    if (!ticker) return;
-    
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
@@ -90,8 +88,6 @@ export const useChatAPI = (
   };
 
   const fetchFAQsStream = async () => {
-    if (!ticker) return;
-    
     const threadId = Date.now().toString();
     updateThread(threadId, {
       id: threadId,
