@@ -13,6 +13,7 @@ import MarkdownContent from './MarkdownContent';
 interface FinancialChatboxProps {
   onClose: () => void;
   children?: React.ReactNode;
+  type?: 'chat' | 'report'
 }
 
 interface ThreadViewProps {
@@ -66,7 +67,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThre
   );
 };
 
-const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children }) => {
+const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, type = 'chat' }) => {
   const params = useParams();
   const ticker = params.ticker as string | undefined;
   const latestThreadRef = useRef<HTMLDivElement>(null);
@@ -97,7 +98,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children }
     // When chat is visible, disable body scroll
     document.body.style.overflow = 'hidden';
 
-    if (!hasFetchedFAQs.current) {
+    if (!hasFetchedFAQs.current && type === 'chat') {
       hasFetchedFAQs.current = true;
       fetchFAQsStream();
     }

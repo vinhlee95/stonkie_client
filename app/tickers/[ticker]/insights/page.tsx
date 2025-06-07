@@ -124,6 +124,7 @@ export default function InsightsPage() {
     return (
       <Chat 
         onClose={() => setIsChatOpen(false)}
+        type='report'
       >
         <InsightHeader imageUrl={currentInsight.imageUrl} title={titleWithoutMarkdown} recap={contentWithoutTitle} />
         <InsightReport ticker={ticker} slug={currentInsight.slug} />
