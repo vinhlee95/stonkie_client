@@ -15,7 +15,16 @@ const nextConfig = {
         ]
       },
       {
-        source: '/tickers/[ticker]/*',
+        source: '/tickers/:ticker',
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, s-maxage=300, stale-while-revalidate=59"
+          }
+        ]
+      },
+      {
+        source: '/tickers/:ticker/:path*',
         headers: [
           {
             key: "Cache-Control",
