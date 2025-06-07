@@ -15,7 +15,7 @@ const nextConfig = {
         ]
       },
       {
-        source: '/tickers/:ticker*',
+        source: '/tickers/[ticker]/*',
         headers: [
           {
             key: "Cache-Control",
