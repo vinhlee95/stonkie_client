@@ -5,6 +5,17 @@ import EpsChart from "./EpsChart";
 import DebtCoverageChart from "./DebtCoverageChart";
 import { CompanyFinancialStatement } from "@/app/types";
 
+export const revalidate = 300;
+
+// Pre-render popular ticker pages at build time for even faster initial loads.
+export async function generateStaticParams() {
+  // You can fetch a list of your most popular tickers here
+  const popularTickers = ['TSLA', 'AAPL', 'GOOG'];
+  return popularTickers.map((ticker) => ({
+    ticker: ticker,
+  }));
+}
+
 export default async function TickerDetails({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = await params;
   
