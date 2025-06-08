@@ -4,16 +4,19 @@ import GrowthChart from "./GrowthChart";
 import EpsChart from "./EpsChart";
 import DebtCoverageChart from "./DebtCoverageChart";
 import { CompanyFinancialStatement } from "@/app/types";
+import { Company } from "@/app/CompanyList";
 
 export const revalidate = 300;
 
 // Pre-render popular ticker pages at build time for even faster initial loads.
 export async function generateStaticParams() {
-  // You can fetch a list of your most popular tickers here
-  const popularTickers = ['TSLA', 'AAPL', 'GOOG'];
-  return popularTickers.map((ticker) => ({
-    ticker: ticker,
-  }));
+  const response = await fetch(`${process.env.BACKEND_URL}/api/companies/most-viewed`)
+  if (!response.ok) {
+    return []
+  }
+
+  const data = (await response.json()).data as Company[]
+  return data.map(company => ({ticker: company.ticker}))
 }
 
 export default async function TickerDetails({ params }: { params: Promise<{ ticker: string }> }) {
