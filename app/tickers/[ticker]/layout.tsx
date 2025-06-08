@@ -18,7 +18,10 @@ async function LogoAndTickerBlock({ ticker }: { ticker: string }) {
             className="w-12 h-12 object-contain rounded-full"
           />
         )}
-        <h1 className="text-2xl font-bold">{ticker.toUpperCase()}</h1>
+        <div>
+          <h1 className="text-2xl font-bold">{keyStats?.name}</h1>
+          <h2>{ticker.toUpperCase()} - {keyStats?.exchange}</h2>
+        </div>
       </div>
     </Link>
   );

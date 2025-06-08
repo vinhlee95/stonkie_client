@@ -1,6 +1,7 @@
 import { formatNumber } from "@/utils/formatter";
 
 export type KeyStatsType = {
+  name: string;
   market_cap: number;
   pe_ratio: number;
   revenue: number;
@@ -8,6 +9,11 @@ export type KeyStatsType = {
   basic_eps: number;
   dividend_yield: number;
   logo_url: string | null;
+  country: string;
+  description: string;
+  industry: string;
+  sector: string;
+  exchange: string;
 }
 
 export default function KeyStats({keyStats}: {keyStats: KeyStatsType}) {
