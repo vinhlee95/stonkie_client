@@ -17,6 +17,8 @@ export type KeyStatsType = {
 }
 
 export default function KeyStats({keyStats}: {keyStats: KeyStatsType}) {
+  return null
+  
   return (
     <div className="mb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
