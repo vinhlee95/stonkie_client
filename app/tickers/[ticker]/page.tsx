@@ -6,7 +6,7 @@ import DebtCoverageChart from "./DebtCoverageChart";
 import { CompanyFinancialStatement } from "@/app/types";
 import { Company } from "@/app/CompanyList";
 
-export const revalidate = 60;
+export const revalidate = 120;
 
 // Pre-render popular ticker pages at build time for even faster initial loads.
 export async function generateStaticParams() {
