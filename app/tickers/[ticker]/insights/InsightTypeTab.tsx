@@ -1,12 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React from "react";
-
-export enum InsightType {
-  GROWTH = "growth",
-  EARNINGS = "earnings",
-  CASH_FLOW = "cash_flow"
-}
+import { InsightType } from "./constants";
 
 interface InsightTypeTabProps {
   currentType: InsightType;
@@ -19,7 +14,6 @@ const typeLabels: Record<InsightType, string> = {
   [InsightType.CASH_FLOW]: "Cash Flow"
 };
 
-const INSIGHT_TYPES = [InsightType.GROWTH, InsightType.EARNINGS, InsightType.CASH_FLOW];
 
 export default function InsightTypeTab({ currentType, ticker }: InsightTypeTabProps) {
   const router = useRouter();
@@ -32,7 +26,7 @@ export default function InsightTypeTab({ currentType, ticker }: InsightTypeTabPr
 
   return (
     <div className="flex space-x-4 mb-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
-      {INSIGHT_TYPES.map((type) => {
+      {Object.values(InsightType).map((type) => {
         const isActive = currentType === type;
         return (
           <button

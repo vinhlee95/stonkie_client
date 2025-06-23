@@ -1,15 +1,10 @@
 import { Company } from "@/app/CompanyList";
 import ClientInsightsFallback from "../ClientInsightsFallback";
 import InsightChatModal from "../InsightChatModal";
-import InsightTypeTab, { InsightType as InsightTypeEnum } from "../InsightTypeTab";
+import InsightTypeTab from "../InsightTypeTab";
+import { InsightType } from "../constants";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
-
-enum InsightType {
-  GROWTH = "growth",
-  EARNINGS = "earnings",
-  CASH_FLOW = "cash_flow"
-}
 
 export const revalidate = 120;
 
