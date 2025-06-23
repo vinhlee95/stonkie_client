@@ -8,14 +8,19 @@ export default function TabNavigation({ticker}: {ticker: string}) {
   const tabs = [
     { label: 'Overview', path: `/tickers/${ticker}` },
     { label: 'Financial statements', path: `/tickers/${ticker}/statements` },
-    { label: 'Insights', path: `/tickers/${ticker}/insights` },
+    { label: 'Insights', path: `/tickers/${ticker}/insights/growth` },
   ];
+
+  const checkActiveTab = (currentPathName: string, mainTabPath: string): boolean => {
+      if(mainTabPath.includes('insights')) return currentPathName.includes('insights')
+      if(mainTabPath.includes('statements')) return currentPathName.includes('statements')
+      return currentPathName === mainTabPath
+  }
 
   return (
     <div className="flex p-4 overflow-x-auto whitespace-nowrap">
       {tabs.map((tab) => {
-        // statements route has multiple sub-routes
-        const isActive = tab.path.includes('statements') ? pathname.includes(tab.path) : pathname === tab.path;
+        const isActive = checkActiveTab(pathname, tab.path)
         return (
           <Link
             key={tab.path}

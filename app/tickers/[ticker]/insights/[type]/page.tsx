@@ -1,6 +1,7 @@
 import { Company } from "@/app/CompanyList";
 import ClientInsightsFallback from "../ClientInsightsFallback";
 import InsightChatModal from "../InsightChatModal";
+import InsightTypeTab, { InsightType as InsightTypeEnum } from "../InsightTypeTab";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
@@ -55,9 +56,13 @@ export default async function InsightsPage({ params }: InsightsPageProps) {
     fetchError = true;
   }
 
-  if (!insights || insights.length === 0 || fetchError) {
-    return <ClientInsightsFallback ticker={ticker} insightType={insightType} />;
-  }
-
-  return <InsightChatModal insights={insights} ticker={ticker} />;
+  // Render the chip selector above the main content
+  return (
+    <>
+      <InsightTypeTab currentType={insightType as InsightTypeEnum} ticker={ticker} />
+      {(!insights || insights.length === 0 || fetchError)
+        ? <ClientInsightsFallback ticker={ticker} insightType={insightType} />
+        : <InsightChatModal insights={insights} ticker={ticker} />}
+    </>
+  );
 }
