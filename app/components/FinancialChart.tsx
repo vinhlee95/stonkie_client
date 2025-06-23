@@ -253,7 +253,7 @@ export default function ChartWithPeriod({
 
   const onInsightButtonClick = () => {
     const insightType = getInsightTypeByTitle(title);
-    router.push(`/tickers/${ticker}/insights?type=${insightType}`);
+    router.push(`/tickers/${ticker}/insights/${insightType}`);
   }
 
   const labels = timePeriod === 'Quarterly' ? quarterlyLabels : annualLabels;
