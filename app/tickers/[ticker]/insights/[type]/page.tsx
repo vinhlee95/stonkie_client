@@ -54,7 +54,7 @@ export default async function InsightsPage({ params }: InsightsPageProps) {
   // Render the chip selector above the main content
   return (
     <>
-      <InsightTypeTab currentType={insightType as InsightTypeEnum} ticker={ticker} />
+      <InsightTypeTab currentType={insightType} ticker={ticker} />
       {(!insights || insights.length === 0 || fetchError)
         ? <ClientInsightsFallback ticker={ticker} insightType={insightType} />
         : <InsightChatModal insights={insights} ticker={ticker} />}
