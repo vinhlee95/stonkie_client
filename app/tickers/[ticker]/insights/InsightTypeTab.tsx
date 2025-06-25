@@ -32,7 +32,7 @@ export default function InsightTypeTab({ currentType, ticker }: InsightTypeTabPr
           <button
             key={type}
             onClick={() => handleTypeChange(type)}
-            className={`px-3 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-base font-medium flex-shrink-0 transition-colors duration-200 ${
+            className={`cursor-pointer px-3 sm:px-8 py-2 sm:py-3 rounded-full text-sm sm:text-base font-medium flex-shrink-0 transition-colors duration-200 ${
               isActive
                 ? 'bg-[var(--tab-active)] dark:bg-[var(--tab-active-dark)] text-white'
                 : 'bg-[var(--button-background)] dark:bg-[var(--button-background-dark)] text-gray-900 dark:text-white hover:bg-[var(--button-hover)] dark:hover:bg-[var(--button-hover-dark)]'
