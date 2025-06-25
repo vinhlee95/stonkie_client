@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Thread } from './useChatState';
+import { AnswerGround, Thread } from './useChatState';
 import { chatService } from '../services/chatService';
 
 export const useChatAPI = (
@@ -34,6 +34,7 @@ export const useChatAPI = (
       let accumulatedContent = '';
       let thoughts: string[] = [];
       let relatedQuestions: string[] = [];
+      let grounds: AnswerGround[] = []
 
       while (true) {
         const { value, done } = await reader.read();
@@ -59,6 +60,9 @@ export const useChatAPI = (
             } else if (parsedChunk.type === 'related_question') {
               relatedQuestions = [...relatedQuestions, parsedChunk.body];
               updateThread(threadId, { relatedQuestions });
+            } else if (parsedChunk.type === 'google_search_ground') {
+              grounds = [...grounds, {body: parsedChunk.body, url: parsedChunk.url}]
+              updateThread(threadId, {grounds})
             }
           }
         } catch (e) {

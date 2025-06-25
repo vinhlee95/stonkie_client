@@ -1,11 +1,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
+export interface AnswerGround {
+  body: string
+  url: string
+}
+
 export interface Thread {
   id: string;
   question: string;
   thoughts: string[];
   answer: string | null;
   relatedQuestions: string[];
+  grounds: AnswerGround[]
 }
 
 export const useChatState = (ticker: string | undefined) => {
@@ -25,7 +31,8 @@ export const useChatState = (ticker: string | undefined) => {
       question,
       thoughts: [],
       answer: null,
-      relatedQuestions: []
+      relatedQuestions: [],
+      grounds: [],
     };
     setThreads(prev => [...prev, newThread]);
     setCurrentThreadId(newThread.id);
@@ -43,7 +50,8 @@ export const useChatState = (ticker: string | undefined) => {
           question: updates.question || 'New Thread',
           thoughts: updates.thoughts || [],
           answer: updates.answer || null,
-          relatedQuestions: updates.relatedQuestions || []
+          relatedQuestions: updates.relatedQuestions || [],
+          grounds: []
         };
         return [...prev, newThread];
       }

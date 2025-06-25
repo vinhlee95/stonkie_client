@@ -9,6 +9,7 @@ import { useChatAPI } from './hooks/useChatAPI';
 import { ThoughtBubble } from './ThoughtBubble';
 import { Plus } from 'lucide-react';
 import MarkdownContent from './MarkdownContent';
+import ResourceChips from './ResourceChips';
 
 interface FinancialChatboxProps {
   onClose: () => void;
@@ -39,6 +40,9 @@ const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThre
         <MarkdownContent content={thread.answer} />
       )}
       
+      {thread.grounds && thread.grounds.length > 0 && (
+        <ResourceChips resources={thread.grounds.map(i => ({url: i.url, label: i.body}))} />
+      )}
       {thread.relatedQuestions.length > 0 && (
         <div>
           {!isFirstThread && (
