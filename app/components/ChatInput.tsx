@@ -25,7 +25,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, is
   }, [input]);
 
   return (
-    <div className="flex-shrink-0 pb-4 px-4 pr-8 w-full bg-transparent border-t border-gray-200 dark:border-gray-700">
+    <div className="flex-shrink-0 pb-4 px-4 w-full bg-transparent">
       <div className="relative max-w-4xl mx-auto">
         <textarea
           disabled={isLoading}
