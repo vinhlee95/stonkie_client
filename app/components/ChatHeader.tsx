@@ -6,7 +6,7 @@ interface ChatHeaderProps {
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ onClose }) => {
   return (
-    <div className="fixed top-2 right-2 z-50 pr-4">
+    <div className="absolute top-2 right-0 z-50 pr-4">
       <button
         onClick={onClose}
         className="rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 shadow-md"

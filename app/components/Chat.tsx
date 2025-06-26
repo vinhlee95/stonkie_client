@@ -14,7 +14,8 @@ import ResourceChips from './ResourceChips';
 interface FinancialChatboxProps {
   onClose: () => void;
   children?: React.ReactNode;
-  type?: 'chat' | 'report'
+  type?: 'chat' | 'report';
+  isDesktop?: boolean;
 }
 
 interface ThreadViewProps {
@@ -27,7 +28,7 @@ interface ThreadViewProps {
 
 const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThread, isLastThread, isThinking }) => {
   return (
-    <div className={`mb-8 ${isLastThread ? 'pb-20' : ''}`}>
+    <div className='mb-8'>
       <div className="text-2xl font-medium mb-2">{thread.question}</div>
       {/* Do not show AI thought in first FAQ section */}
       {!isFirstThread && (
@@ -71,7 +72,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThre
   );
 };
 
-const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, type = 'chat' }) => {
+const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, type = 'chat', isDesktop }) => {
   const params = useParams();
   const ticker = params.ticker as string | undefined;
   const latestThreadRef = useRef<HTMLDivElement>(null);
@@ -100,7 +101,9 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
 
   useEffect(() => {
     // When chat is visible, disable body scroll
-    document.body.style.overflow = 'hidden';
+    if(!isDesktop) {
+      document.body.style.overflow = 'hidden';
+    }
 
     if (!hasFetchedFAQs.current && type === 'chat') {
       hasFetchedFAQs.current = true;
@@ -114,8 +117,10 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
   }, [hasFetchedFAQs, fetchFAQsStream]);
 
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 w-full h-full z-50">
-      <div className="bg-[var(--background)] text-[var(--foreground)] rounded-none shadow-lg flex flex-col h-full w-full overflow-hidden fixed inset-0">
+    <div className={`fixed z-50 ${isDesktop ? 'chat-overlay-desktop' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}>
+      <div
+        className={`bg-[var(--background)] text-[var(--foreground)] rounded-none shadow-lg flex flex-col h-full w-full overflow-hidden ${isDesktop ? 'chatbox-inner-desktop' : ''}`}
+      >
         <ChatHeader onClose={onClose} />
 
         <div className="flex-1 overflow-y-auto px-4 mt-4">
@@ -152,6 +157,30 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
           onCancel={cancelRequest}
         />
       </div>
+      <style jsx global>{`
+        @media (min-width: 768px) {
+          .chat-overlay-desktop {
+            position: fixed;
+            top: 15vh;
+            right: 32px;
+            left: auto;
+            height: 80vh;
+            max-height: 80vh;
+            width: 40vw;
+            max-width: 50vw;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+            z-index: 50;
+            border-radius: 12px;
+          }
+          .chatbox-inner-desktop {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            border-radius: 12px;
+          }
+        }
+      `}</style>
     </div>
   );
 };

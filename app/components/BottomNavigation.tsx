@@ -1,11 +1,19 @@
 'use client'
 import Link from 'next/link'
 import { ChatBubbleOutline, HomeOutlined } from '@mui/icons-material'
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import Chat from './Chat'
 
 const BottomNavigation = () => {
   const [isChatVisible, setIsChatVisible] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
 
   const handleChatClick = () => {
     setIsChatVisible(true)
@@ -18,11 +26,9 @@ const BottomNavigation = () => {
   return (
     <>
       {isChatVisible && (
-        <div className="fixed inset-0 z-50">
-          <Suspense>
-            <Chat onClose={handleChatClose} />
-          </Suspense>
-        </div>
+        <Suspense>
+          <Chat onClose={handleChatClose} isDesktop={isDesktop} />
+        </Suspense>
       )}
       
       <div className="fixed bottom-4 left-0 right-0 z-40 flex justify-center">
