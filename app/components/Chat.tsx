@@ -117,13 +117,13 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
   }, [hasFetchedFAQs, fetchFAQsStream]);
 
   return (
-    <div className={`fixed z-50 ${isDesktop ? 'chat-overlay-desktop' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}>
+    <div className={`fixed z-50 overflow-x-hidden ${isDesktop ? 'chat-overlay-desktop' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}>
       <div
-        className={`bg-[var(--background)] text-[var(--foreground)] rounded-none shadow-lg flex flex-col h-full w-full overflow-hidden ${isDesktop ? 'chatbox-inner-desktop' : ''}`}
+        className={`bg-[var(--background)] text-[var(--foreground)] rounded-none shadow-lg flex flex-col h-full w-full overflow-hidden overflow-x-hidden ${isDesktop ? 'chatbox-inner-desktop' : ''}`}
       >
         <ChatHeader onClose={onClose} />
 
-        <div className="flex-1 overflow-y-auto px-4 mt-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 mt-4">
           <div className="w-full max-w-4xl mx-auto">
             {children}
             {threads.map((thread, index) => (
@@ -171,6 +171,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
             box-shadow: 0 2px 16px rgba(0,0,0,0.15);
             z-index: 50;
             border-radius: 12px;
+            overflow-x: hidden;
           }
           .chatbox-inner-desktop {
             height: 100%;
@@ -178,6 +179,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
             display: flex;
             flex-direction: column;
             border-radius: 12px;
+            overflow-x: hidden;
           }
         }
       `}</style>
