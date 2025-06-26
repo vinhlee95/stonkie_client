@@ -9,7 +9,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onClose }) => {
     <div className="absolute top-2 right-0 z-50 pr-4">
       <button
         onClick={onClose}
-        className="rounded-full p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 shadow-md"
+        className="p-2 cursor-pointer"
         aria-label="Close"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
