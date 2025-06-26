@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { ListPlus } from 'lucide-react';
+import { ListPlus, FileSearch } from 'lucide-react';
 import ChatHeader from './ChatHeader';
 import ChatInput from './ChatInput';
 import { useChatState, Thread } from './hooks/useChatState';
@@ -42,7 +42,13 @@ const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThre
       )}
       
       {thread.grounds && thread.grounds.length > 0 && (
-        <ResourceChips resources={thread.grounds.map(i => ({url: i.url, label: i.body}))} />
+        <>
+          <div className='flex my-4'>
+            <FileSearch />
+            <div className="font-semibold">Sources</div>
+          </div>
+          <ResourceChips resources={thread.grounds.map(i => ({url: i.url, label: i.body}))} />
+        </>
       )}
       {thread.relatedQuestions.length > 0 && (
         <div>
@@ -157,6 +163,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
           onCancel={cancelRequest}
         />
       </div>
+      {/* TODO: simplify this */}
       <style jsx global>{`
         @media (min-width: 768px) {
           .chat-overlay-desktop {
