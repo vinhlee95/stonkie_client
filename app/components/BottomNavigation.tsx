@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ChatBubbleOutline, HomeOutlined } from '@mui/icons-material'
 import { Suspense, useState, useEffect } from 'react'
 import Chat from './Chat'
+import { ChatProvider } from './Chat'
 
 const BottomNavigation = () => {
   const [isChatVisible, setIsChatVisible] = useState(false)
@@ -25,11 +26,11 @@ const BottomNavigation = () => {
 
   return (
     <>
-      {isChatVisible && (
-        <Suspense>
-          <Chat onClose={handleChatClose} isDesktop={isDesktop} />
-        </Suspense>
-      )}
+      <Suspense>
+        <ChatProvider>
+          {isChatVisible && <Chat onClose={handleChatClose} isDesktop={isDesktop} />}
+        </ChatProvider>
+      </Suspense>
       
       <div className="fixed bottom-4 left-0 right-0 z-40 flex justify-center">
         <div className="flex gap-8 px-6 py-3 rounded-full bg-white/70 dark:bg-[#1C1C1C]/70 backdrop-blur-md shadow-lg border border-gray-200/50 dark:border-gray-800/50">

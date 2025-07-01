@@ -2,7 +2,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
-import Chat from "@/app/components/Chat";
+import { InsightChatbox } from "@/app/components/Chat";
 import InsightReport from "./InsightReport";
 import InsightHeader from "./InsightHeader";
 
@@ -36,10 +36,10 @@ export default function InsightChatModal({ insights, ticker }: { insights: Insig
       ? currentInsight.content
       : currentInsight.content.split("\n").slice(1).join("\n");
     return (
-      <Chat onClose={() => setIsChatOpen(false)} type="report">
+      <InsightChatbox onClose={() => setIsChatOpen(false)}>
         <InsightHeader imageUrl={currentInsight.thumbnail_url} title={titleWithoutMarkdown} recap={contentWithoutTitle} />
         <InsightReport ticker={ticker} slug={currentInsight.slug} />
-      </Chat>
+      </InsightChatbox>
     );
   }
 

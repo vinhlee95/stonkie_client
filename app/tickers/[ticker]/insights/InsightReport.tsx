@@ -47,7 +47,6 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
         const { done, value } = await reader.read();
         
         if (done) {
-          console.log('Done streaming');
           setIsStreaming(false);
           break;
         }

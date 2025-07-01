@@ -22,6 +22,7 @@ const eslintConfig = [
           ignoreRestSiblings: true,
         },
       ],
+      'react/no-children-prop': 'off',
     }
   }
 ];

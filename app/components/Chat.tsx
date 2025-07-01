@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useContext, createContext, ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import { ListPlus, FileSearch } from 'lucide-react';
 import ChatHeader from './ChatHeader';
@@ -11,10 +11,40 @@ import { Plus } from 'lucide-react';
 import MarkdownContent from './MarkdownContent';
 import ResourceChips from './ResourceChips';
 
+// Compose the context type from useChatState and useChatAPI return types
+type ChatStateType = ReturnType<typeof useChatState>;
+type ChatAPIType = ReturnType<typeof useChatAPI>;
+export type ChatContextType = ChatStateType & ChatAPIType;
+
+export const ChatContext = createContext<ChatContextType | undefined>(undefined);
+
+export const ChatProvider = ({ children }: { children: ReactNode }) => {
+  const params = useParams();
+  const ticker = params.ticker as string | undefined;
+  const chatState = useChatState(ticker);
+  const chatAPI = useChatAPI(ticker, chatState.updateThread);
+
+  useEffect(() => {
+    if (!chatState.hasFetchedFAQs.current) {
+      chatState.hasFetchedFAQs.current = true;
+      chatAPI.fetchFAQsStream();
+    }
+
+    return () => {
+      chatState.hasFetchedFAQs.current = false
+    }
+  }, [ticker]);
+
+  return (
+    <ChatContext.Provider value={{ ...chatState, ...chatAPI }}>
+      {children}
+    </ChatContext.Provider>
+  );
+};
+
 interface FinancialChatboxProps {
   onClose: () => void;
   children?: React.ReactNode;
-  type?: 'chat' | 'report';
   isDesktop?: boolean;
 }
 
@@ -78,49 +108,42 @@ const ThreadView: React.FC<ThreadViewProps> = ({ thread, onFAQClick, isFirstThre
   );
 };
 
-const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, type = 'chat', isDesktop }) => {
-  const params = useParams();
-  const ticker = params.ticker as string | undefined;
+interface ChatboxUIProps {
+  threads: Thread[];
+  input: string;
+  setInput: (input: string) => void;
+  addThread: (question: string) => string;
+  handleSubmit: (question: string, threadId: string) => Promise<void>;
+  isLoading: boolean;
+  isThinking: boolean;
+  cancelRequest: () => void;
+  children?: React.ReactNode;
+  onClose: () => void;
+  isDesktop?: boolean;
+  handleFAQClick: (question: string) => void;
+}
+
+const ChatboxUI: React.FC<ChatboxUIProps> = ({
+  threads,
+  input,
+  setInput,
+  addThread,
+  handleSubmit,
+  isLoading,
+  isThinking,
+  cancelRequest,
+  children,
+  onClose,
+  isDesktop,
+  handleFAQClick
+}) => {
   const latestThreadRef = useRef<HTMLDivElement>(null);
 
-  const {
-    threads,
-    input,
-    setInput,
-    hasFetchedFAQs,
-    addThread,
-    updateThread
-  } = useChatState(ticker);
-  
   useEffect(() => {
     if(latestThreadRef.current) {
       latestThreadRef.current.scrollIntoView({behavior: 'smooth', block: 'start'})
     }
   }, [threads.length])
-
-  const { handleSubmit, fetchFAQsStream, isLoading, isThinking, cancelRequest } = useChatAPI(ticker, updateThread);
-
-  const handleFAQClick = async (question: string) => {
-    const threadId = addThread(question);
-    await handleSubmit(question, threadId);
-  };
-
-  useEffect(() => {
-    // When chat is visible, disable body scroll
-    if(!isDesktop) {
-      document.body.style.overflow = 'hidden';
-    }
-
-    if (!hasFetchedFAQs.current && type === 'chat') {
-      hasFetchedFAQs.current = true;
-      fetchFAQsStream();
-    }
-
-    return () => {
-      // When chat is hidden, restore body scroll
-      document.body.style.overflow = '';
-    };
-  }, [hasFetchedFAQs, fetchFAQsStream]);
 
   return (
     <div className={`fixed z-50 overflow-x-hidden ${isDesktop ? 'md:fixed md:top-[15vh] md:right-8 md:left-auto md:h-[80vh] md:max-h-[80vh] md:w-[40vw] md:max-w-[50vw] md:shadow-[0_2px_16px_rgba(0,0,0,0.15)] md:z-50 md:rounded-xl md:overflow-x-hidden' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}>
@@ -131,7 +154,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 mt-4">
           <div className="w-full max-w-4xl mx-auto">
             {children}
-            {threads.map((thread, index) => (
+            {threads.map((thread: Thread, index: number) => (
               <div
                 key={thread.id}
                 ref={index === threads.length - 1 ? latestThreadRef : undefined}
@@ -166,4 +189,100 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
   );
 };
 
+const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, isDesktop }) => {
+  const context = useContext(ChatContext);
+  if (!context) throw new Error('ChatContext must be used within a ChatProvider');
+  const {
+    threads,
+    input,
+    setInput,
+    addThread,
+    handleSubmit,
+    isLoading,
+    isThinking,
+    cancelRequest
+  } = context;
+
+  const handleFAQClick = async (question: string) => {
+    const threadId = addThread(question);
+    await handleSubmit(question, threadId);
+  };
+
+  useEffect(() => {
+    // When chat is visible, disable body scroll
+    if(!isDesktop) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      // When chat is hidden, restore body scroll
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  return (
+    <ChatboxUI
+      threads={threads}
+      input={input}
+      setInput={setInput}
+      addThread={addThread}
+      handleSubmit={handleSubmit}
+      isLoading={isLoading}
+      isThinking={isThinking}
+      cancelRequest={cancelRequest}
+      children={children}
+      onClose={onClose}
+      isDesktop={isDesktop}
+      handleFAQClick={handleFAQClick}
+    />
+  );
+};
+
 export default FinancialChatbox;
+
+export const InsightChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, isDesktop }) => {
+  const params = useParams();
+  const ticker = params.ticker as string | undefined;
+
+  const {
+    threads,
+    input,
+    setInput,
+    addThread,
+    updateThread
+  } = useChatState(ticker);
+  
+  const { handleSubmit, isLoading, isThinking, cancelRequest } = useChatAPI(ticker, updateThread);
+
+  const handleFAQClick = async (question: string) => {
+    const threadId = addThread(question);
+    await handleSubmit(question, threadId);
+  };
+
+  useEffect(() => {
+    // When chat is visible, disable body scroll
+    if(!isDesktop) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      // When chat is hidden, restore body scroll
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  return (
+    <ChatboxUI
+      threads={threads}
+      input={input}
+      setInput={setInput}
+      addThread={addThread}
+      handleSubmit={handleSubmit}
+      isLoading={isLoading}
+      isThinking={isThinking}
+      cancelRequest={cancelRequest}
+      children={children}
+      onClose={onClose}
+      isDesktop={isDesktop}
+      handleFAQClick={handleFAQClick}
+    />
+  );
+};
