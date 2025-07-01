@@ -7,7 +7,7 @@ export default function TabNavigation({ticker}: {ticker: string}) {
   const pathname = usePathname()
   const tabs = [
     { label: 'Overview', path: `/tickers/${ticker}` },
-    { label: 'Financial statements', path: `/tickers/${ticker}/statements` },
+    { label: 'Reports', path: `/tickers/${ticker}/statements` },
     { label: 'Insights', path: `/tickers/${ticker}/insights/growth` },
   ];
 
