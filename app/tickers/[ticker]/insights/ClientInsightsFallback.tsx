@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
-import Chat from "@/app/components/Chat";
+import { InsightChatbox } from "@/app/components/Chat";
 import InsightReport from "./InsightReport";
 import InsightHeader from "./InsightHeader";
 import LoadingSkeleton from "@/app/components/LoadingSkeleton";
@@ -104,10 +104,10 @@ export default function ClientInsightsFallback({ ticker, insightType }: { ticker
       ? currentInsight.content
       : currentInsight.content.split("\n").slice(1).join("\n");
     return (
-      <Chat onClose={() => setIsChatOpen(false)} type="report">
+      <InsightChatbox onClose={() => setIsChatOpen(false)}>
         <InsightHeader imageUrl={currentInsight.imageUrl} title={titleWithoutMarkdown} recap={contentWithoutTitle} />
         <InsightReport ticker={ticker} slug={currentInsight.slug} />
-      </Chat>
+      </InsightChatbox>
     );
   }
 
