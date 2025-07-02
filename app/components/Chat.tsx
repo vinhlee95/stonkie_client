@@ -150,7 +150,7 @@ const ChatboxUI: React.FC<ChatboxUIProps> = ({
   }, [threads.length])
 
   return (
-    <div className={`fixed z-50 overflow-x-hidden ${isDesktop ? 'md:fixed md:top-[15vh] md:right-8 md:left-auto md:h-[80vh] md:max-h-[80vh] md:w-[40vw] md:max-w-[50vw] md:shadow-[0_2px_16px_rgba(0,0,0,0.15)] md:z-50 md:rounded-xl md:overflow-x-hidden' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}>
+    <div className={`fixed z-50 overflow-x-hidden ${isDesktop ? 'md:fixed md:top-[15vh] md:right-8 md:left-auto md:h-[80vh] md:max-h-[80vh] md:max-w-[50vw] md:shadow-[0_2px_16px_rgba(0,0,0,0.15)] md:z-50 md:rounded-xl md:overflow-x-hidden' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}>
       <div
         className={`bg-[var(--background)] text-[var(--foreground)] rounded-none shadow-lg flex flex-col h-full w-full overflow-hidden overflow-x-hidden ${isDesktop ? 'md:h-full md:w-full md:flex md:flex-col md:rounded-xl md:overflow-x-hidden' : ''}`}>
         <ChatHeader onClose={onClose} />
