@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useRef, useContext, createContext, ReactNode } from 'react';
+import React, { useEffect, useRef, useContext, createContext, ReactNode, Dispatch, SetStateAction } from 'react';
 import { useParams } from 'next/navigation';
 import { ListPlus, FileSearch } from 'lucide-react';
 import ChatHeader from './ChatHeader';
@@ -121,6 +121,8 @@ interface ChatboxUIProps {
   onClose: () => void;
   isDesktop?: boolean;
   handleFAQClick: (question: string) => void;
+  useGoogleSearch: boolean
+  setUseGoogleSearch: Dispatch<SetStateAction<boolean>>
 }
 
 const ChatboxUI: React.FC<ChatboxUIProps> = ({
@@ -135,7 +137,9 @@ const ChatboxUI: React.FC<ChatboxUIProps> = ({
   children,
   onClose,
   isDesktop,
-  handleFAQClick
+  handleFAQClick,
+  useGoogleSearch,
+  setUseGoogleSearch,
 }) => {
   const latestThreadRef = useRef<HTMLDivElement>(null);
 
@@ -183,6 +187,8 @@ const ChatboxUI: React.FC<ChatboxUIProps> = ({
           }}
           isLoading={isLoading}
           onCancel={cancelRequest}
+          useGoogleSearch={useGoogleSearch}
+          setUseGoogleSearch={setUseGoogleSearch}
         />
       </div>
     </div>
@@ -192,6 +198,7 @@ const ChatboxUI: React.FC<ChatboxUIProps> = ({
 const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, isDesktop }) => {
   const context = useContext(ChatContext);
   if (!context) throw new Error('ChatContext must be used within a ChatProvider');
+  
   const {
     threads,
     input,
@@ -200,12 +207,14 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
     handleSubmit,
     isLoading,
     isThinking,
-    cancelRequest
+    cancelRequest,
+    useGoogleSearch,
+    setUseGoogleSearch
   } = context;
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question);
-    await handleSubmit(question, threadId);
+    await handleSubmit(question, threadId, useGoogleSearch);
   };
 
   useEffect(() => {
@@ -225,7 +234,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
       input={input}
       setInput={setInput}
       addThread={addThread}
-      handleSubmit={handleSubmit}
+      handleSubmit={(question: string, threadId: string) => handleSubmit(question, threadId, useGoogleSearch)}
       isLoading={isLoading}
       isThinking={isThinking}
       cancelRequest={cancelRequest}
@@ -233,6 +242,8 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
       onClose={onClose}
       isDesktop={isDesktop}
       handleFAQClick={handleFAQClick}
+      useGoogleSearch={useGoogleSearch}
+      setUseGoogleSearch={setUseGoogleSearch}
     />
   );
 };
@@ -248,14 +259,16 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({ onClose, child
     input,
     setInput,
     addThread,
-    updateThread
+    updateThread,
+    useGoogleSearch,
+    setUseGoogleSearch
   } = useChatState(ticker);
   
   const { handleSubmit, isLoading, isThinking, cancelRequest } = useChatAPI(ticker, updateThread);
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question);
-    await handleSubmit(question, threadId);
+    await handleSubmit(question, threadId, useGoogleSearch);
   };
 
   useEffect(() => {
@@ -275,7 +288,7 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({ onClose, child
       input={input}
       setInput={setInput}
       addThread={addThread}
-      handleSubmit={handleSubmit}
+      handleSubmit={(question: string, threadId: string) => handleSubmit(question, threadId, useGoogleSearch)}
       isLoading={isLoading}
       isThinking={isThinking}
       cancelRequest={cancelRequest}
@@ -283,6 +296,8 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({ onClose, child
       onClose={onClose}
       isDesktop={isDesktop}
       handleFAQClick={handleFAQClick}
+      useGoogleSearch={useGoogleSearch}
+      setUseGoogleSearch={setUseGoogleSearch}
     />
   );
 };

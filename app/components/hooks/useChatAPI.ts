@@ -19,7 +19,8 @@ export const useChatAPI = (
     }
   };
 
-  const handleSubmit = async (question: string, threadId: string) => {
+  const handleSubmit = async (question: string, threadId: string, useGoogleSearch: boolean) => {
+    console.log('Use Google Search', useGoogleSearch)
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
