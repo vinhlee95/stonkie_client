@@ -20,7 +20,6 @@ export const useChatAPI = (
   };
 
   const handleSubmit = async (question: string, threadId: string, useGoogleSearch: boolean) => {
-    console.log('Use Google Search', useGoogleSearch)
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
@@ -28,7 +27,7 @@ export const useChatAPI = (
     setIsLoading(true);
     isThinkingRef.current = true;
     try {
-      const reader = await chatService.analyzeQuestion(question, ticker, signal);
+      const reader = await chatService.analyzeQuestion(question, ticker, useGoogleSearch, signal);
       if (!reader) throw new Error('Failed to get reader');
 
       const decoder = new TextDecoder();
