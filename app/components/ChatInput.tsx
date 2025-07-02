@@ -64,7 +64,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, is
             </div>
           </div>
           <button
-            onClick={isLoading ? onCancel : handleSubmit}
+            onClick={isLoading ? onCancel : e => {
+              e.preventDefault();
+              handleSubmit(e);
+              setInput('');
+            }}
             className={`p-2 cursor-pointer rounded-full flex items-center justify-center transition-colors duration-200 ${
               isLoading
                 ? 'bg-[var(--accent-danger)]'
