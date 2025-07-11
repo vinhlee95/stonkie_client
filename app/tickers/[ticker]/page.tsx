@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import KeyStats, {KeyStatsType} from "./KeyStats";
+import KeyStats, { KeyStatsType } from "./KeyStats";
 import GrowthChart from "./GrowthChart";
 import EpsChart from "./EpsChart";
 import DebtCoverageChart from "./DebtCoverageChart";
@@ -16,21 +16,21 @@ export async function generateStaticParams() {
   }
 
   const data = (await response.json()).data as Company[]
-  return data.map(company => ({ticker: company.ticker}))
+  return data.map(company => ({ ticker: company.ticker }))
 }
 
 export default async function TickerDetails({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = await params;
-  
+
   const keyStatsResponse = await fetch(`${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/key-stats`, {
-    next: {revalidate: 15*60}
+    next: { revalidate: 15 * 60 }
   })
   const keyStats = keyStatsResponse.status === 200 ? (await keyStatsResponse.json()).data as KeyStatsType : null
 
   const statementsResponse = await fetch(`${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/statements`, {
-    next: {revalidate: 15*60}
+    next: { revalidate: 15 * 60 }
   })
-  
+
   const statements = statementsResponse.status === 200 ? await statementsResponse.json() as CompanyFinancialStatement[] : null
   const incomeStatements = statements && statements.length > 0 ? statements.filter((statement) => statement.income_statement).map((statement) => ({
     period_end_year: statement.period_end_year,
