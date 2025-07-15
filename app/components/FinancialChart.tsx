@@ -71,7 +71,7 @@ interface ChartProps {
 }
 
 interface FinancialChartProps extends ChartProps {
-  quaterlyDatasets: Dataset[];
+  quaterlyDatasets: Dataset[];  // quaterlyDatasets❌ quarterlyDatasets ✅
   quarterlyLabels: string[];
 }
 

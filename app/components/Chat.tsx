@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useRef, useContext, createContext, ReactNode, Dispatch, SetStateAction } from 'react';
+import React, { useEffect, useRef, useContext, createContext, ReactNode, Dispatch, SetStateAction, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ListPlus, FileSearch } from 'lucide-react';
 import ChatHeader from './ChatHeader';
@@ -142,6 +142,12 @@ const ChatboxUI: React.FC<ChatboxUIProps> = ({
   setUseGoogleSearch,
 }) => {
   const latestThreadRef = useRef<HTMLDivElement>(null);
+  
+  // State to track if the chat is maximized
+  const [isMaximized, setIsMaximized] = useState(false);
+  const handleMaximize = () => {
+    setIsMaximized(prev => !prev);
+  }
 
   useEffect(() => {
     if(latestThreadRef.current) {
@@ -150,10 +156,10 @@ const ChatboxUI: React.FC<ChatboxUIProps> = ({
   }, [threads.length])
 
   return (
-    <div className={`fixed z-50 overflow-x-hidden ${isDesktop ? 'md:fixed md:top-[15vh] md:right-8 md:left-auto md:h-[80vh] md:max-h-[80vh] md:max-w-[50vw] md:shadow-[0_2px_16px_rgba(0,0,0,0.15)] md:z-50 md:rounded-xl md:overflow-x-hidden' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}>
+    <div className={`fixed z-50 overflow-x-hidden ${ isMaximized ? 'top-0 left-0 right-0 bottom-0 w-full h-full' : isDesktop ? 'md:fixed md:top-[15vh] md:right-8 md:left-auto md:h-[80vh] md:max-h-[80vh] md:max-w-[50vw] md:shadow-[0_2px_16px_rgba(0,0,0,0.15)] md:z-50 md:rounded-xl md:overflow-x-hidden' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}>
       <div
         className={`bg-[var(--background)] text-[var(--foreground)] rounded-none shadow-lg flex flex-col h-full w-full overflow-hidden overflow-x-hidden ${isDesktop ? 'md:h-full md:w-full md:flex md:flex-col md:rounded-xl md:overflow-x-hidden' : ''}`}>
-        <ChatHeader onClose={onClose} />
+        <ChatHeader onClose={onClose} onMaximize={handleMaximize} isMaximized={isMaximized} />
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 mt-4">
           <div className="w-full max-w-4xl mx-auto">
