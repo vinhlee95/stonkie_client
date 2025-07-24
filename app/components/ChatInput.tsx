@@ -1,30 +1,38 @@
-import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react';
-import { ArrowUp, Square, Globe } from 'lucide-react';
+import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react'
+import { ArrowUp, Square, Globe } from 'lucide-react'
 
 interface ChatInputProps {
-  input: string;
-  setInput: (value: string) => void;
-  handleSubmit: (e: React.FormEvent) => void;
-  isLoading: boolean;
-  onCancel?: () => void;
+  input: string
+  setInput: (value: string) => void
+  handleSubmit: (e: React.FormEvent) => void
+  isLoading: boolean
+  onCancel?: () => void
   useGoogleSearch: boolean
   setUseGoogleSearch: Dispatch<SetStateAction<boolean>>
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, isLoading, onCancel, useGoogleSearch, setUseGoogleSearch }) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+const ChatInput: React.FC<ChatInputProps> = ({
+  input,
+  setInput,
+  handleSubmit,
+  isLoading,
+  onCancel,
+  useGoogleSearch,
+  setUseGoogleSearch,
+}) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const adjustTextareaHeight = () => {
-    const textarea = textareaRef.current;
+    const textarea = textareaRef.current
     if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+      textarea.style.height = 'auto'
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`
     }
-  };
+  }
 
   useEffect(() => {
-    adjustTextareaHeight();
-  }, [input]);
+    adjustTextareaHeight()
+  }, [input])
 
   return (
     <div className="flex-shrink-0 pb-4 px-4 w-full bg-transparent">
@@ -37,9 +45,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, is
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit(e);
-              setInput('');
+              e.preventDefault()
+              handleSubmit(e)
+              setInput('')
             }
           }}
           placeholder="Ask follow-up..."
@@ -54,9 +62,11 @@ const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, is
               type="button"
               className={`p-2 cursor-pointer rounded-full transition-colors ${useGoogleSearch ? 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]' : 'hover:bg-gray-100 dark:hover:bg-[#232323]'}`}
               aria-label="Web search"
-              onClick={() => setUseGoogleSearch(!useGoogleSearch)} 
+              onClick={() => setUseGoogleSearch(!useGoogleSearch)}
             >
-              <Globe className={`w-4 h-4 ${useGoogleSearch ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`} />
+              <Globe
+                className={`w-4 h-4 ${useGoogleSearch ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`}
+              />
             </button>
             {/* Tooltip */}
             <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
@@ -64,17 +74,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, is
             </div>
           </div>
           <button
-            onClick={isLoading ? onCancel : e => {
-              e.preventDefault();
-              handleSubmit(e);
-              setInput('');
-            }}
+            onClick={
+              isLoading
+                ? onCancel
+                : (e) => {
+                    e.preventDefault()
+                    handleSubmit(e)
+                    setInput('')
+                  }
+            }
             className={`p-2 cursor-pointer rounded-full flex items-center justify-center transition-colors duration-200 ${
               isLoading
                 ? 'bg-[var(--accent-danger)]'
                 : 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]'
             }`}
-            aria-label={isLoading ? "Stop request" : "Submit question"}
+            aria-label={isLoading ? 'Stop request' : 'Submit question'}
             type="button"
           >
             {isLoading ? (
@@ -86,7 +100,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, handleSubmit, is
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ChatInput; 
+export default ChatInput

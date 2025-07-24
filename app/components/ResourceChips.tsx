@@ -1,5 +1,5 @@
 interface ResourceChipsProps {
-  resources: { url: string; label: string }[];
+  resources: { url: string; label: string }[]
 }
 
 export default function ResourceChips({ resources }: ResourceChipsProps) {
@@ -22,5 +22,5 @@ export default function ResourceChips({ resources }: ResourceChipsProps) {
         </a>
       ))}
     </div>
-  );
-} 
+  )
+}

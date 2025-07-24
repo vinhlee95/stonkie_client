@@ -1,65 +1,75 @@
-"use client";
-import { useEffect, useState, useRef } from "react";
-import ReactMarkdown from "react-markdown";
-import Image from "next/image";
-import { InsightChatbox } from "@/app/components/Chat";
-import InsightReport from "./InsightReport";
-import InsightHeader from "./InsightHeader";
-import LoadingSkeleton from "@/app/components/LoadingSkeleton";
+'use client'
+import { useEffect, useState, useRef } from 'react'
+import ReactMarkdown from 'react-markdown'
+import Image from 'next/image'
+import { InsightChatbox } from '@/app/components/Chat'
+import InsightReport from './InsightReport'
+import InsightHeader from './InsightHeader'
+import LoadingSkeleton from '@/app/components/LoadingSkeleton'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
 interface Insight {
-  title?: string;
-  content: string;
-  slug: string;
-  source?: string;
-  imageUrl: string;
+  title?: string
+  content: string
+  slug: string
+  source?: string
+  imageUrl: string
 }
 
 function truncateContent(content: string, maxWords: number = 30): string {
-  const words = content.split(/\s+/);
-  if (words.length <= maxWords) return content;
-  return words.slice(0, maxWords).join(" ") + "...";
+  const words = content.split(/\s+/)
+  if (words.length <= maxWords) return content
+  return words.slice(0, maxWords).join(' ') + '...'
 }
 
-export default function ClientInsightsFallback({ ticker, insightType }: { ticker: string; insightType: string }) {
-  const [insights, setInsights] = useState<Insight[]>([]);
-  const [currentInsight, setCurrentInsight] = useState<Insight | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const isFetching = useRef(false);
+export default function ClientInsightsFallback({
+  ticker,
+  insightType,
+}: {
+  ticker: string
+  insightType: string
+}) {
+  const [insights, setInsights] = useState<Insight[]>([])
+  const [currentInsight, setCurrentInsight] = useState<Insight | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const isFetching = useRef(false)
 
   useEffect(() => {
     const fetchInsights = async () => {
-      if (isFetching.current) return;
-      isFetching.current = true;
-      setIsLoading(true);
-      setInsights([]);
-      setCurrentInsight(null);
+      if (isFetching.current) return
+      isFetching.current = true
+      setIsLoading(true)
+      setInsights([])
+      setCurrentInsight(null)
       try {
-        const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/insights/${insightType}?stream=${true}`);
-        const reader = response.body?.getReader();
-        if (!reader) return;
-        const decoder = new TextDecoder();
+        const response = await fetch(
+          `${BACKEND_URL}/api/companies/${ticker}/insights/${insightType}?stream=${true}`,
+        )
+        const reader = response.body?.getReader()
+        if (!reader) return
+        const decoder = new TextDecoder()
         while (true) {
-          const { done, value } = await reader.read();
+          const { done, value } = await reader.read()
           if (done) {
-            setIsLoading(false);
-            break;
+            setIsLoading(false)
+            break
           }
-          const chunk = decoder.decode(value);
-          const lines = chunk.split("\n");
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
           for (const line of lines) {
             if (line.trim()) {
               try {
-                const parsed = JSON.parse(line);
-                if (parsed.type === "success" && parsed.data?.content) {
+                const parsed = JSON.parse(line)
+                if (parsed.type === 'success' && parsed.data?.content) {
                   // Extract source if present
-                  const content = parsed.data.content;
-                  const sourceMatch = content.match(/Source: (.*)$/m);
-                  const insightContent = sourceMatch ? content.slice(0, sourceMatch.index).trim() : content;
-                  const source = sourceMatch ? sourceMatch[1].trim() : "";
+                  const content = parsed.data.content
+                  const sourceMatch = content.match(/Source: (.*)$/m)
+                  const insightContent = sourceMatch
+                    ? content.slice(0, sourceMatch.index).trim()
+                    : content
+                  const source = sourceMatch ? sourceMatch[1].trim() : ''
                   setInsights((prev) => [
                     ...prev,
                     {
@@ -69,46 +79,50 @@ export default function ClientInsightsFallback({ ticker, insightType }: { ticker
                       imageUrl: parsed.data.imageUrl,
                       slug: parsed.data.slug,
                     },
-                  ]);
-                  setCurrentInsight(null);
-                } else if (parsed.type === "stream" && parsed.content) {
+                  ])
+                  setCurrentInsight(null)
+                } else if (parsed.type === 'stream' && parsed.content) {
                   setCurrentInsight((prev) => {
                     if (prev) {
                       return {
                         ...prev,
                         content: prev.content + parsed.content,
-                      };
+                      }
                     }
-                    return null;
-                  });
+                    return null
+                  })
                 }
               } catch {}
             }
           }
         }
       } catch {
-        setIsLoading(false);
+        setIsLoading(false)
       } finally {
-        isFetching.current = false;
+        isFetching.current = false
       }
-    };
-    fetchInsights();
+    }
+    fetchInsights()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticker, insightType]);
+  }, [ticker, insightType])
 
   if (isChatOpen && currentInsight) {
     // A bit complicated logic to support some old insights do not have any title
-    const title = currentInsight.content.split("\n")[0];
-    const titleWithoutMarkdown = currentInsight.title ?? title.replace(/^#+\s*|\*\*/g, "").trim();
+    const title = currentInsight.content.split('\n')[0]
+    const titleWithoutMarkdown = currentInsight.title ?? title.replace(/^#+\s*|\*\*/g, '').trim()
     const contentWithoutTitle = currentInsight.title
       ? currentInsight.content
-      : currentInsight.content.split("\n").slice(1).join("\n");
+      : currentInsight.content.split('\n').slice(1).join('\n')
     return (
       <InsightChatbox onClose={() => setIsChatOpen(false)}>
-        <InsightHeader imageUrl={currentInsight.imageUrl} title={titleWithoutMarkdown} recap={contentWithoutTitle} />
+        <InsightHeader
+          imageUrl={currentInsight.imageUrl}
+          title={titleWithoutMarkdown}
+          recap={contentWithoutTitle}
+        />
         <InsightReport ticker={ticker} slug={currentInsight.slug} />
       </InsightChatbox>
-    );
+    )
   }
 
   return (
@@ -134,8 +148,8 @@ export default function ClientInsightsFallback({ ticker, insightType }: { ticker
                 key={index}
                 className="rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-700/50 overflow-hidden transition-all hover:shadow-md cursor-pointer"
                 onClick={() => {
-                  setIsChatOpen(true);
-                  setCurrentInsight(insight);
+                  setIsChatOpen(true)
+                  setCurrentInsight(insight)
                 }}
               >
                 {insight.imageUrl && (
@@ -164,5 +178,5 @@ export default function ClientInsightsFallback({ ticker, insightType }: { ticker
         )}
       </div>
     </div>
-  );
-} 
+  )
+}

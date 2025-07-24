@@ -1,7 +1,12 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
 export const chatService = {
-  async analyzeQuestion(question: string, ticker: string | undefined, useGoogleSearch: boolean, signal?: AbortSignal) {
+  async analyzeQuestion(
+    question: string,
+    ticker: string | undefined,
+    useGoogleSearch: boolean,
+    signal?: AbortSignal,
+  ) {
     const response = await fetch(`${BACKEND_URL}/api/company/analyze`, {
       method: 'POST',
       headers: {
@@ -9,26 +14,26 @@ export const chatService = {
       },
       body: JSON.stringify({ question, ticker, useGoogleSearch }),
       signal,
-    });
+    })
 
     if (!response.ok) {
-      throw new Error('Failed to get analysis');
+      throw new Error('Failed to get analysis')
     }
 
-    return response.body?.getReader();
+    return response.body?.getReader()
   },
 
   async fetchFAQs(ticker: string | undefined) {
-    const URL = ticker 
-      ? `${BACKEND_URL}/api/company/faq?ticker=${ticker}&stream=true` 
-      : `${BACKEND_URL}/api/company/faq?stream=true`;
-    
-    const response = await fetch(URL);
-    return response.body?.getReader();
+    const URL = ticker
+      ? `${BACKEND_URL}/api/company/faq?ticker=${ticker}&stream=true`
+      : `${BACKEND_URL}/api/company/faq?stream=true`
+
+    const response = await fetch(URL)
+    return response.body?.getReader()
   },
 
   async fetchDetailedReport(ticker: string | undefined, slug: string) {
-    const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/reports/${slug}`);
-    return response.body?.getReader();
-  }
-}; 
+    const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/reports/${slug}`)
+    return response.body?.getReader()
+  },
+}

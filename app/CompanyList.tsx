@@ -1,6 +1,6 @@
-"use client"
-import Link from "next/link"
-import { useState } from "react"
+'use client'
+import Link from 'next/link'
+import { useState } from 'react'
 
 export interface Company {
   name: string
@@ -27,7 +27,7 @@ export default function CompanyList({ companies }: { companies: Company[] }) {
             {company.logo_url && (
               <div className="w-12 h-12 mr-4 flex-shrink-0 relative z-10">
                 <img
-                  src={company.logo_url || "/placeholder.svg"}
+                  src={company.logo_url || '/placeholder.svg'}
                   alt={`${company.name} logo`}
                   className="w-full h-full object-contain rounded-full"
                 />

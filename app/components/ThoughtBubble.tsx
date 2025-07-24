@@ -1,12 +1,18 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useRef } from "react"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./Collapsible"
-import { ChevronDown, Sparkles } from "lucide-react"
-import MarkdownContent from "./MarkdownContent"
+import { useState, useEffect, useRef } from 'react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './Collapsible'
+import { ChevronDown, Sparkles } from 'lucide-react'
+import MarkdownContent from './MarkdownContent'
 
-export function ThoughtBubble({thought, isThinking}: {thought: string | null, isThinking: boolean}) {
-  const [currentThought, setCurrentThought] = useState("")
+export function ThoughtBubble({
+  thought,
+  isThinking,
+}: {
+  thought: string | null
+  isThinking: boolean
+}) {
+  const [currentThought, setCurrentThought] = useState('')
   const [isOpen, setIsOpen] = useState(true)
   const [completedThoughts, setCompletedThoughts] = useState<string[]>([])
   const lastThoughtRef = useRef<string | null>(null)
@@ -38,7 +44,7 @@ export function ThoughtBubble({thought, isThinking}: {thought: string | null, is
   const startTypingThought = (thought: string) => {
     isTypingRef.current = true
     let charIndex = 0
-    setCurrentThought("")
+    setCurrentThought('')
 
     const typeThought = () => {
       if (!thought) return
@@ -48,9 +54,9 @@ export function ThoughtBubble({thought, isThinking}: {thought: string | null, is
         setTimeout(typeThought, 10)
       } else {
         // When done, add to completedThoughts and update lastThoughtRef
-        setCompletedThoughts(prev => [...prev, thought])
+        setCompletedThoughts((prev) => [...prev, thought])
         lastThoughtRef.current = thought
-        setCurrentThought("")
+        setCurrentThought('')
         isTypingRef.current = false
       }
     }
@@ -69,20 +75,20 @@ export function ThoughtBubble({thought, isThinking}: {thought: string | null, is
                 <div className="flex gap-1">
                   <div
                     className="w-1 h-1 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] rounded-full animate-bounce"
-                    style={{ animationDelay: "0ms" }}
+                    style={{ animationDelay: '0ms' }}
                   ></div>
                   <div
                     className="w-1 h-1 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] rounded-full animate-bounce"
-                    style={{ animationDelay: "150ms" }}
+                    style={{ animationDelay: '150ms' }}
                   />
                   <div
                     className="w-1 h-1 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] rounded-full animate-bounce"
-                    style={{ animationDelay: "300ms" }}
+                    style={{ animationDelay: '300ms' }}
                   ></div>
                 </div>
               )}
             </div>
-            <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </CollapsibleTrigger>
 
           {completedThoughts && completedThoughts.length > 0 && (
@@ -90,7 +96,10 @@ export function ThoughtBubble({thought, isThinking}: {thought: string | null, is
               <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
                 <div className="space-y-2">
                   {completedThoughts.map((t, index) => (
-                    <div key={index} className="text-sm text-gray-600 dark:text-gray-300 opacity-75">
+                    <div
+                      key={index}
+                      className="text-sm text-gray-600 dark:text-gray-300 opacity-75"
+                    >
                       <MarkdownContent content={t} smallSize />
                     </div>
                   ))}

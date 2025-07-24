@@ -1,72 +1,72 @@
-import { useRef, useState } from 'react';
-import { AnswerGround, Thread } from './useChatState';
-import { chatService } from '../services/chatService';
+import { useRef, useState } from 'react'
+import { AnswerGround, Thread } from './useChatState'
+import { chatService } from '../services/chatService'
 
 export const useChatAPI = (
   ticker: string | undefined,
-  updateThread: (threadId: string, updates: Partial<Thread>) => void
+  updateThread: (threadId: string, updates: Partial<Thread>) => void,
 ) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const isThinkingRef = useRef(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const [isLoading, setIsLoading] = useState(false)
+  const isThinkingRef = useRef(false)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const cancelRequest = () => {
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-      setIsLoading(false);
-      isThinkingRef.current = false;
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+      setIsLoading(false)
+      isThinkingRef.current = false
     }
-  };
+  }
 
   const handleSubmit = async (question: string, threadId: string, useGoogleSearch: boolean) => {
     // Create new AbortController for this request
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
-    
-    setIsLoading(true);
-    isThinkingRef.current = true;
-    try {
-      const reader = await chatService.analyzeQuestion(question, ticker, useGoogleSearch, signal);
-      if (!reader) throw new Error('Failed to get reader');
+    abortControllerRef.current = new AbortController()
+    const signal = abortControllerRef.current.signal
 
-      const decoder = new TextDecoder();
-      let accumulatedContent = '';
-      let thoughts: string[] = [];
-      let relatedQuestions: string[] = [];
+    setIsLoading(true)
+    isThinkingRef.current = true
+    try {
+      const reader = await chatService.analyzeQuestion(question, ticker, useGoogleSearch, signal)
+      if (!reader) throw new Error('Failed to get reader')
+
+      const decoder = new TextDecoder()
+      let accumulatedContent = ''
+      let thoughts: string[] = []
+      let relatedQuestions: string[] = []
       let grounds: AnswerGround[] = []
 
       while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
+        const { value, done } = await reader.read()
+        if (done) break
 
-        const chunk = decoder.decode(value);
+        const chunk = decoder.decode(value)
         try {
-          const jsonStrings = chunk.split('\n').filter(str => str.trim());
+          const jsonStrings = chunk.split('\n').filter((str) => str.trim())
           for (const jsonStr of jsonStrings) {
-            const parsedChunk = JSON.parse(jsonStr);
+            const parsedChunk = JSON.parse(jsonStr)
             if (parsedChunk.type === 'answer') {
-              if(isThinkingRef.current) {
+              if (isThinkingRef.current) {
                 isThinkingRef.current = false
               }
-              accumulatedContent += parsedChunk.body;
-              updateThread(threadId, { answer: accumulatedContent });
+              accumulatedContent += parsedChunk.body
+              updateThread(threadId, { answer: accumulatedContent })
             } else if (parsedChunk.type === 'thinking_status') {
-              if(!isThinkingRef.current) {
+              if (!isThinkingRef.current) {
                 isThinkingRef.current = true
               }
-              thoughts = [...thoughts, parsedChunk.body];
-              updateThread(threadId, { thoughts });
+              thoughts = [...thoughts, parsedChunk.body]
+              updateThread(threadId, { thoughts })
             } else if (parsedChunk.type === 'related_question') {
-              relatedQuestions = [...relatedQuestions, parsedChunk.body];
-              updateThread(threadId, { relatedQuestions });
+              relatedQuestions = [...relatedQuestions, parsedChunk.body]
+              updateThread(threadId, { relatedQuestions })
             } else if (parsedChunk.type === 'google_search_ground') {
-              grounds = [...grounds, {body: parsedChunk.body, url: parsedChunk.url}]
-              updateThread(threadId, {grounds})
+              grounds = [...grounds, { body: parsedChunk.body, url: parsedChunk.url }]
+              updateThread(threadId, { grounds })
             }
           }
         } catch (e) {
-          console.error('Error parsing chunk:', e);
+          console.error('Error parsing chunk:', e)
         }
       }
     } catch (error) {
@@ -74,85 +74,85 @@ export const useChatAPI = (
         updateThread(threadId, {
           answer: 'Request cancelled.',
           thoughts: [],
-          relatedQuestions: []
-        });
+          relatedQuestions: [],
+        })
         return
       }
-      
-      console.error('Error in chat:', error);
+
+      console.error('Error in chat:', error)
       updateThread(threadId, {
         answer: 'Sorry, I encountered an error analyzing the data.',
         thoughts: [],
-        relatedQuestions: []
-      });
+        relatedQuestions: [],
+      })
     } finally {
-      setIsLoading(false);
-      abortControllerRef.current = null;
+      setIsLoading(false)
+      abortControllerRef.current = null
     }
-  };
+  }
 
   const fetchFAQsStream = async () => {
-    const threadId = Date.now().toString();
+    const threadId = Date.now().toString()
     updateThread(threadId, {
       id: threadId,
       question: 'Loading FAQs...',
       thoughts: [],
       answer: null,
-      relatedQuestions: []
-    });
+      relatedQuestions: [],
+    })
 
     try {
-      const reader = await chatService.fetchFAQs(ticker);
-      if (!reader) throw new Error('Failed to get reader');
+      const reader = await chatService.fetchFAQs(ticker)
+      if (!reader) throw new Error('Failed to get reader')
 
-      const decoder = new TextDecoder();
-      let questions: string[] = [];
+      const decoder = new TextDecoder()
+      let questions: string[] = []
 
       while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
+        const { value, done } = await reader.read()
+        if (done) break
 
-        const lines = decoder.decode(value).split('\n');
+        const lines = decoder.decode(value).split('\n')
         for (const line of lines) {
           if (line.trim()) {
-            const jsonString = line.replace(/^data: /, '');
+            const jsonString = line.replace(/^data: /, '')
             try {
-              const data = JSON.parse(jsonString);
+              const data = JSON.parse(jsonString)
               switch (data.type) {
                 case 'question':
-                  questions = [...questions, data.text];
+                  questions = [...questions, data.text]
                   updateThread(threadId, {
                     question: 'Frequently Asked Questions',
                     thoughts: [],
                     answer: null,
-                    relatedQuestions: questions
-                  });
-                  break;
+                    relatedQuestions: questions,
+                  })
+                  break
                 case 'status':
                   updateThread(threadId, {
-                    thoughts: [data.message]
-                  });
-                  break;
+                    thoughts: [data.message],
+                  })
+                  break
                 case 'error':
-                  console.error('Error:', data.message);
-                  break;
+                  console.error('Error:', data.message)
+                  break
               }
             } catch (e) {
-              console.error('Error parsing FAQ data:', e);
+              console.error('Error parsing FAQ data:', e)
             }
           }
         }
       }
     } catch (error) {
-      console.error('Error fetching FAQs:', error);
+      console.error('Error fetching FAQs:', error)
       updateThread(threadId, {
         question: 'Error loading FAQs',
         thoughts: [],
         answer: 'Failed to load frequently asked questions. Please try again later.',
-        relatedQuestions: []
-      });
+        relatedQuestions: [],
+      })
     }
-  };
+  }
 
   return {
     handleSubmit,
@@ -160,5 +160,5 @@ export const useChatAPI = (
     isLoading,
     isThinking: isThinkingRef.current,
     cancelRequest,
-  };
-}; 
+  }
+}

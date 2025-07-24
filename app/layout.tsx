@@ -1,20 +1,19 @@
-import type { Metadata } from "next";
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import "./globals.css";
-import { Suspense } from "react";
-import BottomNavigation from "./components/BottomNavigation";
-import { GeistSans } from 'geist/font/sans';
-
+import type { Metadata } from 'next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import './globals.css'
+import { Suspense } from 'react'
+import BottomNavigation from './components/BottomNavigation'
+import { GeistSans } from 'geist/font/sans'
 
 export const metadata: Metadata = {
-  title: "Stonkie 🚀",
-  description: "Invest in less is more",
-};
+  title: 'Stonkie 🚀',
+  description: 'Invest in less is more',
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="en" className={GeistSans.className}>
@@ -28,5 +27,5 @@ export default function RootLayout({
         </Suspense>
       </body>
     </html>
-  );
+  )
 }
