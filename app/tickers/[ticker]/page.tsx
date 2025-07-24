@@ -5,6 +5,7 @@ import EpsChart from './EpsChart'
 import DebtCoverageChart from './DebtCoverageChart'
 import { CompanyFinancialStatement } from '@/app/types'
 import { Company } from '@/app/CompanyList'
+import PriceChart from './PriceChart'
 
 export const revalidate = 120
 
@@ -77,6 +78,9 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
 
   return (
     <>
+      <Suspense fallback={<p>Loading stock price chart</p>}>
+        <PriceChart ticker={ticker} />
+      </Suspense>
       {keyStats && <KeyStats keyStats={keyStats} />}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Suspense fallback={<p>Loading growth chart...</p>}>
