@@ -32,7 +32,6 @@ function TradingViewWidget({ ticker }: { ticker: string }) {
           "wickDownColor": "#f7525f",
           "isTransparent": true,
           "locale": "en",
-          "chartOnly": true,
           "scalePosition": "right",
           "scaleMode": "Normal",
           "valuesTracking": "1",
@@ -55,7 +54,8 @@ function TradingViewWidget({ ticker }: { ticker: string }) {
           "height": "100%",
           "noTimeScale": false,
           "hideDateRanges": false,
-          "hideMarketStatus": true,
+          "chartOnly": false,
+          "hideMarketStatus": false,
           "hideSymbolLogo": true
         }`
 
