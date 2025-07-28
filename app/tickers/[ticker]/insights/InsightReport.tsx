@@ -1,122 +1,123 @@
 'use client'
-import { useState, useEffect, useRef } from "react";
-import {Chart} from '@/app/components/FinancialChart';
-import LoadingSkeleton from "@/app/components/LoadingSkeleton";
+import { useState, useEffect, useRef } from 'react'
+import { Chart } from '@/app/components/FinancialChart'
+import LoadingSkeleton from '@/app/components/LoadingSkeleton'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
 type ChartData = {
-  period: string;
-  value: number;
-  metric: string;
+  period: string
+  value: number
+  metric: string
   value_type: 'currency' | 'percentage'
-
-};
+}
 
 type ContentItem = {
-  type: 'text' | 'chart';
-  title: string;
-  content: string;
-  data: ChartData[] | null;
-  source: string[];
-};
+  type: 'text' | 'chart'
+  title: string
+  content: string
+  data: ChartData[] | null
+  source: string[]
+}
 
-export default function InsightReport({ticker, slug}: {ticker: string, slug: string}) {
-  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const hasFetchedDetailedReport = useRef(false);   
+export default function InsightReport({ ticker, slug }: { ticker: string; slug: string }) {
+  const [contentItems, setContentItems] = useState<ContentItem[]>([])
+  const [isStreaming, setIsStreaming] = useState(false)
+  const hasFetchedDetailedReport = useRef(false)
 
   const fetchDetailedReport = async (slug: string) => {
     try {
-      setIsStreaming(true);
-      const response = await fetch(`${BACKEND_URL}/api/companies/${ticker.toUpperCase()}/dynamic-report/${slug}`);
-      
+      setIsStreaming(true)
+      const response = await fetch(
+        `${BACKEND_URL}/api/companies/${ticker.toUpperCase()}/dynamic-report/${slug}`,
+      )
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       if (!response.body) {
-        throw new Error('ReadableStream not yet supported in this browser.');
+        throw new Error('ReadableStream not yet supported in this browser.')
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
 
       while (true) {
-        const { done, value } = await reader.read();
-        
+        const { done, value } = await reader.read()
+
         if (done) {
-          setIsStreaming(false);
-          break;
+          setIsStreaming(false)
+          break
         }
 
-        buffer += decoder.decode(value, { stream: true });
-        
+        buffer += decoder.decode(value, { stream: true })
+
         // Process complete JSON objects from the buffer
-        let startIndex = 0;
+        let startIndex = 0
         while (true) {
-          const endIndex = buffer.indexOf('\n', startIndex);
+          const endIndex = buffer.indexOf('\n', startIndex)
           if (endIndex === -1) {
-            buffer = buffer.slice(startIndex);
-            break;
+            buffer = buffer.slice(startIndex)
+            break
           }
 
-          const jsonStr = buffer.slice(startIndex, endIndex).trim();
+          const jsonStr = buffer.slice(startIndex, endIndex).trim()
           if (jsonStr) {
             try {
-              const contentItem = JSON.parse(jsonStr);
-              setContentItems(prevItems => [...prevItems, contentItem]);
+              const contentItem = JSON.parse(jsonStr)
+              setContentItems((prevItems) => [...prevItems, contentItem])
             } catch (e) {
-              console.error('Error parsing JSON chunk:', e);
+              console.error('Error parsing JSON chunk:', e)
             }
           }
-          startIndex = endIndex + 1;
+          startIndex = endIndex + 1
         }
       }
     } catch (error) {
-      console.error('Error fetching detailed report:', error);
-      setIsStreaming(false);
+      console.error('Error fetching detailed report:', error)
+      setIsStreaming(false)
     }
-  };
+  }
 
   useEffect(() => {
     if (!hasFetchedDetailedReport.current) {
-      hasFetchedDetailedReport.current = true;
-      fetchDetailedReport(slug);
+      hasFetchedDetailedReport.current = true
+      fetchDetailedReport(slug)
     }
-  }, [slug]);
+  }, [slug])
 
   const renderChart = (data: ChartData[], title: string) => {
     // Group data by metric
-    const metrics = Array.from(new Set(data.map(item => item.metric)));
-    
+    const metrics = Array.from(new Set(data.map((item) => item.metric)))
+
     // Sort periods chronologically
-    const periods = Array.from(new Set(data.map(item => item.period))).sort((a, b) => {
+    const periods = Array.from(new Set(data.map((item) => item.period))).sort((a, b) => {
       // Check if the period is a date string (e.g., "12/31/2024")
-      const isDateA = /\d{1,2}\/\d{1,2}\/\d{4}/.test(a);
-      const isDateB = /\d{1,2}\/\d{1,2}\/\d{4}/.test(b);
-      
+      const isDateA = /\d{1,2}\/\d{1,2}\/\d{4}/.test(a)
+      const isDateB = /\d{1,2}\/\d{1,2}\/\d{4}/.test(b)
+
       if (isDateA && isDateB) {
         // Parse dates and compare
-        const [monthA, dayA, yearA] = a.split('/').map(Number);
-        const [monthB, dayB, yearB] = b.split('/').map(Number);
-        const dateA = new Date(yearA, monthA - 1, dayA);
-        const dateB = new Date(yearB, monthB - 1, dayB);
-        return dateA.getTime() - dateB.getTime();
+        const [monthA, dayA, yearA] = a.split('/').map(Number)
+        const [monthB, dayB, yearB] = b.split('/').map(Number)
+        const dateA = new Date(yearA, monthA - 1, dayA)
+        const dateB = new Date(yearB, monthB - 1, dayB)
+        return dateA.getTime() - dateB.getTime()
       }
-      
+
       // If one is a date and the other isn't, put the date first
-      if (isDateA) return -1;
-      if (isDateB) return 1;
-      
+      if (isDateA) return -1
+      if (isDateB) return 1
+
       // If neither is a date, compare as strings
-      return a.localeCompare(b);
-    });
+      return a.localeCompare(b)
+    })
 
     // Determine the value type from the first data point
-    const valueType = data[0]?.value_type || 'currency';
-    const isPercentage = valueType === 'percentage';
+    const valueType = data[0]?.value_type || 'currency'
+    const isPercentage = valueType === 'percentage'
 
     // Create a dataset for each metric
     const datasets = metrics.map((metric, index) => {
@@ -125,22 +126,25 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
         { backgroundColor: '#34d399', borderColor: '#059669' }, // green
         { backgroundColor: '#3b82f6', borderColor: '#2563eb' }, // blue
         { backgroundColor: '#f59e0b', borderColor: '#d97706' }, // yellow/orange
-        { backgroundColor: '#ef4444', borderColor: '#dc2626' }  // red
-      ];
-      const colorIndex = index % colors.length;
+        { backgroundColor: '#ef4444', borderColor: '#dc2626' }, // red
+      ]
+      const colorIndex = index % colors.length
 
       const baseConfig = {
-        label: metric.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-        data: periods.map(period => {
-          const dataPoint = data.find(item => item.period === period && item.metric === metric);
-          if (!dataPoint) return 0;
-          
+        label: metric
+          .split('_')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' '),
+        data: periods.map((period) => {
+          const dataPoint = data.find((item) => item.period === period && item.metric === metric)
+          if (!dataPoint) return 0
+
           // Only multiply by 1000 for currency values
-          return valueType === 'currency' ? dataPoint.value * 1000 : dataPoint.value;
+          return valueType === 'currency' ? dataPoint.value * 1000 : dataPoint.value
         }),
         borderColor: colors[colorIndex].borderColor,
         borderWidth: 2,
-      };
+      }
 
       if (isPercentage) {
         return {
@@ -151,7 +155,7 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
           pointHoverRadius: 6,
           fill: false,
           tension: 0.4,
-        };
+        }
       }
 
       return {
@@ -159,8 +163,8 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
         type: 'bar' as const,
         backgroundColor: colors[colorIndex].backgroundColor,
         borderRadius: 4,
-      };
-    });
+      }
+    })
 
     return (
       <Chart
@@ -168,12 +172,12 @@ export default function InsightReport({ticker, slug}: {ticker: string, slug: str
         labels={periods}
         datasets={datasets}
         yAxisFormatType={valueType}
-        yAxisFormatOptions={{ 
+        yAxisFormatOptions={{
           decimals: 1,
         }}
       />
-    );
-  };
+    )
+  }
 
   return (
     <div className="prose max-w-none space-y-8">

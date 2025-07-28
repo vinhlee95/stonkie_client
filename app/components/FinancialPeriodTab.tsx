@@ -1,11 +1,14 @@
-'use client';
+'use client'
 
 interface FinancialPeriodTabProps {
-  selectedPeriod: 'Annual' | 'Quarterly';
-  onPeriodChange: (period: 'Annual' | 'Quarterly') => void;
+  selectedPeriod: 'Annual' | 'Quarterly'
+  onPeriodChange: (period: 'Annual' | 'Quarterly') => void
 }
 
-export default function FinancialPeriodTab({ selectedPeriod, onPeriodChange }: FinancialPeriodTabProps) {
+export default function FinancialPeriodTab({
+  selectedPeriod,
+  onPeriodChange,
+}: FinancialPeriodTabProps) {
   return (
     <div className="flex mb-4">
       <button
@@ -35,5 +38,5 @@ export default function FinancialPeriodTab({ selectedPeriod, onPeriodChange }: F
         Quarterly
       </button>
     </div>
-  );
+  )
 }

@@ -8,8 +8,8 @@ import {
   Tooltip,
   Legend,
   type ChartOptions,
-} from "chart.js"
-import { Bar } from "react-chartjs-2"
+} from 'chart.js'
+import { Bar } from 'react-chartjs-2'
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
@@ -34,14 +34,14 @@ export default function RevenueChart({ revenueData }: RevenueChartProps) {
 
   // Color palette for different labels
   const colors = [
-    'rgb(82, 130, 255)',   // Blue
-    'rgb(99, 205, 255)',   // Light Blue
-    'rgb(255, 99, 132)',   // Pink
-    'rgb(75, 192, 192)',   // Teal
-    'rgb(255, 159, 64)',   // Orange
-    'rgb(153, 102, 255)',  // Purple
-    'rgb(255, 205, 86)',   // Yellow
-    'rgb(201, 203, 207)'   // Gray
+    'rgb(82, 130, 255)', // Blue
+    'rgb(99, 205, 255)', // Light Blue
+    'rgb(255, 99, 132)', // Pink
+    'rgb(75, 192, 192)', // Teal
+    'rgb(255, 159, 64)', // Orange
+    'rgb(153, 102, 255)', // Purple
+    'rgb(255, 205, 86)', // Yellow
+    'rgb(201, 203, 207)', // Gray
   ]
 
   // Transform data for Chart.js
@@ -56,7 +56,7 @@ export default function RevenueChart({ revenueData }: RevenueChartProps) {
     }
   })
 
-  const options: ChartOptions<"bar"> = {
+  const options: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
@@ -67,7 +67,7 @@ export default function RevenueChart({ revenueData }: RevenueChartProps) {
         },
         border: {
           display: false,
-        }
+        },
       },
       y: {
         stacked: true,

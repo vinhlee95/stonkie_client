@@ -1,33 +1,32 @@
-"use client";
-import { useRouter } from "next/navigation";
-import React from "react";
-import { InsightType } from "./constants";
+'use client'
+import { useRouter } from 'next/navigation'
+import React from 'react'
+import { InsightType } from './constants'
 
 interface InsightTypeTabProps {
-  currentType: InsightType;
-  ticker: string;
+  currentType: InsightType
+  ticker: string
 }
 
 const typeLabels: Record<InsightType, string> = {
-  [InsightType.GROWTH]: "Growth",
-  [InsightType.EARNINGS]: "Earnings",
-  [InsightType.CASH_FLOW]: "Cash Flow"
-};
-
+  [InsightType.GROWTH]: 'Growth',
+  [InsightType.EARNINGS]: 'Earnings',
+  [InsightType.CASH_FLOW]: 'Cash Flow',
+}
 
 export default function InsightTypeTab({ currentType, ticker }: InsightTypeTabProps) {
-  const router = useRouter();
+  const router = useRouter()
 
   const handleTypeChange = (type: InsightType) => {
     if (type !== currentType) {
-      router.push(`/tickers/${ticker}/insights/${type}`);
+      router.push(`/tickers/${ticker}/insights/${type}`)
     }
-  };
+  }
 
   return (
     <div className="flex space-x-4 mb-6 overflow-x-auto whitespace-nowrap scrollbar-hide">
       {Object.values(InsightType).map((type) => {
-        const isActive = currentType === type;
+        const isActive = currentType === type
         return (
           <button
             key={type}
@@ -40,8 +39,8 @@ export default function InsightTypeTab({ currentType, ticker }: InsightTypeTabPr
           >
             {typeLabels[type as InsightType]}
           </button>
-        );
+        )
       })}
     </div>
-  );
-} 
+  )
+}

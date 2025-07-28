@@ -7,16 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "husky"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+    "lint-fix": "eslint --fix",
+    "prepare": "husky",
+    "format": "prettier --write ."
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "npm run lint"
+    "*.{js,jsx,ts,tsx,json,css,md}": [
+      "npm run lint-fix",
+      "npm run format",
+      "git add ."
     ]
   },
   "dependencies": {
@@ -46,6 +45,7 @@
     "eslint-config-next": "15.2.3",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.0",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

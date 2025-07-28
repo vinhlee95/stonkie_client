@@ -1,46 +1,56 @@
-"use client";
-import { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import Image from "next/image";
-import { InsightChatbox } from "@/app/components/Chat";
-import InsightReport from "./InsightReport";
-import InsightHeader from "./InsightHeader";
+'use client'
+import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import Image from 'next/image'
+import { InsightChatbox } from '@/app/components/Chat'
+import InsightReport from './InsightReport'
+import InsightHeader from './InsightHeader'
 
 interface Insight {
-  title: string;
-  content: string;
-  slug: string;
-  thumbnail_url: string;
+  title: string
+  content: string
+  slug: string
+  thumbnail_url: string
 }
 
 function truncateContent(content: string, maxWords: number = 30): string {
-  const words = content.split(/\s+/);
-  if (words.length <= maxWords) return content;
-  return words.slice(0, maxWords).join(" ") + "...";
+  const words = content.split(/\s+/)
+  if (words.length <= maxWords) return content
+  return words.slice(0, maxWords).join(' ') + '...'
 }
 
-export default function InsightChatModal({ insights, ticker }: { insights: Insight[]; ticker: string }) {
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [currentInsight, setCurrentInsight] = useState<Insight | null>(null);
+export default function InsightChatModal({
+  insights,
+  ticker,
+}: {
+  insights: Insight[]
+  ticker: string
+}) {
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [currentInsight, setCurrentInsight] = useState<Insight | null>(null)
 
   const handleCardClick = (insight: Insight) => {
-    setCurrentInsight(insight);
-    setIsChatOpen(true);
-  };
+    setCurrentInsight(insight)
+    setIsChatOpen(true)
+  }
 
   if (isChatOpen && currentInsight) {
     // Support for insights with/without title in content
-    const title = currentInsight.content.split("\n")[0];
-    const titleWithoutMarkdown = currentInsight.title ?? title.replace(/^#+\s*|\*\*/g, "").trim();
+    const title = currentInsight.content.split('\n')[0]
+    const titleWithoutMarkdown = currentInsight.title ?? title.replace(/^#+\s*|\*\*/g, '').trim()
     const contentWithoutTitle = currentInsight.title
       ? currentInsight.content
-      : currentInsight.content.split("\n").slice(1).join("\n");
+      : currentInsight.content.split('\n').slice(1).join('\n')
     return (
       <InsightChatbox onClose={() => setIsChatOpen(false)}>
-        <InsightHeader imageUrl={currentInsight.thumbnail_url} title={titleWithoutMarkdown} recap={contentWithoutTitle} />
+        <InsightHeader
+          imageUrl={currentInsight.thumbnail_url}
+          title={titleWithoutMarkdown}
+          recap={contentWithoutTitle}
+        />
         <InsightReport ticker={ticker} slug={currentInsight.slug} />
       </InsightChatbox>
-    );
+    )
   }
 
   return (
@@ -72,5 +82,5 @@ export default function InsightChatModal({ insights, ticker }: { insights: Insig
         ))}
       </div>
     </div>
-  );
-} 
+  )
+}
