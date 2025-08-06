@@ -3,6 +3,7 @@ import KeyStats, { KeyStatsType } from './KeyStats'
 import GrowthChart from './GrowthChart'
 import EpsChart from './EpsChart'
 import DebtCoverageChart from './DebtCoverageChart'
+import DebtEquityChart from './DebtEquityChart'
 import { CompanyFinancialStatement } from '@/app/types'
 import { Company } from '@/app/CompanyList'
 import PriceChart from './PriceChart'
@@ -96,6 +97,11 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
         <Suspense fallback={<p>Loading Debt and coverage chart...</p>}>
           {balanceSheet && cashFlow && balanceSheet.length > 0 && cashFlow.length > 0 && (
             <DebtCoverageChart balanceSheet={balanceSheet} cashFlow={cashFlow} ticker={ticker} />
+          )}
+        </Suspense>
+        <Suspense fallback={<p>Loading Debt to Equit chart...</p>}>
+          {balanceSheet && balanceSheet.length > 0 && (
+            <DebtEquityChart balanceSheet={balanceSheet} ticker={ticker} />
           )}
         </Suspense>
       </div>
