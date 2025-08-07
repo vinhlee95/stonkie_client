@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import CompanyList, { Company } from './CompanyList'
 import MarketChart from './MarketChart'
 
@@ -21,11 +20,9 @@ export default async function Page() {
     <div className="container mx-auto px-4 py-8">
       <>
         <h1 className="text-2xl font-bold mb-6">Market Overview</h1>
-        <Suspense fallback={<div>Loading...</div>}>
-          <div className="h-[350px] mb-6">
-            <MarketChart />
-          </div>
-        </Suspense>
+        <div className="h-[350px] mb-6">
+          <MarketChart />
+        </div>
       </>
       <h1 className="text-2xl font-bold mb-6">Most Viewed Companies</h1>
       {data && <CompanyList companies={data} />}
