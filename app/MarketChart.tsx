@@ -1,28 +1,36 @@
 'use client'
 
 import React, { useEffect, useRef, memo } from 'react'
+import { useDarkMode } from './components/hooks/useDarkMode'
 
 // https://www.tradingview.com/widget-docs/widgets/watchlists/market-overview/
 function TradingViewWidget() {
   const container = useRef<HTMLDivElement>(null)
   const hasCreatedChart = useRef<boolean>(false)
+  const isDarkMode = useDarkMode()
 
   useEffect(() => {
+    // Clear existing chart if theme changes
+    if (container.current && hasCreatedChart.current) {
+      container.current.innerHTML = ''
+      hasCreatedChart.current = false
+    }
+
     if (hasCreatedChart.current) {
       return
     }
 
     const widgetOptions = {
-      colorTheme: 'light',
+      colorTheme: isDarkMode ? 'dark' : 'light',
       dateRange: '12M',
       locale: 'en',
       largeChartUrl: '',
-      isTransparent: true,
+      isTransparent: false,
       showFloatingTooltip: true,
       plotLineColorGrowing: 'rgba(41, 98, 255, 1)',
       plotLineColorFalling: 'rgba(41, 98, 255, 1)',
       gridLineColor: 'rgba(240, 243, 250, 0)',
-      scaleFontColor: '#0F0F0F',
+      scaleFontColor: isDarkMode ? '#ffffff' : '#0F0F0F',
       belowLineFillColorGrowing: 'rgba(41, 98, 255, 0.12)',
       belowLineFillColorFalling: 'rgba(41, 98, 255, 0.12)',
       belowLineFillColorGrowingBottom: 'rgba(41, 98, 255, 0)',
@@ -74,7 +82,7 @@ function TradingViewWidget() {
       container.current.appendChild(script)
       hasCreatedChart.current = true
     }
-  }, [])
+  }, [isDarkMode])
 
   return (
     <div className="tradingview-widget-container" ref={container}>
