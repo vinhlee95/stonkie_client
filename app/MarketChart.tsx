@@ -51,12 +51,6 @@ function TradingViewWidget() {
               'currency-logoid': 'country/US',
             },
             {
-              s: 'HOSE:VNINDEX',
-              d: 'VN Index',
-              logoid: 'indices/vietnam-index',
-              'currency-logoid': 'country/VN',
-            },
-            {
               s: 'NASDAQ:OMXH25',
               d: '',
               'currency-logoid': 'country/EU',
