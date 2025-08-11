@@ -1,47 +1,48 @@
 'use client'
+import { KeyStatsType } from './KeyStats'
 import { useState } from 'react'
 
-export type CompanyInfoType = {
-  name: string
-  sector: string
-  industry: string
-  description: string
-  country: string
+type CompanyInfoType = Pick<
+  KeyStatsType,
+  'name' | 'sector' | 'industry' | 'country' | 'description'
+>
+function toTitleCase(str: string) {
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
 export default function CompanyInfo({ companyInfo }: { companyInfo: CompanyInfoType }) {
   const [showMore, setShowMore] = useState(false)
   const maxLength = 200
   const toggleShowMore = () => setShowMore((prev) => !prev)
-  const shortcut = companyInfo.description.length > maxLength
+  const needsTruncate = companyInfo.description.length > maxLength
   const displayed = showMore
     ? companyInfo.description
-    : companyInfo.description.slice(0, maxLength) + (shortcut ? '...' : '')
+    : companyInfo.description.slice(0, maxLength) + (needsTruncate ? '...' : '')
   return (
-    <section className="m-4">
-      <h2 className="text-xl font-bold mb-4">About {companyInfo.name}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-lg">
+    <section className="mt-2 mb-6">
+      <h2 className="text-xl font-bold mb-2">About {companyInfo.name}</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-lg mb-2">
         <div>
-          <span className="font-semibold">Sector:</span> <span>{companyInfo.sector}</span>
+          <span className="font-semibold">Sector:</span>{' '}
+          <span>{toTitleCase(companyInfo.sector)}</span>
         </div>
         <div>
-          <span className="font-semibold">Industry:</span> <span>{companyInfo.industry}</span>
+          <span className="font-semibold">Industry:</span>{' '}
+          <span>{toTitleCase(companyInfo.industry)}</span>
         </div>
         <div>
           <span className="font-semibold">Country:</span> <span>{companyInfo.country}</span>
         </div>
       </div>
-      <p className="mt-5 text-lg leading-relaxed">
+      <p className="text-lg leading-relaxed">
         {displayed}
-        {shortcut && (
+        {needsTruncate && (
           <button
             onClick={toggleShowMore}
-            className="ml-2 text-blue-500 hover:underline focus:outline-none"
+            className="text-blue-300 hover:underline focus:outline-none"
             aria-expanded={showMore}
-            aria-label={showMore ? 'Show less' : 'Show more'}
-            type="button"
           >
-            {showMore ? 'Show less' : 'Show more'}
+            {showMore ? 'Show Less' : 'Show More'}
           </button>
         )}
       </p>
