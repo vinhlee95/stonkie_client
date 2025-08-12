@@ -54,7 +54,7 @@ function TradingViewWidget({ ticker }: { ticker: string }) {
       noTimeScale: false,
       hideDateRanges: false,
       hideMarketStatus: false,
-      hideSymbolLogo: false,
+      hideSymbolLogo: true,
     }
 
     const script = document.createElement('script')
