@@ -1,23 +1,20 @@
 'use client'
-import { KeyStatsType } from './KeyStats'
+import type { KeyStatsType } from '@/app/types'
 import { useState } from 'react'
 
-type CompanyInfoType = Pick<
-  KeyStatsType,
-  'name' | 'sector' | 'industry' | 'country' | 'description'
->
 function toTitleCase(str: string) {
+  if (!str) return ' '
   return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
-export default function CompanyInfo({ companyInfo }: { companyInfo: CompanyInfoType }) {
+export default function CompanyInfo({ companyInfo }: { companyInfo: KeyStatsType }) {
   const [showMore, setShowMore] = useState(false)
   const maxLength = 200
   const toggleShowMore = () => setShowMore((prev) => !prev)
-  const needsTruncate = companyInfo.description.length > maxLength
-  const displayed = showMore
-    ? companyInfo.description
-    : companyInfo.description.slice(0, maxLength) + (needsTruncate ? '...' : '')
+  const des = companyInfo.description || ' '
+  const needsTruncate = des.length > maxLength
+  const displayed = showMore ? des : des.slice(0, maxLength) + (needsTruncate ? '...  ' : ' ')
+
   return (
     <section className="mt-2 mb-6">
       <h2 className="text-xl font-bold mb-2">About {companyInfo.name}</h2>
@@ -41,6 +38,7 @@ export default function CompanyInfo({ companyInfo }: { companyInfo: CompanyInfoT
             onClick={toggleShowMore}
             className="text-blue-300 hover:underline focus:outline-none"
             aria-expanded={showMore}
+            aria-label={showMore ? 'Show Less' : 'Show More'}
           >
             {showMore ? 'Show Less' : 'Show More'}
           </button>

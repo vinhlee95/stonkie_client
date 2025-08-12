@@ -31,3 +31,12 @@ export function isQuarterlyStatement(
 ): statement is QuarterlyFinancialStatement {
   return 'period_end_quarter' in statement
 }
+
+//KeyStats type
+export type KeyStatsType = {
+  name: string
+  sector: string
+  industry: string
+  country: string
+  description: string
+}
