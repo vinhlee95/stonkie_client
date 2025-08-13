@@ -7,6 +7,7 @@ import DebtEquityChart from './DebtEquityChart'
 import { CompanyFinancialStatement } from '@/app/types'
 import { Company } from '@/app/CompanyList'
 import PriceChart from './PriceChart'
+import CompanyInfo from './CompanyInfo'
 
 export const revalidate = 120
 
@@ -79,6 +80,7 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
 
   return (
     <>
+      {keyStats && <CompanyInfo companyInfo={keyStats} />}
       <Suspense fallback={<p>Loading stock price chart</p>}>
         <PriceChart ticker={ticker} />
       </Suspense>
