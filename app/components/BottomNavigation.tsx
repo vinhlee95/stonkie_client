@@ -2,23 +2,11 @@
 
 import Link from 'next/link'
 import { ChatBubbleOutline, HomeOutlined } from '@mui/icons-material'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { ChatProvider } from './Chat'
 
-const LoadingUI = () => (
-  <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-    <div className="flex flex-col items-center gap-2 bg-white dark:bg-[#1C1C1C] px-4 py-3 rounded-lg shadow-lg">
-      <div className="w-8 h-8 border-4 border-gray-300 dark:border-gray-600 border-t-[var(--accent-hover)] dark:border-t-[var(--accent-hover-dark)] rounded-full animate-spin"></div>
-      <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">Loading chat...</span>
-    </div>
-  </div>
-)
-
-const Chat = dynamic(() => import('./Chat'), {
-  ssr: false,
-  loading: () => <LoadingUI />,
-})
+const ChatComp = dynamic(() => import('./Chat'), { ssr: false })
 
 export default function BottomNavigation() {
   const [isChatVisible, setIsChatVisible] = useState(false)
@@ -31,11 +19,15 @@ export default function BottomNavigation() {
     return () => window.removeEventListener('resize', checkDesktop)
   }, [])
 
+  const preloadChat = useCallback(() => {
+    import('./Chat')
+  }, [])
+
   return (
     <>
       {isChatVisible && (
         <ChatProvider>
-          <Chat onClose={() => setIsChatVisible(false)} isDesktop={isDesktop} />
+          <ChatComp onClose={() => setIsChatVisible(false)} isDesktop={isDesktop} />
         </ChatProvider>
       )}
 
@@ -50,6 +42,7 @@ export default function BottomNavigation() {
 
           <button
             onClick={() => setIsChatVisible(true)}
+            onMouseEnter={preloadChat}
             className="p-2 rounded-full text-gray-600 dark:text-gray-400 focus:outline-none hover:text-[var(--accent-hover)] dark:hover:text-[var(--accent-hover-dark)] transition-colors duration-200"
           >
             <ChatBubbleOutline fontSize="medium" />
