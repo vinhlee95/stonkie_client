@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 type CompanyInfoType = {
   name: string
@@ -15,30 +15,28 @@ function toTitleCase(str?: string) {
 }
 export default function CompanyInfo({ companyInfo }: { companyInfo: CompanyInfoType }) {
   const [showMore, setShowMore] = useState(false)
-  const maxLength = 200
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768)
+    checkDesktop()
+    window.addEventListener('resize', checkDesktop)
+    return () => window.removeEventListener('resize', checkDesktop)
+  }, [])
+
+  const maxLength = isDesktop ? 400 : 200
   const toggleShowMore = () => setShowMore((prev) => !prev)
   const des = companyInfo?.description?.trim() ?? ''
   const needsTruncate = des.length > maxLength
   const displayed = showMore ? des + ' ' : des.slice(0, maxLength) + (needsTruncate ? '... ' : '')
 
   return (
-    <section className="mt-2 mb-6">
-      <div className="flex flex-col sm:flex-row justify-between gap-4 text-lg mb-2">
-        <div>
-          <span className="font-semibold">Sector: </span>
-          <span>{toTitleCase(companyInfo.sector)}</span>
-        </div>
-        <div>
-          <span className="font-semibold">Industry: </span>
-          <span>{toTitleCase(companyInfo.industry)}</span>
-        </div>
-        <div>
-          <span className="font-semibold">Country: </span>
-          <span>{companyInfo.country}</span>
-        </div>
-      </div>
-
-      <p className="text-lg leading-relaxed">
+    <section className="mb-4">
+      <span className="font-semibold mb-2 block">
+        {toTitleCase(companyInfo.sector)} | <span>{toTitleCase(companyInfo.industry)} | </span>
+        <span>{companyInfo.country}</span>
+      </span>
+      <p className="leading-relaxed">
         {displayed}
         {needsTruncate && (
           <button
