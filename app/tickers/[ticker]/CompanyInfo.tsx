@@ -23,9 +23,7 @@ export default function CompanyInfo({ companyInfo }: { companyInfo: CompanyInfoT
 
   return (
     <section className="mt-2 mb-6">
-      <h2 className="text-xl font-bold mb-2">About {companyInfo.name}</h2>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-lg mb-2">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 text-lg mb-2">
         <div>
           <span className="font-semibold">Sector: </span>
           <span>{toTitleCase(companyInfo.sector)}</span>
