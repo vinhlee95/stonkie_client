@@ -220,9 +220,8 @@ function ChartTitle({
   onInsightButtonClick: () => void
 }) {
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h1 className="text-xl font-bold">{title}</h1>
-
+    <div className="flex items-center justify-between mb-2">
+      <h3 className="font-semibold">{title}</h3>
       <button
         className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5 transition-colors cursor-pointer"
         onClick={onInsightButtonClick}

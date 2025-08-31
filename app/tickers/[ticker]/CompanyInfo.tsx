@@ -32,10 +32,10 @@ export default function CompanyInfo({ companyInfo }: { companyInfo: CompanyInfoT
 
   return (
     <section className="mb-4">
-      <span className="font-semibold mb-2 block">
-        {toTitleCase(companyInfo.sector)} | <span>{toTitleCase(companyInfo.industry)} | </span>
-        <span>{companyInfo.country}</span>
-      </span>
+      <h3 className="mb-2">
+        {toTitleCase(companyInfo.sector)} | {toTitleCase(companyInfo.industry)} |{' '}
+        {toTitleCase(companyInfo.country).toUpperCase()}
+      </h3>
       <p className="leading-relaxed">
         {displayed}
         {needsTruncate && (

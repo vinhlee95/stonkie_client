@@ -22,32 +22,32 @@ export default function KeyStats({ keyStats }: { keyStats: KeyStatsType }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="stat-card">
           <h3>Market capitalization</h3>
-          <p className="text-2xl font-bold">${formatNumber(keyStats.market_cap)}</p>
+          <p className="text-2xl font-semibold">${formatNumber(keyStats.market_cap)}</p>
         </div>
 
         <div className="stat-card">
           <h3>Price to earnings Ratio (TTM)</h3>
-          <p className="text-2xl font-bold">{keyStats.pe_ratio}</p>
+          <p className="text-2xl font-semibold">{keyStats.pe_ratio}</p>
         </div>
 
         <div className="stat-card">
           <h3>Dividend yield (indicated)</h3>
-          <p className="text-2xl font-bold">{keyStats.dividend_yield}%</p>
+          <p className="text-2xl font-semibold">{keyStats.dividend_yield}%</p>
         </div>
 
         <div className="stat-card">
           <h3>Basic EPS (TTM)</h3>
-          <p className="text-2xl font-bold">${keyStats.basic_eps}</p>
+          <p className="text-2xl font-semibold">${keyStats.basic_eps}</p>
         </div>
 
         <div className="stat-card">
           <h3>Net income (FY)</h3>
-          <p className="text-2xl font-bold">${formatNumber(keyStats.net_income)}</p>
+          <p className="text-2xl font-semibold">${formatNumber(keyStats.net_income)}</p>
         </div>
 
         <div className="stat-card">
           <h3>Revenue (FY)</h3>
-          <p className="text-2xl font-bold">${formatNumber(keyStats.revenue)}</p>
+          <p className="text-2xl font-semibold">${formatNumber(keyStats.revenue)}</p>
         </div>
       </div>
     </div>
