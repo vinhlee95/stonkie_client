@@ -9,10 +9,10 @@ interface ChatHeaderProps {
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ onClose, onMaximize, isMaximized }) => {
   return (
-    <div className="sticky top-0 right-0 z-50 flex justify-end gap-2 bg-[var(--background)] px-4 py-2">
+    <div className="absolute top-0 right-0 z-50 flex justify-end gap-2 bg-transparent px-4 py-2">
       <button
         onClick={onMaximize}
-        className="hidden md:inline-flex p-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 rounded w-8 h-8"
+        className="hidden md:inline-flex p-2 cursor-pointer bg-white dark:bg-black hover:bg-gray-100 dark:hover:bg-gray-900 rounded-xl"
         aria-label={isMaximized ? 'Minimize' : 'Maximize'}
         aria-pressed={isMaximized}
       >
@@ -20,7 +20,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onClose, onMaximize, isMaximize
       </button>
       <button
         onClick={onClose}
-        className="p-2 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 rounded w-8 h-8"
+        className="p-2 cursor-pointer bg-white dark:bg-black hover:bg-gray-100 dark:hover:bg-gray-900 rounded-xl"
         aria-label="Close"
       >
         <Minus className="w-6 h-6" />
