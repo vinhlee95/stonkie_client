@@ -107,7 +107,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
               <div
                 key={index}
                 onClick={() => onFAQClick?.(question)}
-                className="group flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 cursor-pointer rounded px-2 transition-colors duration-200"
+                className="group flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 cursor-pointer rounded transition-colors duration-200"
               >
                 <p className="text-gray-900 dark:text-white flex-1 pr-2 transition-colors duration-200 group-hover:text-[var(--accent-hover)] dark:group-hover:text-[var(--accent-hover-dark)]">
                   {question}
