@@ -19,7 +19,7 @@ export const useChatState = (ticker: string | undefined) => {
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null)
   const [input, setInput] = useState('')
   const hasFetchedFAQs = useRef(false)
-  const [useGoogleSearch, setUseGoogleSearch] = useState<boolean>(true)
+  const [useGoogleSearch, setUseGoogleSearch] = useState<boolean>(false)
 
   useEffect(() => {
     setThreads([])
