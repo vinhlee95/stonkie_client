@@ -35,22 +35,22 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-size: 1.125rem; /* Base mobile font size */
+  font-size: 1rem; /* Base mobile font size - reduced by ~10% */
 }
 
 /* Mobile font sizes */
 h3 {
-  font-size: 1.25rem; /* 18px - bigger h3 for mobile */
+  font-size: 1.125rem; /* Reduced by ~10% */
 }
 
 /* Improve font sizes globally for better desktop readability */
 @media (min-width: 768px) {
   body {
-    font-size: 1.2rem; /* Larger base font size for desktop */
+    font-size: 1.125rem; /* Larger base font size for desktop - reduced by ~10% */
   }
 
   h1 {
-    font-size: 1.75rem;
+    font-size: 1.575rem; /* Reduced by ~10% */
   }
 
   p {
@@ -58,10 +58,10 @@ h3 {
   }
 
   h2 {
-    font-size: 1.5rem;
+    font-size: 1.35rem; /* Reduced by ~10% */
   }
 
   h3 {
-    font-size: 1.35rem;
+    font-size: 1.215rem; /* Reduced by ~10% */
   }
 }

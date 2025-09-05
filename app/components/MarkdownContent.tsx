@@ -18,14 +18,14 @@ export default function MarkdownContent({
           ),
           p: ({ children }) => (
             <p
-              className={`mb-3 text-gray-900 dark:text-white text-base leading-relaxed ${smallSize ? 'text-sm' : ''}`}
+              className={`mb-3 text-gray-900 dark:text-white leading-relaxed ${smallSize ? 'text-sm' : ''}`}
             >
               {children}
             </p>
           ),
           strong: ({ children }) => <span className="font-bold">{children}</span>,
           ul: ({ children }) => <ul className="pl-4 mb-1.5 list-disc">{children}</ul>,
-          li: ({ children }) => <li className="mb-2 text-base leading-relaxed">{children}</li>,
+          li: ({ children }) => <li className="mb-2 leading-relaxed">{children}</li>,
           table: ({ children }) => (
             <div className="overflow-x-auto mb-2">
               <table className="w-full text-sm border-collapse">{children}</table>
