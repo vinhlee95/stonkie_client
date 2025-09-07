@@ -16,6 +16,10 @@ const TABS = [
     label: 'Cash flow',
     path: '/cash_flow',
   },
+  {
+    label: 'Filings',
+    path: '/filing',
+  },
 ]
 
 export default function Tabs({ ticker }: { ticker: string }) {
