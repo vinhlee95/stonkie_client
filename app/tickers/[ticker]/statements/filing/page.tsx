@@ -1,6 +1,19 @@
 import { AnnualFiling } from '@/app/types'
 import { BarChart3 } from 'lucide-react'
 import FinancialPeriodTabWithRouterChange from '@/app/components/FinancialPeriodTabWithRouterChange'
+import { Metadata } from 'next'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ ticker: string }>
+}): Promise<Metadata> {
+  const { ticker } = await params
+
+  return {
+    title: `${ticker.toUpperCase()} - 10K filings - Stonkie`,
+  }
+}
 
 export default async function FilingPage({
   params,

@@ -2,6 +2,19 @@ import { Chart } from '@/app/components/FinancialChart'
 import FinancialPeriodTabWithRouterChange from '@/app/components/FinancialPeriodTabWithRouterChange'
 import { isAnnualStatement, isQuarterlyStatement, type FinancialStatement } from '@/app/types'
 import { formatNumber } from '@/utils/formatter'
+import { Metadata } from 'next'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ ticker: string }>
+}): Promise<Metadata> {
+  const { ticker } = await params
+
+  return {
+    title: `${ticker.toUpperCase()} - Income Statement statements - Stonkie`,
+  }
+}
 
 const HIGHLIGHTED_METRICS = [
   'Total revenue',
