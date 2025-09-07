@@ -37,7 +37,7 @@ export default async function FilingPage({
     quarterlyFilingsResponse.status === 200 ? await quarterlyFilingsResponse.json() : []
 
   return (
-    <div className="py-2">
+    <div>
       {/* Tab Navigation */}
       <FinancialPeriodTabWithRouterChange />
 
@@ -57,9 +57,6 @@ export default async function FilingPage({
                   <h3 className="text-lg font-semibold text-gray-900">
                     Form {selectedPeriod === 'quarterly' ? '10-Q' : '10-K'} {filing.period_end_year}
                   </h3>
-                  <p className="text-gray-600 text-sm">
-                    Filed: Mar {15 + index}, {filing.period_end_year + 1}
-                  </p>
                 </div>
                 <span
                   className={`px-2 py-1 rounded text-xs font-medium ${
@@ -76,7 +73,7 @@ export default async function FilingPage({
                   href={filing.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-white"
+                  className="text-sm flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white"
                   style={{ backgroundColor: 'var(--tab-active)' }}
                 >
                   <BarChart3 size={16} />
@@ -86,7 +83,7 @@ export default async function FilingPage({
                   href={filing.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  className="text-sm flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 >
                   View
                 </a>
