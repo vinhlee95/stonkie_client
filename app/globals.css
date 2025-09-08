@@ -16,6 +16,14 @@
   --button-hover-dark: #333535;
   --tab-active: #286956;
   --tab-active-dark: #146a4e;
+  --card-background: #ffffff;
+  --card-background-dark: #2d2b2b;
+  --primary-button-background: #286956;
+  --primary-button-hover: #318970;
+  --primary-button-hover-dark: #10b981;
+  --secondary-button-background: #e5e8e7;
+  --secondary-button-hover: #cdd1d0;
+  --secondary-button-hover-dark: #333535;
 }
 
 @theme inline {
@@ -29,6 +37,9 @@
   :root {
     --background: rgb(37, 35, 35);
     --foreground: #ededed;
+    --card-background: #2d2b2b;
+    --button-background: #414443;
+    --secondary-button-background: #414443;
   }
 }
 
@@ -63,5 +74,35 @@ h3 {
 
   h3 {
     font-size: 1.215rem; /* Reduced by ~10% */
+  }
+}
+
+/* Button styles */
+.button-primary {
+  background-color: var(--primary-button-background);
+  transition: all 0.2s ease;
+}
+
+.button-primary:hover {
+  background-color: var(--primary-button-hover);
+}
+
+.button-secondary {
+  background-color: var(--secondary-button-background);
+  border-color: var(--secondary-button-background);
+  transition: all 0.2s ease;
+}
+
+.button-secondary:hover {
+  background-color: var(--secondary-button-hover);
+}
+
+@media (prefers-color-scheme: dark) {
+  .button-primary:hover {
+    background-color: var(--primary-button-hover-dark);
+  }
+
+  .button-secondary:hover {
+    background-color: var(--secondary-button-hover-dark);
   }
 }

@@ -64,16 +64,22 @@ export default async function FilingPage({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {(selectedPeriod === 'quarterly' ? quarterlyFilings : annualFilings).map(
           (filing, index) => (
-            <div key={index} className="border border-gray-200 rounded-xl p-6 bg-white">
+            <div
+              key={index}
+              className="border border-gray-200 dark:border-gray-600 rounded-xl p-6"
+              style={{ backgroundColor: 'var(--card-background)' }}
+            >
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Form {selectedPeriod === 'quarterly' ? '10-Q' : '10-K'} {filing.period_end_year}
                   </h3>
                 </div>
                 <span
                   className={`px-2 py-1 rounded text-xs font-medium ${
-                    index === 0 ? 'text-white' : 'bg-gray-100 text-gray-600'
+                    index === 0
+                      ? 'text-white'
+                      : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
                   }`}
                   style={index === 0 ? { backgroundColor: 'var(--tab-active)' } : {}}
                 >
@@ -86,8 +92,7 @@ export default async function FilingPage({
                   href={filing.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white"
-                  style={{ backgroundColor: 'var(--tab-active)' }}
+                  className="button-primary text-sm flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-white"
                 >
                   <BarChart3 size={16} />
                   Analyze
@@ -96,7 +101,7 @@ export default async function FilingPage({
                   href={filing.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  className="button-secondary text-sm flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border text-gray-700 dark:text-gray-200"
                 >
                   View
                 </a>
