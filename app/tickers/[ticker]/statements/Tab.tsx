@@ -53,7 +53,7 @@ export default function Tabs({ ticker }: { ticker: string }) {
         <div className="w-8 sm:w-0 flex-shrink-0"></div>
       </div>
       {/* Fade gradient overlay for mobile only */}
-      <div className="absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-white via-white/80 to-transparent pointer-events-none sm:hidden"></div>
+      <div className="absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-[var(--background)] via-[var(--background)]/80 to-transparent pointer-events-none sm:hidden"></div>
       <style jsx>{`
         div::-webkit-scrollbar {
           display: none;
