@@ -139,7 +139,7 @@ interface ChatboxUIProps {
   setUseGoogleSearch: Dispatch<SetStateAction<boolean>>
 }
 
-const ChatboxUI: React.FC<ChatboxUIProps> = ({
+export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   threads,
   input,
   setInput,

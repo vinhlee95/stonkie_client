@@ -48,7 +48,7 @@ export const useChatState = (ticker: string | undefined) => {
       if (threadIndex === -1) {
         const newThread: Thread = {
           id: threadId,
-          question: updates.question || 'New Thread',
+          question: updates.question || '',
           thoughts: updates.thoughts || [],
           answer: updates.answer || null,
           relatedQuestions: updates.relatedQuestions || [],
