@@ -19,7 +19,11 @@ export const useChatAPI = (
     }
   }
 
-  const handleSubmit = async (question: string, threadId: string, useGoogleSearch: boolean) => {
+  const handleSubmit = async (
+    question: string,
+    threadId: string,
+    useGoogleSearch: boolean = false,
+  ) => {
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController()
     const signal = abortControllerRef.current.signal
@@ -96,8 +100,6 @@ export const useChatAPI = (
     updateThread(threadId, {
       id: threadId,
       question: 'Loading FAQs...',
-      thoughts: [],
-      answer: null,
       relatedQuestions: [],
     })
 
@@ -123,14 +125,7 @@ export const useChatAPI = (
                   questions = [...questions, data.text]
                   updateThread(threadId, {
                     question: 'Frequently Asked Questions',
-                    thoughts: [],
-                    answer: null,
                     relatedQuestions: questions,
-                  })
-                  break
-                case 'status':
-                  updateThread(threadId, {
-                    thoughts: [data.message],
                   })
                   break
                 case 'error':

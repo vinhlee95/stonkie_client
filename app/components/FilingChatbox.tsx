@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { useChatState } from './hooks/useChatState'
 import { useChatAPI } from './hooks/useChatAPI'
@@ -22,7 +22,8 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
   isDesktop = false,
 }) => {
   const params = useParams()
-  const ticker = params.ticker as string | undefined
+  // const ticker = params.ticker as string | undefined
+  const ticker = useMemo(() => params.ticker as string | undefined, [params.ticker])
   const hasFetchedAnalysis = useRef(false)
   const currentAnswerRef = useRef('')
   const isThinkingRef = useRef(false)
@@ -30,7 +31,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
   const { threads, input, setInput, addThread, updateThread, useGoogleSearch, setUseGoogleSearch } =
     useChatState(ticker)
 
-  const { isLoading, cancelRequest } = useChatAPI(ticker, updateThread)
+  const { isLoading, cancelRequest, handleSubmit } = useChatAPI(ticker, updateThread)
 
   // Extract period from filing name (e.g., "Form 10-K 2024" -> "2024")
   const extractPeriod = (name: string) => {
@@ -47,7 +48,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
     if (!ticker) return
 
     // Create the analysis thread
-    const threadId = addThread(`Analysis of ${filingName}`)
+    const threadId = addThread('')
     currentAnswerRef.current = ''
     isThinkingRef.current = true
 
@@ -164,7 +165,9 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 p-6 mb-6">
       <div className="flex items-center gap-3 mb-3">
         <FileText size={24} className="text-gray-600 dark:text-gray-400" />
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{filingName}</h3>
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          Analysis of {filingName}
+        </h3>
       </div>
       <a
         href={filingUrl}
@@ -183,10 +186,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
       input={input}
       setInput={setInput}
       addThread={addThread}
-      handleSubmit={async (question: string, threadId: string) => {
-        // For now, just add the thread. Future: implement chat API for follow-up questions
-        console.log('Filing chat question:', question, 'threadId:', threadId)
-      }}
+      handleSubmit={handleSubmit}
       isLoading={isLoading}
       isThinking={isThinkingRef.current}
       cancelRequest={cancelRequest}

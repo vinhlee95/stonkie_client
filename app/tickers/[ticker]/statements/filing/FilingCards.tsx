@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { AnnualFiling } from '@/app/types'
 import { BarChart3 } from 'lucide-react'
 import FilingChatbox from '@/app/components/FilingChatbox'
@@ -34,6 +34,15 @@ export default function FilingCards({
     setSelectedFiling(filing)
     setIsChatOpen(true)
   }
+
+  const handleCloseChat = useCallback(() => {
+    setIsChatOpen(false)
+  }, [])
+
+  const filingName = useMemo(() => {
+    if (!selectedFiling) return ''
+    return `Form ${selectedPeriod === 'quarterly' ? '10-Q' : '10-K'} ${selectedFiling.period_end_year}`
+  }, [selectedPeriod, selectedFiling])
 
   const filings = selectedPeriod === 'quarterly' ? quarterlyFilings : annualFilings
 
@@ -89,8 +98,8 @@ export default function FilingCards({
       {/* Chat Modal */}
       {isChatOpen && selectedFiling && (
         <FilingChatbox
-          onClose={() => setIsChatOpen(false)}
-          filingName={`Form ${selectedPeriod === 'quarterly' ? '10-Q' : '10-K'} ${selectedFiling.period_end_year}`}
+          onClose={handleCloseChat}
+          filingName={filingName}
           filingUrl={selectedFiling.url}
           isDesktop={isDesktop}
         />
