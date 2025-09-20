@@ -75,6 +75,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
       const decoder = new TextDecoder()
       let buffer = ''
       let thoughts: string[] = []
+      const relatedQuestions: string[] = []
 
       while (true) {
         const { done, value } = await reader.read()
@@ -117,6 +118,10 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
                 updateThread(threadId, {
                   answer: currentAnswerRef.current,
                 })
+              } else if (data.type == 'related_question') {
+                // Update related questions
+                relatedQuestions.push(data.body)
+                updateThread(threadId, { relatedQuestions })
               }
             } catch (e) {
               console.error('Error parsing JSON chunk:', e)
@@ -135,7 +140,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
         isThinkingRef.current = false
       }
     }
-  }, [ticker, period, periodType, addThread, updateThread, filingName])
+  }, [ticker, period, periodType, addThread, updateThread])
 
   const handleFAQClick = async (question: string) => {
     // For now, just add the question as a new thread
