@@ -143,8 +143,8 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
   }, [ticker, period, periodType, addThread, updateThread])
 
   const handleFAQClick = async (question: string) => {
-    // For now, just add the question as a new thread
-    addThread(question)
+    const threadId = addThread(question)
+    await handleSubmit(question, threadId)
   }
 
   useEffect(() => {
