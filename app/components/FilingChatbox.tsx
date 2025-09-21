@@ -26,12 +26,17 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
   const ticker = useMemo(() => params.ticker as string | undefined, [params.ticker])
   const hasFetchedAnalysis = useRef(false)
   const currentAnswerRef = useRef('')
-  const isThinkingRef = useRef(false)
+  const isFetchingAnalysisRef = useRef(false)
 
   const { threads, input, setInput, addThread, updateThread, useGoogleSearch, setUseGoogleSearch } =
     useChatState(ticker)
 
-  const { isLoading, cancelRequest, handleSubmit } = useChatAPI(ticker, updateThread)
+  const {
+    isLoading,
+    cancelRequest,
+    handleSubmit,
+    isThinking: isAnsweringNextQuestion,
+  } = useChatAPI(ticker, updateThread)
 
   // Extract period from filing name (e.g., "Form 10-K 2024" -> "2024")
   const extractPeriod = (name: string) => {
@@ -50,7 +55,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
     // Create the analysis thread
     const threadId = addThread('')
     currentAnswerRef.current = ''
-    isThinkingRef.current = true
+    isFetchingAnalysisRef.current = true
 
     try {
       const response = await fetch(
@@ -112,7 +117,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
                 // Update thoughts
                 updateThread(threadId, { thoughts })
               } else if (data.type === 'answer') {
-                isThinkingRef.current = false
+                isFetchingAnalysisRef.current = false
                 // Accumulate answer content
                 currentAnswerRef.current += data.body
                 updateThread(threadId, {
@@ -136,8 +141,8 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
         answer: 'Error loading analysis. Please try again.',
       })
     } finally {
-      if (isThinkingRef.current) {
-        isThinkingRef.current = false
+      if (isFetchingAnalysisRef.current) {
+        isFetchingAnalysisRef.current = false
       }
     }
   }, [ticker, period, periodType, addThread, updateThread])
@@ -193,7 +198,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
       addThread={addThread}
       handleSubmit={handleSubmit}
       isLoading={isLoading}
-      isThinking={isThinkingRef.current}
+      isThinking={isFetchingAnalysisRef.current || isAnsweringNextQuestion}
       cancelRequest={cancelRequest}
       onClose={onClose}
       isDesktop={isDesktop}
