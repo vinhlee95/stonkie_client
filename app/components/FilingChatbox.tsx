@@ -149,7 +149,13 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
-    await handleSubmit(question, threadId)
+    const questionWithFilingContext = `${question}. Here is the 10K filing URL: ${filingUrl}`
+    await handleSubmit(questionWithFilingContext, threadId)
+  }
+
+  const handleSubmitNewQuestion = async (question: string, threadId: string) => {
+    const questionWithFilingContext = `${question}. Here is the 10K filing URL: ${filingUrl}`
+    await handleSubmit(questionWithFilingContext, threadId)
   }
 
   useEffect(() => {
@@ -196,7 +202,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
       input={input}
       setInput={setInput}
       addThread={addThread}
-      handleSubmit={handleSubmit}
+      handleSubmit={handleSubmitNewQuestion}
       isLoading={isLoading}
       isThinking={isFetchingAnalysisRef.current || isAnsweringNextQuestion}
       cancelRequest={cancelRequest}
