@@ -113,6 +113,9 @@ h3 {
   /* Safari-specific fixes */
   transform: translate3d(0, 0, 0);
   -webkit-transform: translate3d(0, 0, 0);
+  /* Ensure scrolling works on Safari iOS */
+  position: relative;
+  z-index: 1;
 }
 
 /* Safari-specific body lock classes */
@@ -128,6 +131,13 @@ html.safari-scroll-lock {
   overflow: hidden !important;
   width: 100% !important;
   height: 100% !important;
+}
+
+/* Allow modal content to scroll even when body is locked */
+body.safari-scroll-lock .modal-content {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  max-height: 100% !important;
 }
 
 /* Ensure proper touch scrolling on iOS and Safari */

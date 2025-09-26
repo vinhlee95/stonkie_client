@@ -174,7 +174,7 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
       >
         <ChatHeader onClose={onClose} onMaximize={handleMaximize} isMaximized={isMaximized} />
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 mt-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 mt-4 modal-content">
           <div className="w-full max-w-4xl mx-auto">
             {children}
             {threads.map((thread: Thread, index: number) => (

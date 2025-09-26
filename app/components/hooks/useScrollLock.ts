@@ -72,26 +72,15 @@ export const useScrollLock = ({ isLocked, isDesktop = false }: UseScrollLockOpti
       const target = e.target as Element
       const modalContent = target.closest('.modal-content')
 
+      // If touch is outside modal content, prevent it
       if (!modalContent) {
         e.preventDefault()
         return false
       }
 
-      // For Safari, also check if the touch is at the boundaries of the modal content
-      if (modalContent) {
-        const scrollTop = modalContent.scrollTop
-        const scrollHeight = modalContent.scrollHeight
-        const clientHeight = modalContent.clientHeight
-
-        // Prevent overscroll/bounce at top and bottom
-        if (
-          (scrollTop === 0 && e.touches[0].clientY > e.touches[0].clientY) ||
-          (scrollTop + clientHeight >= scrollHeight && e.touches[0].clientY < e.touches[0].clientY)
-        ) {
-          e.preventDefault()
-          return false
-        }
-      }
+      // If touch is within modal content, allow normal scrolling
+      // The modal content should handle its own overflow scrolling
+      return true
     }
 
     if (!isDesktop) {
@@ -106,8 +95,9 @@ export const useScrollLock = ({ isLocked, isDesktop = false }: UseScrollLockOpti
         document.body.style.left = `-${scrollX}px`
 
         // Add touch event listeners for Safari
-        document.addEventListener('touchmove', preventTouchMove, { passive: false })
-        document.addEventListener('wheel', preventDefault, { passive: false })
+        // Only add to document.body to be more specific
+        document.body.addEventListener('touchmove', preventTouchMove, { passive: false })
+        document.body.addEventListener('wheel', preventDefault, { passive: false })
       } else {
         // Standard mobile approach for other browsers
         document.documentElement.style.overflow = 'hidden'
@@ -132,8 +122,8 @@ export const useScrollLock = ({ isLocked, isDesktop = false }: UseScrollLockOpti
     // Cleanup function to restore original scroll behavior (mobile only)
     return () => {
       // Remove Safari-specific event listeners
-      document.removeEventListener('touchmove', preventTouchMove)
-      document.removeEventListener('wheel', preventDefault)
+      document.body.removeEventListener('touchmove', preventTouchMove)
+      document.body.removeEventListener('wheel', preventDefault)
 
       // Remove Safari-specific CSS classes
       document.documentElement.classList.remove('safari-scroll-lock')
