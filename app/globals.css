@@ -106,3 +106,53 @@ h3 {
     background-color: var(--secondary-button-hover-dark);
   }
 }
+
+/* iOS and Safari-specific modal and scrolling fixes */
+.modal-content {
+  -webkit-overflow-scrolling: touch;
+  /* Safari-specific fixes */
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+}
+
+/* Safari-specific body lock classes */
+body.safari-scroll-lock {
+  position: fixed !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+html.safari-scroll-lock {
+  position: fixed !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Ensure proper touch scrolling on iOS and Safari */
+@supports (-webkit-overflow-scrolling: touch) {
+  .modal-content {
+    -webkit-overflow-scrolling: touch;
+    /* Additional Safari fixes */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+  }
+}
+
+/* Prevent text selection and touch callouts on modal backdrop */
+.modal-backdrop {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* Safari-specific backdrop fixes */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+}

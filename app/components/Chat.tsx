@@ -232,17 +232,6 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
     await handleSubmit(question, threadId, useGoogleSearch)
   }
 
-  useEffect(() => {
-    // When chat is visible, disable body scroll
-    if (!isDesktop) {
-      document.body.style.overflow = 'hidden'
-    }
-    return () => {
-      // When chat is hidden, restore body scroll
-      document.body.style.overflow = ''
-    }
-  }, [])
-
   return (
     <ChatboxUI
       threads={threads}
@@ -284,17 +273,6 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
     const threadId = addThread(question)
     await handleSubmit(question, threadId, useGoogleSearch)
   }
-
-  useEffect(() => {
-    // When chat is visible, disable body scroll
-    if (!isDesktop) {
-      document.body.style.overflow = 'hidden'
-    }
-    return () => {
-      // When chat is hidden, restore body scroll
-      document.body.style.overflow = ''
-    }
-  }, [])
 
   return (
     <ChatboxUI

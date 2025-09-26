@@ -4,10 +4,14 @@ import { ChatBubbleOutline, HomeOutlined } from '@mui/icons-material'
 import { Suspense, useState, useEffect } from 'react'
 import Chat from './Chat'
 import { ChatProvider } from './Chat'
+import { useScrollLock } from './hooks/useScrollLock'
 
 const BottomNavigation = () => {
   const [isChatVisible, setIsChatVisible] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
+
+  // Use the scroll lock hook to disable HTML scrolling when chat is open
+  useScrollLock({ isLocked: isChatVisible, isDesktop })
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768)
