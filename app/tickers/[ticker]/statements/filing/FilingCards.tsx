@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { AnnualFiling } from '@/app/types'
 import { BarChart3 } from 'lucide-react'
 import FilingChatbox from '@/app/components/FilingChatbox'
+import { useScrollLock } from '@/app/components/hooks/useScrollLock'
 
 interface FilingCardsProps {
   annualFilings: AnnualFiling[]
@@ -18,6 +19,7 @@ export default function FilingCards({
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [selectedFiling, setSelectedFiling] = useState<AnnualFiling | null>(null)
   const [isDesktop, setIsDesktop] = useState(false)
+  useScrollLock({ isLocked: isChatOpen, isDesktop })
 
   useEffect(() => {
     const checkIsDesktop = () => {

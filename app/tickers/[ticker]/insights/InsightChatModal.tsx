@@ -1,10 +1,11 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Image from 'next/image'
 import { InsightChatbox } from '@/app/components/Chat'
 import InsightReport from './InsightReport'
 import InsightHeader from './InsightHeader'
+import { useScrollLock } from '@/app/components/hooks/useScrollLock'
 
 interface Insight {
   title: string
@@ -28,6 +29,19 @@ export default function InsightChatModal({
 }) {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [currentInsight, setCurrentInsight] = useState<Insight | null>(null)
+  const [isDesktop, setIsDesktop] = useState(false)
+  useScrollLock({ isLocked: isChatOpen, isDesktop })
+
+  useEffect(() => {
+    const checkIsDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768) // md breakpoint
+    }
+
+    checkIsDesktop()
+    window.addEventListener('resize', checkIsDesktop)
+
+    return () => window.removeEventListener('resize', checkIsDesktop)
+  }, [])
 
   const handleCardClick = (insight: Insight) => {
     setCurrentInsight(insight)
