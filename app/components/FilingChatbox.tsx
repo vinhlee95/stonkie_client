@@ -147,14 +147,18 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
     }
   }, [ticker, period, periodType, addThread, updateThread])
 
+  const addCompanySpecificContext = (question: string): string => {
+    return `${question}. Here is the 10K filing URL: ${filingUrl}. This question is specifically for company ${ticker}, not a general finance question.`
+  }
+
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
-    const questionWithFilingContext = `${question}. Here is the 10K filing URL: ${filingUrl}`
+    const questionWithFilingContext = addCompanySpecificContext(question)
     await handleSubmit(questionWithFilingContext, threadId)
   }
 
   const handleSubmitNewQuestion = async (question: string, threadId: string) => {
-    const questionWithFilingContext = `${question}. Here is the 10K filing URL: ${filingUrl}`
+    const questionWithFilingContext = addCompanySpecificContext(question)
     await handleSubmit(questionWithFilingContext, threadId)
   }
 
