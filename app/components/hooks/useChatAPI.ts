@@ -23,6 +23,7 @@ export const useChatAPI = (
     question: string,
     threadId: string,
     useGoogleSearch: boolean = false,
+    useUrlContext: boolean = false,
   ) => {
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController()
@@ -31,7 +32,13 @@ export const useChatAPI = (
     setIsLoading(true)
     isThinkingRef.current = true
     try {
-      const reader = await chatService.analyzeQuestion(question, ticker, useGoogleSearch, signal)
+      const reader = await chatService.analyzeQuestion(
+        question,
+        ticker,
+        useGoogleSearch,
+        useUrlContext,
+        signal,
+      )
       if (!reader) throw new Error('Failed to get reader')
 
       const decoder = new TextDecoder()

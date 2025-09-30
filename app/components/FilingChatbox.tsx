@@ -154,12 +154,12 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
     const questionWithFilingContext = addCompanySpecificContext(question)
-    await handleSubmit(questionWithFilingContext, threadId)
+    await handleSubmit(questionWithFilingContext, threadId, false, true)
   }
 
   const handleSubmitNewQuestion = async (question: string, threadId: string) => {
     const questionWithFilingContext = addCompanySpecificContext(question)
-    await handleSubmit(questionWithFilingContext, threadId)
+    await handleSubmit(questionWithFilingContext, threadId, false, true)
   }
 
   useEffect(() => {

@@ -5,6 +5,7 @@ export const chatService = {
     question: string,
     ticker: string | undefined,
     useGoogleSearch: boolean,
+    useUrlContext: boolean = false,
     signal?: AbortSignal,
   ) {
     const response = await fetch(`${BACKEND_URL}/api/company/analyze`, {
@@ -12,7 +13,7 @@ export const chatService = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ question, ticker, useGoogleSearch }),
+      body: JSON.stringify({ question, ticker, useGoogleSearch, useUrlContext }),
       signal,
     })
 
