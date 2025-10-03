@@ -37,19 +37,23 @@ const BottomNavigation = () => {
       </Suspense>
 
       <div className="fixed bottom-4 left-0 right-0 z-40 flex justify-center">
-        <div className="flex gap-8 px-6 py-3 rounded-full bg-white/70 dark:bg-[#1C1C1C]/70 backdrop-blur-md shadow-lg border border-gray-200/50 dark:border-gray-800/50">
+        <div className="relative flex gap-6 px-8 py-3 rounded-full bg-white/40 dark:bg-[#1C1C1C]/40 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] border border-white/30 dark:border-white/10 overflow-hidden">
           <Link
             href="/"
-            className="p-2 rounded-full text-gray-600 dark:text-gray-400 hover:text-[var(--accent-hover)] dark:hover:text-[var(--accent-hover-dark)] transition-colors duration-200"
+            className="group relative p-2.5 rounded-full text-gray-700 dark:text-gray-300 transition-all duration-300 hover:scale-110 active:scale-95 z-10"
           >
-            <HomeOutlined fontSize="medium" />
+            <div className="absolute -inset-y-3 -inset-x-8 rounded-full bg-gradient-to-br from-white/80 to-white/30 dark:from-white/30 dark:to-white/10 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 backdrop-blur-sm border-r border-white/40 dark:border-white/20 pointer-events-none" />
+            <div className="absolute -inset-y-3 -inset-x-8 rounded-full shadow-[inset_0_2px_8px_rgba(255,255,255,0.6),inset_0_-2px_8px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_2px_8px_rgba(255,255,255,0.3),inset_0_-2px_8px_rgba(0,0,0,0.4)] opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 pointer-events-none" />
+            <HomeOutlined fontSize="medium" className="relative z-10" />
           </Link>
 
           <button
             onClick={handleChatClick}
-            className="p-2 rounded-full text-gray-600 dark:text-gray-400 focus:outline-none hover:text-[var(--accent-hover)] dark:hover:text-[var(--accent-hover-dark)] transition-colors duration-200"
+            className="group relative p-2.5 rounded-full text-gray-700 dark:text-gray-300 focus:outline-none transition-all duration-300 hover:scale-110 active:scale-95 z-10"
           >
-            <ChatBubbleOutline fontSize="medium" />
+            <div className="absolute -inset-y-3 -inset-x-8 rounded-full bg-gradient-to-br from-white/80 to-white/30 dark:from-white/30 dark:to-white/10 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 backdrop-blur-sm border-l border-white/40 dark:border-white/20 pointer-events-none" />
+            <div className="absolute -inset-y-3 -inset-x-8 rounded-full shadow-[inset_0_2px_8px_rgba(255,255,255,0.6),inset_0_-2px_8px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_2px_8px_rgba(255,255,255,0.3),inset_0_-2px_8px_rgba(0,0,0,0.4)] opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 pointer-events-none" />
+            <ChatBubbleOutline fontSize="medium" className="relative z-10" />
           </button>
         </div>
       </div>
