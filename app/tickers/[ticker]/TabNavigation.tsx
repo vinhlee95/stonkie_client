@@ -37,7 +37,7 @@ export default function TabNavigation({ ticker }: { ticker: string }) {
   }, [pathname, tabs])
 
   return (
-    <div className="relative p-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+    <div className="relative py-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <div className="relative flex bg-gray-100/50 dark:bg-gray-800/30 backdrop-blur-sm rounded-full p-1.5 gap-1 w-fit">
         {/* Animated liquid glass pill that moves between tabs */}
         <div
@@ -59,7 +59,7 @@ export default function TabNavigation({ ticker }: { ticker: string }) {
               }}
               className={`relative px-6 py-2.5 rounded-full text-base font-medium transition-all duration-300 z-10 whitespace-nowrap ${
                 isActive
-                  ? 'text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]'
+                  ? 'text-gray-900 dark:text-white'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
               }`}
             >
