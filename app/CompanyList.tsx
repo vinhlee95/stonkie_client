@@ -34,7 +34,15 @@ export default function CompanyList({ companies }: { companies: Company[] }) {
               </div>
             )}
             <div className="relative z-10">
-              <h3 className="text-gray-800 dark:text-white text-lg font-medium">{company.name}</h3>
+              <h3
+                className="text-gray-800 dark:text-white text-lg font-medium"
+                title={company.name}
+              >
+                <span className="md:hidden">{company.name}</span>
+                <span className="hidden md:inline">
+                  {company.name.length > 12 ? `${company.name.substring(0, 12)}...` : company.name}
+                </span>
+              </h3>
               <p className="text-gray-600 dark:text-gray-400">{company.ticker}</p>
             </div>
           </Link>
