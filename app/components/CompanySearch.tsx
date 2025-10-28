@@ -7,11 +7,11 @@ interface SearchResult {
   name: string
 }
 
-interface AlphaVantageMatch {
-  '1. symbol': string
-  '2. name': string
-  '3. type': string
-  '4. region': string
+interface FinnhubMatch {
+  description: string
+  displaySymbol: string
+  symbol: string
+  type: string
 }
 
 interface CompanySearchProps {
@@ -54,20 +54,19 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ ticker, onTickerChange, o
     try {
       // TODO: move this to server side
       const response = await fetch(
-        `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${query}&apikey=${process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY}`,
+        `https://finnhub.io/api/v1/search?q=${query}&exchange=US&token=${process.env.NEXT_PUBLIC_FINNHUB_API_KEY}`,
       )
       const data = await response.json()
 
-      if (data.bestMatches) {
-        // Filter to only US market stocks (region: "United States") and type: "Equity"
-        const results = data.bestMatches
+      if (data.result) {
+        // Filter to only Common Stock type
+        const results = data.result
           .filter(
-            (match: AlphaVantageMatch) =>
-              match['4. region'] === 'United States' && match['3. type'] === 'Equity',
+            (match: FinnhubMatch) => match.type === 'Common Stock' && !match.symbol.includes('.'), // Exclude non-US exchanges
           )
-          .map((match: AlphaVantageMatch) => ({
-            symbol: match['1. symbol'],
-            name: match['2. name'],
+          .map((match: FinnhubMatch) => ({
+            symbol: match.symbol,
+            name: match.description,
           }))
         setSearchResults(results)
         setShowDropdown(results.length > 0)
