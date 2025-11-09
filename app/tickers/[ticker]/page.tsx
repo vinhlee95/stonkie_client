@@ -9,7 +9,7 @@ import { Company } from '@/app/CompanyList'
 import PriceChart from './PriceChart'
 import CompanyInfo from './CompanyInfo'
 
-export const revalidate = 1
+export const revalidate = 30
 
 // Pre-render popular ticker pages at build time for even faster initial loads.
 export async function generateStaticParams() {
@@ -28,7 +28,7 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
   const keyStatsResponse = await fetch(
     `${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/key-stats`,
     {
-      next: { revalidate: 5 * 60 },
+      next: { revalidate: 2 * 60 },
     },
   )
   const keyStats =
@@ -37,7 +37,7 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
   const statementsResponse = await fetch(
     `${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/statements`,
     {
-      next: { revalidate: 5 * 60 },
+      next: { revalidate: 2 * 60 },
     },
   )
 
