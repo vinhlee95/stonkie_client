@@ -162,17 +162,40 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
 
   const handleMaximize = () => setIsMaximized((prev) => !prev)
 
-  // Lock only vertical scrolling when cursor is on the chat window
+  // Prevent vertical scrolling of main page when cursor is on the chat window (keep scrollbar visible)
   useEffect(() => {
     if (isCursorOnChat) {
-      // Store original overflow-y value
-      const originalOverflowY = document.body.style.overflowY
-      // Disable only vertical scrolling
-      document.body.style.overflowY = 'hidden'
+      const preventScroll = (e: WheelEvent) => {
+        const target = e.target as Element
+        const isInsideModalContent = target.closest('.modal-content')
+
+        // Only prevent scroll if not inside modal content
+        if (!isInsideModalContent) {
+          e.preventDefault()
+        }
+      }
+
+      const preventKeyScroll = (e: KeyboardEvent) => {
+        const target = e.target as Element
+        const isInsideModalContent = target.closest('.modal-content')
+
+        // Only prevent keyboard scroll if not inside modal content
+        if (
+          !isInsideModalContent &&
+          ['ArrowUp', 'ArrowDown', 'Space', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.code)
+        ) {
+          e.preventDefault()
+        }
+      }
+
+      // Prevent wheel scrolling on body
+      window.addEventListener('wheel', preventScroll, { passive: false })
+      // Prevent keyboard scrolling on body
+      window.addEventListener('keydown', preventKeyScroll, { passive: false })
 
       return () => {
-        // Restore original overflow-y value
-        document.body.style.overflowY = originalOverflowY
+        window.removeEventListener('wheel', preventScroll)
+        window.removeEventListener('keydown', preventKeyScroll)
       }
     }
   }, [isCursorOnChat])
