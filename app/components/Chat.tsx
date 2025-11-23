@@ -158,7 +158,25 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
 }) => {
   const latestThreadRef = useRef<HTMLDivElement>(null)
   const [isMaximized, setIsMaximized] = useState(false)
+  const [isCursorOnChat, setIsCursorOnChat] = useState(false)
+
   const handleMaximize = () => setIsMaximized((prev) => !prev)
+
+  // Lock only vertical scrolling when cursor is on the chat window
+  useEffect(() => {
+    if (isCursorOnChat) {
+      // Store original overflow-y value
+      const originalOverflowY = document.body.style.overflowY
+      // Disable only vertical scrolling
+      document.body.style.overflowY = 'hidden'
+
+      return () => {
+        // Restore original overflow-y value
+        document.body.style.overflowY = originalOverflowY
+      }
+    }
+  }, [isCursorOnChat])
+
   useEffect(() => {
     if (latestThreadRef.current) {
       latestThreadRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -168,6 +186,8 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   return (
     <div
       className={`fixed z-50 overflow-x-hidden ${isMaximized ? 'top-0 left-0 right-0 bottom-0 w-full h-full' : isDesktop ? 'md:fixed md:top-[15vh] md:right-8 md:left-auto md:h-[80vh] md:max-h-[80vh] md:w-[50vw] md:shadow-[0_2px_16px_rgba(0,0,0,0.15)] md:z-50 md:rounded-xl md:overflow-x-hidden' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}
+      onMouseEnter={() => setIsCursorOnChat(true)}
+      onMouseLeave={() => setIsCursorOnChat(false)}
     >
       <div
         className={`bg-[var(--background)] text-[var(--foreground)] rounded-none shadow-lg flex flex-col h-full w-full overflow-hidden overflow-x-hidden ${isDesktop ? 'md:h-full md:w-full md:flex md:flex-col md:rounded-xl md:overflow-x-hidden' : ''}`}
