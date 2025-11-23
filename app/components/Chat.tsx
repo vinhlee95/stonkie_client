@@ -165,37 +165,22 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   // Prevent vertical scrolling of main page when cursor is on the chat window (keep scrollbar visible)
   useEffect(() => {
     if (isCursorOnChat) {
-      const preventScroll = (e: WheelEvent) => {
-        const target = e.target as Element
-        const isInsideModalContent = target.closest('.modal-content')
+      // Store current scroll position
+      const scrollY = window.scrollY
 
-        // Only prevent scroll if not inside modal content
-        if (!isInsideModalContent) {
-          e.preventDefault()
-        }
-      }
-
-      const preventKeyScroll = (e: KeyboardEvent) => {
-        const target = e.target as Element
-        const isInsideModalContent = target.closest('.modal-content')
-
-        // Only prevent keyboard scroll if not inside modal content
-        if (
-          !isInsideModalContent &&
-          ['ArrowUp', 'ArrowDown', 'Space', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.code)
-        ) {
-          e.preventDefault()
-        }
-      }
-
-      // Prevent wheel scrolling on body
-      window.addEventListener('wheel', preventScroll, { passive: false })
-      // Prevent keyboard scrolling on body
-      window.addEventListener('keydown', preventKeyScroll, { passive: false })
+      // Apply styles to body to prevent scrolling without hiding scrollbar
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+      document.body.style.overflowY = 'scroll'
 
       return () => {
-        window.removeEventListener('wheel', preventScroll)
-        window.removeEventListener('keydown', preventKeyScroll)
+        // Restore body styles and scroll position
+        document.body.style.position = ''
+        document.body.style.top = ''
+        document.body.style.width = ''
+        document.body.style.overflowY = ''
+        window.scrollTo(0, scrollY)
       }
     }
   }, [isCursorOnChat])
