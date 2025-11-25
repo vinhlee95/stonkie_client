@@ -10,7 +10,7 @@ import React, {
   useState,
 } from 'react'
 import { useParams } from 'next/navigation'
-import { ListPlus, FileSearch } from 'lucide-react'
+import { ListPlus, FileSearch, Cpu } from 'lucide-react'
 import ChatHeader from './ChatHeader'
 import ChatInput from './ChatInput'
 import { useChatState, Thread, isNormalThread } from './hooks/useChatState'
@@ -93,6 +93,13 @@ const ThreadView: React.FC<ThreadViewProps> = ({
           </div>
           <ResourceChips resources={thread.grounds.map((i) => ({ url: i.url, label: i.body }))} />
         </>
+      )}
+
+      {isNormalThread(thread) && thread.modelName && (
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400">
+          <Cpu className="h-3.5 w-3.5" />
+          <span>{thread.modelName}</span>
+        </div>
       )}
 
       {thread.relatedQuestions.length > 0 && (

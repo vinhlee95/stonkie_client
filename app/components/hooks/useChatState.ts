@@ -18,6 +18,7 @@ export interface NormalThread {
   answer: string | null
   relatedQuestions: string[]
   grounds: AnswerGround[]
+  modelName: string | undefined
 }
 
 export type Thread = FaqThread | NormalThread
@@ -57,6 +58,7 @@ export const useChatState = (ticker: string | undefined) => {
       answer: null,
       relatedQuestions: [],
       grounds: [],
+      modelName: undefined,
     }
     setThreads((prev) => {
       return [...prev, newThread]
@@ -68,10 +70,11 @@ export const useChatState = (ticker: string | undefined) => {
   const updateThread = useCallback((threadId: string, updates: Partial<Thread>) => {
     setThreads((prev) => {
       const threadIndex = prev.findIndex((t) => t.id === threadId)
+      const isNewThread = threadIndex === -1
 
-      // If thread doesn't exist, create it based on the update type
-      if (threadIndex === -1) {
-        // Determine thread type based on updates - if it has normal thread properties, create normal thread
+      if (isNewThread) {
+        // Determine thread type based on updates
+        // Iff it has normal thread properties, create normal thread
         if ('thoughts' in updates || 'answer' in updates || 'grounds' in updates) {
           const newThread: NormalThread = {
             id: threadId,
@@ -80,50 +83,27 @@ export const useChatState = (ticker: string | undefined) => {
             answer: (updates as Partial<NormalThread>).answer || null,
             relatedQuestions: updates.relatedQuestions || [],
             grounds: (updates as Partial<NormalThread>).grounds || [],
-          }
-          return [...prev, newThread]
-        } else {
-          // Create FAQ thread
-          const newThread: FaqThread = {
-            id: threadId,
-            question: updates.question || '',
-            relatedQuestions: updates.relatedQuestions || [],
+            modelName: (updates as Partial<NormalThread>).modelName || undefined,
           }
           return [...prev, newThread]
         }
+
+        // Create FAQ thread
+        const newThread: FaqThread = {
+          id: threadId,
+          question: updates.question || '',
+          relatedQuestions: updates.relatedQuestions || [],
+        }
+        return [...prev, newThread]
       }
 
       // Update existing thread
       const updatedThreads = [...prev]
       const existingThread = updatedThreads[threadIndex]
 
-      if (isNormalThread(existingThread)) {
-        // Update normal thread - only apply valid NormalThread properties
-        updatedThreads[threadIndex] = {
-          ...existingThread,
-          // ...(updates.question !== undefined && { question: updates.question }),
-          ...(updates.relatedQuestions !== undefined && {
-            relatedQuestions: updates.relatedQuestions,
-          }),
-          ...((updates as Partial<NormalThread>).thoughts !== undefined && {
-            thoughts: (updates as Partial<NormalThread>).thoughts,
-          }),
-          ...((updates as Partial<NormalThread>).answer !== undefined && {
-            answer: (updates as Partial<NormalThread>).answer,
-          }),
-          ...((updates as Partial<NormalThread>).grounds !== undefined && {
-            grounds: (updates as Partial<NormalThread>).grounds,
-          }),
-        }
-      } else if (isFaqThread(existingThread)) {
-        // Update FAQ thread - only apply valid FaqThread properties
-        updatedThreads[threadIndex] = {
-          ...existingThread,
-          ...(updates.question !== undefined && { question: updates.question }),
-          ...(updates.relatedQuestions !== undefined && {
-            relatedQuestions: updates.relatedQuestions,
-          }),
-        }
+      updatedThreads[threadIndex] = {
+        ...existingThread,
+        ...updates,
       }
 
       return updatedThreads

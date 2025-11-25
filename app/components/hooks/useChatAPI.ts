@@ -74,6 +74,8 @@ export const useChatAPI = (
             } else if (parsedChunk.type === 'google_search_ground') {
               grounds = [...grounds, { body: parsedChunk.body, url: parsedChunk.url }]
               updateThread(threadId, { grounds })
+            } else if (parsedChunk.type === 'model_used') {
+              updateThread(threadId, { modelName: parsedChunk.body })
             }
           }
         } catch (e) {
