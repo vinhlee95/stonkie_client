@@ -1,10 +1,12 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Company } from '../CompanyList'
 
 interface SearchResult {
   symbol: string
   name: string
+  logo_url?: string
 }
 
 interface FinnhubMatch {
@@ -18,9 +20,15 @@ interface CompanySearchProps {
   ticker: string
   onTickerChange: (ticker: string) => void
   onSubmit: (e: React.FormEvent) => Promise<void>
+  companies: Company[] | null
 }
 
-const CompanySearch: React.FC<CompanySearchProps> = ({ ticker, onTickerChange, onSubmit }) => {
+const CompanySearch: React.FC<CompanySearchProps> = ({
+  ticker,
+  onTickerChange,
+  onSubmit,
+  companies,
+}) => {
   const router = useRouter()
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
@@ -30,6 +38,24 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ ticker, onTickerChange, o
   const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const optionRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  // Search local companies by ticker or name (case-insensitive)
+  const searchLocalCompanies = (query: string): SearchResult[] => {
+    if (!companies || companies.length === 0) return []
+
+    const lowerQuery = query.toLowerCase()
+    const matches = companies.filter(
+      (company) =>
+        company.ticker.toLowerCase().includes(lowerQuery) ||
+        company.name.toLowerCase().includes(lowerQuery),
+    )
+
+    return matches.map((company) => ({
+      symbol: company.ticker,
+      name: company.name,
+      logo_url: company.logo_url,
+    }))
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -95,7 +121,33 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ ticker, onTickerChange, o
     setInputValue(value)
     onTickerChange(value)
     setSelectedIndex(-1) // Reset selection when typing
-    debouncedSearch(value)
+
+    // If input is empty, clear results and hide dropdown
+    if (!value.trim()) {
+      setSearchResults([])
+      setShowDropdown(false)
+      // Cancel any pending API call
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+      return
+    }
+
+    // Search local companies first (instant, no debounce)
+    const localResults = searchLocalCompanies(value)
+
+    if (localResults.length > 0) {
+      // Found local results - show them immediately
+      setSearchResults(localResults)
+      setShowDropdown(true)
+      // Cancel any pending API call since we have local results
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    } else {
+      // No local results - trigger debounced API search
+      debouncedSearch(value)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -144,7 +196,16 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ ticker, onTickerChange, o
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                          placeholder:text-gray-400 dark:placeholder:text-gray-500"
               onFocus={() => {
-                if (searchResults.length > 0) {
+                // Show top 10 companies when input is empty and focused
+                if (!inputValue.trim() && companies && companies.length > 0) {
+                  const top10 = companies.slice(0, 10).map((company) => ({
+                    symbol: company.ticker,
+                    name: company.name,
+                    logo_url: company.logo_url,
+                  }))
+                  setSearchResults(top10)
+                  setShowDropdown(true)
+                } else if (searchResults.length > 0) {
                   setShowDropdown(true)
                 }
               }}
@@ -161,7 +222,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ ticker, onTickerChange, o
             {showDropdown && searchResults.length > 0 && (
               <div
                 className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 
-                            rounded-xl shadow-lg max-h-60 overflow-y-auto"
+                            rounded-xl shadow-lg max-h-100 overflow-y-auto"
               >
                 {searchResults.map((result, index) => (
                   <div
@@ -170,7 +231,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ ticker, onTickerChange, o
                       optionRefs.current[index] = el
                     }}
                     onClick={() => handleSelectOption(result)}
-                    className={`px-4 py-2 cursor-pointer 
+                    className={`px-4 py-3 cursor-pointer flex items-center gap-3
                              text-gray-900 dark:text-gray-100 text-sm
                              first:rounded-t-xl last:rounded-b-xl
                              transition-colors duration-150
@@ -180,7 +241,25 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ ticker, onTickerChange, o
                                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                              }`}
                   >
-                    <span className="font-semibold">{result.symbol}</span> - {result.name}
+                    {/* Company logo or placeholder */}
+                    <div className="w-8 h-8 flex-shrink-0 relative">
+                      <img
+                        src={result.logo_url || '/stonkie.png'}
+                        alt={`${result.name} logo`}
+                        className="w-full h-full object-contain rounded-full"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = '/stonkie.png'
+                        }}
+                      />
+                    </div>
+                    {/* Company info */}
+                    <div className="flex-1 min-w-0">
+                      <div>
+                        <span className="font-semibold">{result.symbol}</span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">{result.name}</span>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

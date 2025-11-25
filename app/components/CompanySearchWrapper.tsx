@@ -3,8 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import CompanySearch from './CompanySearch'
+import { Company } from '../CompanyList'
 
-export default function CompanySearchWrapper() {
+export default function CompanySearchWrapper({
+  companies = null,
+}: {
+  companies: Company[] | null
+}) {
   const [ticker, setTicker] = useState('')
   const router = useRouter()
 
@@ -20,5 +25,12 @@ export default function CompanySearchWrapper() {
     }
   }
 
-  return <CompanySearch ticker={ticker} onTickerChange={setTicker} onSubmit={handleSubmit} />
+  return (
+    <CompanySearch
+      ticker={ticker}
+      onTickerChange={setTicker}
+      onSubmit={handleSubmit}
+      companies={companies}
+    />
+  )
 }
