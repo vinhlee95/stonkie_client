@@ -37,7 +37,7 @@ export const useChatState = (ticker: string | undefined) => {
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null)
   const [input, setInput] = useState('')
   const hasFetchedFAQs = useRef(false)
-  const [useGoogleSearch, setUseGoogleSearch] = useState<boolean>(true)
+  const [useGoogleSearch, setUseGoogleSearch] = useState<boolean>(false)
 
   // Debug logging for ticker changes
   const prevTickerRef = useRef<string | undefined>(ticker)
