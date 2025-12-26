@@ -8,7 +8,7 @@ export const chatService = {
     useUrlContext: boolean = false,
     signal?: AbortSignal,
   ) {
-    const response = await fetch(`${BACKEND_URL}/api/company/analyze`, {
+    const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
