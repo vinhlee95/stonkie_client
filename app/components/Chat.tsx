@@ -10,7 +10,7 @@ import React, {
   useState,
 } from 'react'
 import { useParams } from 'next/navigation'
-import { ListPlus, FileSearch, Cpu } from 'lucide-react'
+import { ListPlus, FileSearch, Cpu, FileText } from 'lucide-react'
 import ChatHeader from './ChatHeader'
 import ChatInput from './ChatInput'
 import { useChatState, Thread, isNormalThread } from './hooks/useChatState'
@@ -71,6 +71,20 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   return (
     <div className="mb-8">
       <div className="text-2xl font-medium mb-2">{thread.question}</div>
+      {isNormalThread(thread) && thread.attachmentUrl && (
+        <div className="mt-4 mb-4">
+          <a
+            href={thread.attachmentUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-sm"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Attachment</span>
+          </a>
+        </div>
+      )}
+
       {/* Do not show AI thought in first FAQ section and skip for FAQ threads */}
       {isNormalThread(thread) && (
         <div className="mb-4">

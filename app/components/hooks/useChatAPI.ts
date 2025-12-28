@@ -76,6 +76,8 @@ export const useChatAPI = (
               updateThread(threadId, { grounds })
             } else if (parsedChunk.type === 'model_used') {
               updateThread(threadId, { modelName: parsedChunk.body })
+            } else if (parsedChunk.type === 'attachment_url') {
+              updateThread(threadId, { attachmentUrl: parsedChunk.body })
             }
           }
         } catch (e) {

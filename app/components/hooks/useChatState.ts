@@ -19,6 +19,7 @@ export interface NormalThread {
   relatedQuestions: string[]
   grounds: AnswerGround[]
   modelName: string | undefined
+  attachmentUrl: string | undefined
 }
 
 export type Thread = FaqThread | NormalThread
@@ -59,6 +60,7 @@ export const useChatState = (ticker: string | undefined) => {
       relatedQuestions: [],
       grounds: [],
       modelName: undefined,
+      attachmentUrl: undefined,
     }
     setThreads((prev) => {
       return [...prev, newThread]
@@ -74,7 +76,7 @@ export const useChatState = (ticker: string | undefined) => {
 
       if (isNewThread) {
         // Determine thread type based on updates
-        // Iff it has normal thread properties, create normal thread
+        // If it has normal thread properties, create normal thread
         if ('thoughts' in updates || 'answer' in updates || 'grounds' in updates) {
           const newThread: NormalThread = {
             id: threadId,
