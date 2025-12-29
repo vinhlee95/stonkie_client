@@ -86,6 +86,7 @@ export const useChatState = (ticker: string | undefined) => {
             relatedQuestions: updates.relatedQuestions || [],
             grounds: (updates as Partial<NormalThread>).grounds || [],
             modelName: (updates as Partial<NormalThread>).modelName || undefined,
+            attachmentUrl: (updates as Partial<NormalThread>).attachmentUrl || undefined,
           }
           return [...prev, newThread]
         }
