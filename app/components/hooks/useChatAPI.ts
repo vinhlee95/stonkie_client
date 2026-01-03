@@ -24,6 +24,7 @@ export const useChatAPI = (
     threadId: string,
     useGoogleSearch: boolean = false,
     useUrlContext: boolean = false,
+    deepAnalysis: boolean = false,
   ) => {
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController()
@@ -37,6 +38,7 @@ export const useChatAPI = (
         ticker,
         useGoogleSearch,
         useUrlContext,
+        deepAnalysis,
         signal,
       )
       if (!reader) throw new Error('Failed to get reader')

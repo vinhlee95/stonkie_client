@@ -159,6 +159,8 @@ interface ChatboxUIProps {
   handleFAQClick: (question: string) => void
   useGoogleSearch: boolean
   setUseGoogleSearch: Dispatch<SetStateAction<boolean>>
+  deepAnalysis: boolean
+  setDeepAnalysis: Dispatch<SetStateAction<boolean>>
 }
 
 export const ChatboxUI: React.FC<ChatboxUIProps> = ({
@@ -176,6 +178,8 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   handleFAQClick,
   useGoogleSearch,
   setUseGoogleSearch,
+  deepAnalysis,
+  setDeepAnalysis,
 }) => {
   const latestThreadRef = useRef<HTMLDivElement>(null)
   const [isMaximized, setIsMaximized] = useState(false)
@@ -253,6 +257,8 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
           onCancel={cancelRequest}
           useGoogleSearch={useGoogleSearch}
           setUseGoogleSearch={setUseGoogleSearch}
+          deepAnalysis={deepAnalysis}
+          setDeepAnalysis={setDeepAnalysis}
         />
       </div>
     </div>
@@ -274,11 +280,13 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
     cancelRequest,
     useGoogleSearch,
     setUseGoogleSearch,
+    deepAnalysis,
+    setDeepAnalysis,
   } = context
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
-    await handleSubmit(question, threadId, useGoogleSearch)
+    await handleSubmit(question, threadId, useGoogleSearch, false, deepAnalysis)
   }
 
   return (
@@ -288,7 +296,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
       setInput={setInput}
       addThread={addThread}
       handleSubmit={(question: string, threadId: string) =>
-        handleSubmit(question, threadId, useGoogleSearch)
+        handleSubmit(question, threadId, useGoogleSearch, false, deepAnalysis)
       }
       isLoading={isLoading}
       isThinking={isThinking}
@@ -299,6 +307,8 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
       handleFAQClick={handleFAQClick}
       useGoogleSearch={useGoogleSearch}
       setUseGoogleSearch={setUseGoogleSearch}
+      deepAnalysis={deepAnalysis}
+      setDeepAnalysis={setDeepAnalysis}
     />
   )
 }
@@ -313,14 +323,23 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
   const params = useParams()
   const ticker = params.ticker as string | undefined
 
-  const { threads, input, setInput, addThread, updateThread, useGoogleSearch, setUseGoogleSearch } =
-    useChatState(ticker)
+  const {
+    threads,
+    input,
+    setInput,
+    addThread,
+    updateThread,
+    useGoogleSearch,
+    setUseGoogleSearch,
+    deepAnalysis,
+    setDeepAnalysis,
+  } = useChatState(ticker)
 
   const { handleSubmit, isLoading, isThinking, cancelRequest } = useChatAPI(ticker, updateThread)
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
-    await handleSubmit(question, threadId, useGoogleSearch)
+    await handleSubmit(question, threadId, useGoogleSearch, false, deepAnalysis)
   }
 
   return (
@@ -330,7 +349,7 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
       setInput={setInput}
       addThread={addThread}
       handleSubmit={(question: string, threadId: string) =>
-        handleSubmit(question, threadId, useGoogleSearch)
+        handleSubmit(question, threadId, useGoogleSearch, false, deepAnalysis)
       }
       isLoading={isLoading}
       isThinking={isThinking}
@@ -341,6 +360,8 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
       handleFAQClick={handleFAQClick}
       useGoogleSearch={useGoogleSearch}
       setUseGoogleSearch={setUseGoogleSearch}
+      deepAnalysis={deepAnalysis}
+      setDeepAnalysis={setDeepAnalysis}
     />
   )
 }

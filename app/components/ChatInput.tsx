@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react'
-import { ArrowUp, Square, Globe } from 'lucide-react'
+import { ArrowUp, Square, Globe, Zap, Brain } from 'lucide-react'
 
 interface ChatInputProps {
   input: string
@@ -9,6 +9,8 @@ interface ChatInputProps {
   onCancel?: () => void
   useGoogleSearch: boolean
   setUseGoogleSearch: Dispatch<SetStateAction<boolean>>
+  deepAnalysis: boolean
+  setDeepAnalysis: Dispatch<SetStateAction<boolean>>
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -19,6 +21,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onCancel,
   useGoogleSearch,
   setUseGoogleSearch,
+  deepAnalysis,
+  setDeepAnalysis,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -55,48 +59,89 @@ const ChatInput: React.FC<ChatInputProps> = ({
           className="w-full text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 py-3 pl-6 pr-6 focus:outline-none focus:ring-gray-300 dark:focus:ring-[#333333] transition-all duration-200 resize-none overflow-hidden bg-transparent rounded-t-xl"
           style={{ minHeight: '48px' }}
         />
-        {/* Second row: Icons aligned right */}
-        <div className="flex justify-end items-center gap-2 pr-2 pb-2">
-          <div className="relative group">
-            <button
-              type="button"
-              className={`p-2 cursor-pointer rounded-full transition-colors ${useGoogleSearch ? 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]' : 'hover:bg-gray-100 dark:hover:bg-[#232323]'}`}
-              aria-label="Web search"
-              onClick={() => setUseGoogleSearch(!useGoogleSearch)}
-            >
-              <Globe
-                className={`w-4 h-4 ${useGoogleSearch ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`}
-              />
-            </button>
-            {/* Tooltip */}
-            <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
-              Enable Google Search
+        {/* Second row: Icons aligned left and right */}
+        <div className="flex justify-between items-center px-2 pb-2">
+          {/* Left side: Mode toggle */}
+          <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-700 rounded-full p-0.5">
+            {/* Fast analysis toggle */}
+            <div className="relative group">
+              <button
+                type="button"
+                className={`p-2 cursor-pointer rounded-full transition-colors ${!deepAnalysis ? 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]' : 'hover:bg-gray-100 dark:hover:bg-[#232323]'}`}
+                aria-label="Fast analysis"
+                onClick={() => setDeepAnalysis(false)}
+              >
+                <Zap
+                  className={`w-4 h-4 ${!deepAnalysis ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`}
+                />
+              </button>
+              {/* Tooltip */}
+              <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+                Fast analysis
+              </div>
+            </div>
+            {/* Deep analysis toggle */}
+            <div className="relative group">
+              <button
+                type="button"
+                className={`p-2 cursor-pointer rounded-full transition-colors ${deepAnalysis ? 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]' : 'hover:bg-gray-100 dark:hover:bg-[#232323]'}`}
+                aria-label="Deep analysis"
+                onClick={() => setDeepAnalysis(true)}
+              >
+                <Brain
+                  className={`w-4 h-4 ${deepAnalysis ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`}
+                />
+              </button>
+              {/* Tooltip */}
+              <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+                Deep analysis
+              </div>
             </div>
           </div>
-          <button
-            onClick={
-              isLoading
-                ? onCancel
-                : (e) => {
-                    e.preventDefault()
-                    handleSubmit(e)
-                    setInput('')
-                  }
-            }
-            className={`p-2 cursor-pointer rounded-full flex items-center justify-center transition-colors duration-200 ${
-              isLoading
-                ? 'bg-[var(--accent-danger)]'
-                : 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]'
-            }`}
-            aria-label={isLoading ? 'Stop request' : 'Submit question'}
-            type="button"
-          >
-            {isLoading ? (
-              <Square className="h-4 w-4 text-white dark:text-[#ededed]" />
-            ) : (
-              <ArrowUp className="h-4 w-4 text-white dark:text-[#ededed]" />
-            )}
-          </button>
+
+          {/* Right side: Google search and submit */}
+          <div className="flex items-center gap-2">
+            <div className="relative group">
+              <button
+                type="button"
+                className={`p-2 cursor-pointer rounded-full transition-colors ${useGoogleSearch ? 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]' : 'hover:bg-gray-100 dark:hover:bg-[#232323]'}`}
+                aria-label="Web search"
+                onClick={() => setUseGoogleSearch(!useGoogleSearch)}
+              >
+                <Globe
+                  className={`w-4 h-4 ${useGoogleSearch ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`}
+                />
+              </button>
+              {/* Tooltip */}
+              <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+                Enable Google Search
+              </div>
+            </div>
+            <button
+              onClick={
+                isLoading
+                  ? onCancel
+                  : (e) => {
+                      e.preventDefault()
+                      handleSubmit(e)
+                      setInput('')
+                    }
+              }
+              className={`p-2 cursor-pointer rounded-full flex items-center justify-center transition-colors duration-200 ${
+                isLoading
+                  ? 'bg-[var(--accent-danger)]'
+                  : 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]'
+              }`}
+              aria-label={isLoading ? 'Stop request' : 'Submit question'}
+              type="button"
+            >
+              {isLoading ? (
+                <Square className="h-4 w-4 text-white dark:text-[#ededed]" />
+              ) : (
+                <ArrowUp className="h-4 w-4 text-white dark:text-[#ededed]" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
