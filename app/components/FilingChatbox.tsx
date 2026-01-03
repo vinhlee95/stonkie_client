@@ -28,8 +28,17 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
   const currentAnswerRef = useRef('')
   const isFetchingAnalysisRef = useRef(false)
 
-  const { threads, input, setInput, addThread, updateThread, useGoogleSearch, setUseGoogleSearch } =
-    useChatState(ticker)
+  const {
+    threads,
+    input,
+    setInput,
+    addThread,
+    updateThread,
+    useGoogleSearch,
+    setUseGoogleSearch,
+    deepAnalysis,
+    setDeepAnalysis,
+  } = useChatState(ticker)
 
   const {
     isLoading,
@@ -215,6 +224,8 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
       handleFAQClick={handleFAQClick}
       useGoogleSearch={useGoogleSearch}
       setUseGoogleSearch={setUseGoogleSearch}
+      deepAnalysis={deepAnalysis}
+      setDeepAnalysis={setDeepAnalysis}
     >
       <FilingHeader />
     </ChatboxUI>
