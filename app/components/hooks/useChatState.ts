@@ -5,6 +5,11 @@ export interface AnswerGround {
   url: string
 }
 
+export interface Attachment {
+  title: string
+  url: string
+}
+
 export interface FaqThread {
   id: string
   question: string
@@ -19,7 +24,7 @@ export interface NormalThread {
   relatedQuestions: string[]
   grounds: AnswerGround[]
   modelName: string | undefined
-  attachmentUrl: string | undefined
+  attachment: Attachment | undefined
 }
 
 export type Thread = FaqThread | NormalThread
@@ -60,7 +65,7 @@ export const useChatState = (ticker: string | undefined) => {
       relatedQuestions: [],
       grounds: [],
       modelName: undefined,
-      attachmentUrl: undefined,
+      attachment: undefined,
     }
     setThreads((prev) => {
       return [...prev, newThread]
@@ -86,7 +91,7 @@ export const useChatState = (ticker: string | undefined) => {
             relatedQuestions: updates.relatedQuestions || [],
             grounds: (updates as Partial<NormalThread>).grounds || [],
             modelName: (updates as Partial<NormalThread>).modelName || undefined,
-            attachmentUrl: (updates as Partial<NormalThread>).attachmentUrl || undefined,
+            attachment: (updates as Partial<NormalThread>).attachment || undefined,
           }
           return [...prev, newThread]
         }

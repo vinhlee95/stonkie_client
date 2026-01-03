@@ -71,16 +71,16 @@ const ThreadView: React.FC<ThreadViewProps> = ({
   return (
     <div className="mb-8">
       <div className="text-2xl font-medium mb-2">{thread.question}</div>
-      {isNormalThread(thread) && thread.attachmentUrl && (
+      {isNormalThread(thread) && thread.attachment && (
         <div className="mt-4 mb-4">
           <a
-            href={thread.attachmentUrl}
+            href={thread.attachment.url}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-sm"
           >
             <FileText className="w-4 h-4" />
-            <span>Attachment</span>
+            <span>{thread.attachment.title}</span>
           </a>
         </div>
       )}
