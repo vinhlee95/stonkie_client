@@ -35,4 +35,5 @@ export function isQuarterlyStatement(
 export type AnnualFiling = {
   url: string
   period_end_year: number
+  period_end_quarter?: string
 }

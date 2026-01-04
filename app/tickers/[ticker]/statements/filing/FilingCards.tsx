@@ -61,7 +61,10 @@ export default function FilingCards({
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  Form {selectedPeriod === 'quarterly' ? '10-Q' : '10-K'} {filing.period_end_year}
+                  Form {selectedPeriod === 'quarterly' ? '10-Q' : '10-K'}{' '}
+                  {selectedPeriod === 'quarterly'
+                    ? filing.period_end_quarter
+                    : filing.period_end_year}
                 </h3>
               </div>
               <span

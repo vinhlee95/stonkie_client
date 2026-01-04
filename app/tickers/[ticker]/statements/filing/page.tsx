@@ -37,7 +37,7 @@ export default async function FilingPage({
 
   // Fetch quarterly filings
   const quarterlyFilingsResponse = await fetch(
-    `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/filings/quarter`,
+    `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/filings/quarterly`,
     {
       next: { revalidate: 15 * 60 },
     },
