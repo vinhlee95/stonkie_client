@@ -106,6 +106,11 @@ export default function FilingCards({
           onClose={handleCloseChat}
           filingName={filingName}
           filingUrl={selectedFiling.url}
+          periodEndAt={
+            selectedPeriod === 'quarterly' && selectedFiling.period_end_quarter
+              ? selectedFiling.period_end_quarter
+              : selectedFiling.period_end_year.toString()
+          }
           isDesktop={isDesktop}
         />
       )}

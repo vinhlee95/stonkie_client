@@ -12,6 +12,7 @@ interface FilingChatboxProps {
   onClose: () => void
   filingName: string
   filingUrl: string
+  periodEndAt: string
   isDesktop?: boolean
 }
 
@@ -19,6 +20,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
   onClose,
   filingName,
   filingUrl,
+  periodEndAt,
   isDesktop = false,
 }) => {
   const params = useParams()
@@ -47,16 +49,11 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
     isThinking: isAnsweringNextQuestion,
   } = useChatAPI(ticker, updateThread)
 
-  // Extract period from filing name (e.g., "Form 10-K 2024" -> "2024")
-  const extractPeriod = (name: string) => {
-    const match = name.match(/(\d{4})/)
-    return match ? match[1] : '2024'
-  }
-
   // Determine if it's quarterly based on filing name
   const isQuarterly = filingName.includes('10-Q')
-  const period = extractPeriod(filingName)
   const periodType = isQuarterly ? 'quarterly' : 'annually'
+  // Use periodEndAt directly: for quarterly it's MM/DD/YYYY format, for annual it's the year string
+  const period = periodEndAt
 
   const fetchFilingAnalysis = useCallback(async () => {
     if (!ticker) return
@@ -67,8 +64,10 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
     isFetchingAnalysisRef.current = true
 
     try {
+      // URL encode the period to handle slashes in MM/DD/YYYY format
+      const encodedPeriod = encodeURIComponent(period)
       const response = await fetch(
-        `${BACKEND_URL}/api/companies/${ticker.toUpperCase()}/reports/analyze?period_end_at=${period}&period_type=${periodType}`,
+        `${BACKEND_URL}/api/companies/${ticker.toUpperCase()}/reports/analyze?period_end_at=${encodedPeriod}&period_type=${periodType}`,
         {
           method: 'POST',
           headers: {
@@ -154,7 +153,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
         isFetchingAnalysisRef.current = false
       }
     }
-  }, [ticker, period, periodType, addThread, updateThread])
+  }, [ticker, periodEndAt, periodType, addThread, updateThread])
 
   const addCompanySpecificContext = (question: string): string => {
     return `${question}. Here is the 10K filing URL: ${filingUrl}. This question is specifically for company ${ticker}, not a general finance question.`
