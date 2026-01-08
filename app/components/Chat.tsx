@@ -187,17 +187,23 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
 
   const handleMaximize = () => setIsMaximized((prev) => !prev)
 
-  // Prevent vertical scrolling of main page when cursor is on the chat window (keep scrollbar visible)
+  // Prevent vertical scrolling of main page when cursor is on the chat window (keep scrollbar visible if it exists)
   useEffect(() => {
     if (isCursorOnChat) {
       // Store current scroll position
       const scrollY = window.scrollY
 
-      // Apply styles to body to prevent scrolling without hiding scrollbar
+      // Check if scrollbar exists before applying position: fixed
+      // Once position: fixed is applied, scrollHeight may change, so we check beforehand
+      const hasScrollbar =
+        document.documentElement.scrollHeight > document.documentElement.clientHeight
+
+      // Apply styles to body to prevent scrolling
       document.body.style.position = 'fixed'
       document.body.style.top = `-${scrollY}px`
       document.body.style.width = '100%'
-      document.body.style.overflowY = 'scroll'
+      // Only show scrollbar if it existed before, otherwise keep it hidden
+      document.body.style.overflowY = hasScrollbar ? 'scroll' : 'hidden'
 
       return () => {
         // Restore body styles and scroll position
