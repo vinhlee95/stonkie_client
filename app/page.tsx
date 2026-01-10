@@ -1,6 +1,7 @@
 import CompanyList, { Company } from './CompanyList'
 import MarketChart from './MarketChart'
 import CompanySearchWrapper from './components/CompanySearchWrapper'
+import FavouritesList from './components/FavouritesList'
 
 const BACKEND_URL = process.env.BACKEND_URL
 
@@ -24,6 +25,7 @@ export default async function Page() {
       <div className="h-[350px] mb-6">
         <MarketChart />
       </div>
+      <FavouritesList />
       <h1 className="text-2xl font-bold mb-6">Most Viewed Companies</h1>
       {data && <CompanyList companies={data} />}
     </div>
