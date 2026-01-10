@@ -1,14 +1,5 @@
 import type { NextConfig } from 'next'
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  register: false, // We'll register manually to handle update prompts
-  skipWaiting: false, // Wait for user confirmation before activating new SW
-  disable: process.env.NODE_ENV === 'development',
-  buildExcludes: [/middleware-manifest\.json$/],
-})
-
 const nextConfig: NextConfig = {
   images: {
     domains: ['images.unsplash.com'],
@@ -29,4 +20,18 @@ const nextConfig: NextConfig = {
   },
 }
 
-module.exports = withPWA(nextConfig)
+// Only apply PWA wrapper in production builds to avoid Webpack/Turbopack conflicts
+// PWA is disabled in development anyway, so this wrapper isn't needed during dev
+if (process.env.NODE_ENV === 'production') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const withPWA = require('next-pwa')({
+    dest: 'public',
+    register: false, // We'll register manually to handle update prompts
+    skipWaiting: false, // Wait for user confirmation before activating new SW
+    disable: false,
+    buildExcludes: [/middleware-manifest\.json$/],
+  })
+  module.exports = withPWA(nextConfig)
+} else {
+  module.exports = nextConfig
+}
