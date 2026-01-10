@@ -253,25 +253,27 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
           </div>
         </div>
 
-        <ChatInput
-          input={input}
-          setInput={setInput}
-          handleSubmit={async () => {
-            if (input.trim()) {
-              const threadId = addThread(input)
-              await handleSubmit(input, threadId)
-              setInput('')
-            }
-          }}
-          isLoading={isLoading}
-          onCancel={cancelRequest}
-          useGoogleSearch={useGoogleSearch}
-          setUseGoogleSearch={setUseGoogleSearch}
-          deepAnalysis={deepAnalysis}
-          setDeepAnalysis={setDeepAnalysis}
-          preferredModel={preferredModel}
-          setPreferredModel={setPreferredModel}
-        />
+        <div className="pb-6 md:pb-0">
+          <ChatInput
+            input={input}
+            setInput={setInput}
+            handleSubmit={async () => {
+              if (input.trim()) {
+                const threadId = addThread(input)
+                await handleSubmit(input, threadId)
+                setInput('')
+              }
+            }}
+            isLoading={isLoading}
+            onCancel={cancelRequest}
+            useGoogleSearch={useGoogleSearch}
+            setUseGoogleSearch={setUseGoogleSearch}
+            deepAnalysis={deepAnalysis}
+            setDeepAnalysis={setDeepAnalysis}
+            preferredModel={preferredModel}
+            setPreferredModel={setPreferredModel}
+          />
+        </div>
       </div>
     </div>
   )
