@@ -3,6 +3,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 import { Suspense } from 'react'
 import BottomNavigation from './components/BottomNavigation'
+import UpdatePrompt from './components/UpdatePrompt'
 import { GeistSans } from 'geist/font/sans'
 
 export const metadata: Metadata = {
@@ -51,6 +52,7 @@ export default function RootLayout({
           {children}
           <SpeedInsights />
         </div>
+        <UpdatePrompt />
         <Suspense>
           <BottomNavigation />
         </Suspense>

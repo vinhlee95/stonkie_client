@@ -3,8 +3,8 @@ import type { NextConfig } from 'next'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const withPWA = require('next-pwa')({
   dest: 'public',
-  register: true,
-  skipWaiting: true,
+  register: false, // We'll register manually to handle update prompts
+  skipWaiting: false, // Wait for user confirmation before activating new SW
   disable: process.env.NODE_ENV === 'development',
   buildExcludes: [/middleware-manifest\.json$/],
 })
