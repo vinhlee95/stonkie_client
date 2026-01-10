@@ -25,6 +25,7 @@ export const useChatAPI = (
     useGoogleSearch: boolean = false,
     useUrlContext: boolean = false,
     deepAnalysis: boolean = false,
+    preferredModel: string = 'fastest',
   ) => {
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController()
@@ -39,6 +40,7 @@ export const useChatAPI = (
         useGoogleSearch,
         useUrlContext,
         deepAnalysis,
+        preferredModel,
         signal,
       )
       if (!reader) throw new Error('Failed to get reader')

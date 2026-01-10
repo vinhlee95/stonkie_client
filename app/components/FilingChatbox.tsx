@@ -40,6 +40,8 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
     setUseGoogleSearch,
     deepAnalysis,
     setDeepAnalysis,
+    preferredModel,
+    setPreferredModel,
   } = useChatState(ticker)
 
   const {
@@ -225,6 +227,8 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
       setUseGoogleSearch={setUseGoogleSearch}
       deepAnalysis={deepAnalysis}
       setDeepAnalysis={setDeepAnalysis}
+      preferredModel={preferredModel}
+      setPreferredModel={setPreferredModel}
     >
       <FilingHeader />
     </ChatboxUI>

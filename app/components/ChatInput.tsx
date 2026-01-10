@@ -1,5 +1,6 @@
 import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react'
 import { ArrowUp, Square, Globe, Zap, Brain } from 'lucide-react'
+import ModelSelector from './ModelSelector'
 
 interface ChatInputProps {
   input: string
@@ -11,6 +12,8 @@ interface ChatInputProps {
   setUseGoogleSearch: Dispatch<SetStateAction<boolean>>
   deepAnalysis: boolean
   setDeepAnalysis: Dispatch<SetStateAction<boolean>>
+  preferredModel: string
+  setPreferredModel: (model: string) => void
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -23,6 +26,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   setUseGoogleSearch,
   deepAnalysis,
   setDeepAnalysis,
+  preferredModel,
+  setPreferredModel,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -99,8 +104,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
             </div>
           </div>
 
-          {/* Right side: Google search and submit */}
+          {/* Right side: Model selector, Google search and submit */}
           <div className="flex items-center gap-2">
+            <ModelSelector selectedModel={preferredModel} onModelChange={setPreferredModel} />
             <div className="relative group">
               <button
                 type="button"

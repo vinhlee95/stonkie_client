@@ -38,6 +38,9 @@ export const isNormalThread = (thread: Thread): thread is NormalThread => {
   return 'thoughts' in thread && 'answer' in thread && 'grounds' in thread
 }
 
+const STORAGE_KEY = 'stonkie-preferred-model'
+const DEFAULT_MODEL = 'fastest'
+
 export const useChatState = (ticker: string | undefined) => {
   const [threads, setThreads] = useState<Thread[]>([])
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null)
@@ -45,6 +48,23 @@ export const useChatState = (ticker: string | undefined) => {
   const hasFetchedFAQs = useRef(false)
   const [useGoogleSearch, setUseGoogleSearch] = useState<boolean>(false)
   const [deepAnalysis, setDeepAnalysis] = useState<boolean>(false)
+
+  // Initialize preferredModel from localStorage
+  const [preferredModel, setPreferredModelState] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      return stored || DEFAULT_MODEL
+    }
+    return DEFAULT_MODEL
+  })
+
+  // Persist preferredModel to localStorage when it changes
+  const setPreferredModel = useCallback((model: string) => {
+    setPreferredModelState(model)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, model)
+    }
+  }, [])
 
   // Debug logging for ticker changes
   const prevTickerRef = useRef<string | undefined>(ticker)
@@ -132,5 +152,7 @@ export const useChatState = (ticker: string | undefined) => {
     setUseGoogleSearch,
     deepAnalysis,
     setDeepAnalysis,
+    preferredModel,
+    setPreferredModel,
   }
 }

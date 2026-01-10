@@ -7,6 +7,7 @@ export const chatService = {
     useGoogleSearch: boolean,
     useUrlContext: boolean = false,
     deepAnalysis: boolean = false,
+    preferredModel: string = 'fastest',
     signal?: AbortSignal,
   ) {
     const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/analyze`, {
@@ -14,7 +15,14 @@ export const chatService = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ question, ticker, useGoogleSearch, useUrlContext, deepAnalysis }),
+      body: JSON.stringify({
+        question,
+        ticker,
+        useGoogleSearch,
+        useUrlContext,
+        deepAnalysis,
+        preferredModel,
+      }),
       signal,
     })
 
