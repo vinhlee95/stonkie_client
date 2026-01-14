@@ -45,7 +45,6 @@ export const useChatState = (ticker: string | undefined) => {
   const [threads, setThreads] = useState<Thread[]>([])
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null)
   const [input, setInput] = useState('')
-  const hasFetchedFAQs = useRef(false)
   const [useGoogleSearch, setUseGoogleSearch] = useState<boolean>(false)
   const [deepAnalysis, setDeepAnalysis] = useState<boolean>(false)
 
@@ -145,7 +144,6 @@ export const useChatState = (ticker: string | undefined) => {
     setCurrentThreadId,
     input,
     setInput,
-    hasFetchedFAQs,
     addThread,
     updateThread,
     useGoogleSearch,

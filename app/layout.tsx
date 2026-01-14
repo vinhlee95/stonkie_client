@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 import BottomNavigation from './components/BottomNavigation'
 import UpdatePrompt from './components/UpdatePrompt'
 import { GeistSans } from 'geist/font/sans'
+import { QueryProvider } from './providers/QueryProvider'
 
 export const metadata: Metadata = {
   title: 'Stonkie 🚀',
@@ -48,14 +49,16 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
       </head>
       <body className="pb-16">
-        <div className="px-1 md:px-8">
-          {children}
-          <SpeedInsights />
-        </div>
-        <UpdatePrompt />
-        <Suspense>
-          <BottomNavigation />
-        </Suspense>
+        <QueryProvider>
+          <div className="px-1 md:px-8">
+            {children}
+            <SpeedInsights />
+          </div>
+          <UpdatePrompt />
+          <Suspense>
+            <BottomNavigation />
+          </Suspense>
+        </QueryProvider>
       </body>
     </html>
   )

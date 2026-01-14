@@ -115,63 +115,8 @@ export const useChatAPI = (
     }
   }
 
-  const fetchFAQsStream = async () => {
-    const threadId = Date.now().toString()
-    updateThread(threadId, {
-      id: threadId,
-      question: 'Loading FAQs...',
-      relatedQuestions: [],
-    })
-
-    try {
-      const reader = await chatService.fetchFAQs(ticker)
-      if (!reader) throw new Error('Failed to get reader')
-
-      const decoder = new TextDecoder()
-      let questions: string[] = []
-
-      while (true) {
-        const { value, done } = await reader.read()
-        if (done) break
-
-        const lines = decoder.decode(value).split('\n')
-        for (const line of lines) {
-          if (line.trim()) {
-            const jsonString = line.replace(/^data: /, '')
-            try {
-              const data = JSON.parse(jsonString)
-              switch (data.type) {
-                case 'question':
-                  questions = [...questions, data.text]
-                  updateThread(threadId, {
-                    question: 'Frequently Asked Questions',
-                    relatedQuestions: questions,
-                  })
-                  break
-                case 'error':
-                  console.error('Error:', data.message)
-                  break
-              }
-            } catch (e) {
-              console.error('Error parsing FAQ data:', e)
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching FAQs:', error)
-      updateThread(threadId, {
-        question: 'Error loading FAQs',
-        thoughts: [],
-        answer: 'Failed to load frequently asked questions. Please try again later.',
-        relatedQuestions: [],
-      })
-    }
-  }
-
   return {
     handleSubmit,
-    fetchFAQsStream,
     isLoading,
     isThinking: isThinkingRef.current,
     cancelRequest,

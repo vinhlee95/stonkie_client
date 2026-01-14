@@ -15,6 +15,7 @@ import ChatHeader from './ChatHeader'
 import ChatInput from './ChatInput'
 import { useChatState, Thread, isNormalThread } from './hooks/useChatState'
 import { useChatAPI } from './hooks/useChatAPI'
+import { useFAQQuery } from './hooks/useFAQQuery'
 import { ThoughtBubble } from './ThoughtBubble'
 import { Plus } from 'lucide-react'
 import MarkdownContent from './MarkdownContent'
@@ -32,17 +33,31 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const ticker = params.ticker as string | undefined
   const chatState = useChatState(ticker)
   const chatAPI = useChatAPI(ticker, chatState.updateThread)
+  const { data: faqQuestions } = useFAQQuery(ticker)
 
+  // Create FAQ thread when FAQs are loaded
   useEffect(() => {
-    if (!chatState.hasFetchedFAQs.current) {
-      chatState.hasFetchedFAQs.current = true
-      chatAPI.fetchFAQsStream()
-    }
+    if (faqQuestions && faqQuestions.length > 0) {
+      // Check if FAQ thread already exists
+      const existingFAQThread = chatState.threads.find(
+        (thread) => thread.question === 'Frequently Asked Questions',
+      )
 
-    return () => {
-      chatState.hasFetchedFAQs.current = false
+      if (!existingFAQThread) {
+        const threadId = `faq-${ticker || 'general'}`
+        chatState.updateThread(threadId, {
+          id: threadId,
+          question: 'Frequently Asked Questions',
+          relatedQuestions: faqQuestions,
+        })
+      } else if (existingFAQThread.relatedQuestions.length !== faqQuestions.length) {
+        // Update if FAQs have changed
+        chatState.updateThread(existingFAQThread.id, {
+          relatedQuestions: faqQuestions,
+        })
+      }
     }
-  }, [ticker])
+  }, [faqQuestions, ticker, chatState.updateThread, chatState.threads])
 
   return (
     <ChatContext.Provider value={{ ...chatState, ...chatAPI }}>{children}</ChatContext.Provider>
@@ -356,6 +371,31 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
   } = useChatState(ticker)
 
   const { handleSubmit, isLoading, isThinking, cancelRequest } = useChatAPI(ticker, updateThread)
+  const { data: faqQuestions } = useFAQQuery(ticker)
+
+  // Create FAQ thread when FAQs are loaded
+  useEffect(() => {
+    if (faqQuestions && faqQuestions.length > 0) {
+      // Check if FAQ thread already exists
+      const existingFAQThread = threads.find(
+        (thread) => thread.question === 'Frequently Asked Questions',
+      )
+
+      if (!existingFAQThread) {
+        const threadId = `faq-${ticker || 'general'}`
+        updateThread(threadId, {
+          id: threadId,
+          question: 'Frequently Asked Questions',
+          relatedQuestions: faqQuestions,
+        })
+      } else if (existingFAQThread.relatedQuestions.length !== faqQuestions.length) {
+        // Update if FAQs have changed
+        updateThread(existingFAQThread.id, {
+          relatedQuestions: faqQuestions,
+        })
+      }
+    }
+  }, [faqQuestions, ticker, updateThread, threads])
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
