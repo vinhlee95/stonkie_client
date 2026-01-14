@@ -2,23 +2,13 @@
 import Link from 'next/link'
 import { ChatBubbleOutline, HomeOutlined } from '@mui/icons-material'
 import { Suspense, useState, useEffect } from 'react'
-import { usePathname, useParams } from 'next/navigation'
 import Chat from './Chat'
 import { ChatProvider } from './Chat'
 import { useScrollLock } from './hooks/useScrollLock'
-import { useFAQQuery } from './hooks/useFAQQuery'
 
 const BottomNavigation = () => {
   const [isChatVisible, setIsChatVisible] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
-  const pathname = usePathname()
-  const params = useParams()
-  const ticker = params.ticker as string | undefined
-
-  // Pre-fetch FAQs based on current route
-  // On home page: fetch general FAQs (ticker is undefined)
-  // On ticker pages: fetch ticker-specific FAQs
-  useFAQQuery(pathname.startsWith('/tickers/') ? ticker : undefined)
 
   // Use the scroll lock hook to disable HTML scrolling when chat is open
   useScrollLock({ isLocked: isChatVisible, isDesktop })

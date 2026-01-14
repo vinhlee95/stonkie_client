@@ -34,30 +34,42 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const chatState = useChatState(ticker)
   const chatAPI = useChatAPI(ticker, chatState.updateThread)
   const { data: faqQuestions } = useFAQQuery(ticker)
+  const faqProcessedRef = useRef<string | null>(null)
 
   // Create FAQ thread when FAQs are loaded
   useEffect(() => {
     if (faqQuestions && faqQuestions.length > 0) {
-      // Check if FAQ thread already exists
-      const existingFAQThread = chatState.threads.find(
-        (thread) => thread.question === 'Frequently Asked Questions',
-      )
+      const threadId = `faq-${ticker || 'general'}`
 
-      if (!existingFAQThread) {
-        const threadId = `faq-${ticker || 'general'}`
-        chatState.updateThread(threadId, {
-          id: threadId,
-          question: 'Frequently Asked Questions',
-          relatedQuestions: faqQuestions,
-        })
-      } else if (existingFAQThread.relatedQuestions.length !== faqQuestions.length) {
-        // Update if FAQs have changed
-        chatState.updateThread(existingFAQThread.id, {
-          relatedQuestions: faqQuestions,
-        })
+      // Only process if we haven't already processed FAQs for this ticker
+      if (faqProcessedRef.current !== threadId) {
+        // Check if FAQ thread already exists
+        const existingFAQThread = chatState.threads.find(
+          (thread) => thread.question === 'Frequently Asked Questions',
+        )
+
+        if (!existingFAQThread) {
+          chatState.updateThread(threadId, {
+            id: threadId,
+            question: 'Frequently Asked Questions',
+            relatedQuestions: faqQuestions,
+          })
+          faqProcessedRef.current = threadId
+        } else if (existingFAQThread.relatedQuestions.length !== faqQuestions.length) {
+          // Update if FAQs have changed
+          chatState.updateThread(existingFAQThread.id, {
+            relatedQuestions: faqQuestions,
+          })
+          faqProcessedRef.current = threadId
+        }
       }
     }
-  }, [faqQuestions, ticker, chatState.updateThread, chatState.threads])
+  }, [faqQuestions, ticker, chatState.updateThread])
+
+  // Reset ref when ticker changes
+  useEffect(() => {
+    faqProcessedRef.current = null
+  }, [ticker])
 
   return (
     <ChatContext.Provider value={{ ...chatState, ...chatAPI }}>{children}</ChatContext.Provider>
@@ -372,30 +384,42 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
 
   const { handleSubmit, isLoading, isThinking, cancelRequest } = useChatAPI(ticker, updateThread)
   const { data: faqQuestions } = useFAQQuery(ticker)
+  const faqProcessedRef = useRef<string | null>(null)
 
   // Create FAQ thread when FAQs are loaded
   useEffect(() => {
     if (faqQuestions && faqQuestions.length > 0) {
-      // Check if FAQ thread already exists
-      const existingFAQThread = threads.find(
-        (thread) => thread.question === 'Frequently Asked Questions',
-      )
+      const threadId = `faq-${ticker || 'general'}`
 
-      if (!existingFAQThread) {
-        const threadId = `faq-${ticker || 'general'}`
-        updateThread(threadId, {
-          id: threadId,
-          question: 'Frequently Asked Questions',
-          relatedQuestions: faqQuestions,
-        })
-      } else if (existingFAQThread.relatedQuestions.length !== faqQuestions.length) {
-        // Update if FAQs have changed
-        updateThread(existingFAQThread.id, {
-          relatedQuestions: faqQuestions,
-        })
+      // Only process if we haven't already processed FAQs for this ticker
+      if (faqProcessedRef.current !== threadId) {
+        // Check if FAQ thread already exists
+        const existingFAQThread = threads.find(
+          (thread) => thread.question === 'Frequently Asked Questions',
+        )
+
+        if (!existingFAQThread) {
+          updateThread(threadId, {
+            id: threadId,
+            question: 'Frequently Asked Questions',
+            relatedQuestions: faqQuestions,
+          })
+          faqProcessedRef.current = threadId
+        } else if (existingFAQThread.relatedQuestions.length !== faqQuestions.length) {
+          // Update if FAQs have changed
+          updateThread(existingFAQThread.id, {
+            relatedQuestions: faqQuestions,
+          })
+          faqProcessedRef.current = threadId
+        }
       }
     }
-  }, [faqQuestions, ticker, updateThread, threads])
+  }, [faqQuestions, ticker, updateThread])
+
+  // Reset ref when ticker changes
+  useEffect(() => {
+    faqProcessedRef.current = null
+  }, [ticker])
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
