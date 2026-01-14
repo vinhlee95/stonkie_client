@@ -2,7 +2,12 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['images.unsplash.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
   },
   // Only configure caching on root route here. Caching for individual routes are configured by "revalidate" constant in their corresponding pages
   async headers() {
