@@ -8,16 +8,18 @@ export const chatService = {
     useUrlContext: boolean = false,
     deepAnalysis: boolean = false,
     preferredModel: string = 'fastest',
+    conversationId: string | null = null,
     signal?: AbortSignal,
   ) {
     const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/analyze`, {
       method: 'POST',
+      credentials: 'include', // Required for cross-origin cookie support
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         question,
-        ticker,
+        conversationId, // Include conversationId for conversation memory
         useGoogleSearch,
         useUrlContext,
         deepAnalysis,

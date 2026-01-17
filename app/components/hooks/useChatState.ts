@@ -40,6 +40,9 @@ export const isNormalThread = (thread: Thread): thread is NormalThread => {
 
 const STORAGE_KEY = 'stonkie-preferred-model'
 const DEFAULT_MODEL = 'fastest'
+const CONVERSATION_KEY_PREFIX = 'stonkie_conversation_'
+const ACTIVITY_TIMESTAMP_PREFIX = 'stonkie_activity_'
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000 // 15 minutes
 
 export const useChatState = (ticker: string | undefined) => {
   const [threads, setThreads] = useState<Thread[]>([])
@@ -47,6 +50,14 @@ export const useChatState = (ticker: string | undefined) => {
   const [input, setInput] = useState('')
   const [useGoogleSearch, setUseGoogleSearch] = useState<boolean>(false)
   const [deepAnalysis, setDeepAnalysis] = useState<boolean>(false)
+
+  // Initialize conversationId from localStorage (hybrid approach)
+  const [conversationId, setConversationIdState] = useState<string | null>(() => {
+    if (typeof window !== 'undefined' && ticker) {
+      return localStorage.getItem(`${CONVERSATION_KEY_PREFIX}${ticker}`) || null
+    }
+    return null
+  })
 
   // Initialize preferredModel from localStorage
   const [preferredModel, setPreferredModelState] = useState<string>(() => {
@@ -65,13 +76,132 @@ export const useChatState = (ticker: string | undefined) => {
     }
   }, [])
 
+  // Function to record activity timestamp
+  const recordActivity = useCallback(() => {
+    if (typeof window !== 'undefined' && ticker) {
+      localStorage.setItem(`${ACTIVITY_TIMESTAMP_PREFIX}${ticker}`, Date.now().toString())
+    }
+  }, [ticker])
+
+  // Function to set conversationId (updates both state and localStorage)
+  const setConversationId = useCallback(
+    (id: string | null) => {
+      setConversationIdState(id)
+      if (typeof window !== 'undefined' && ticker) {
+        if (id) {
+          localStorage.setItem(`${CONVERSATION_KEY_PREFIX}${ticker}`, id)
+          // Record activity when setting a new conversationId
+          recordActivity()
+        } else {
+          localStorage.removeItem(`${CONVERSATION_KEY_PREFIX}${ticker}`)
+          localStorage.removeItem(`${ACTIVITY_TIMESTAMP_PREFIX}${ticker}`)
+        }
+      }
+    },
+    [ticker, recordActivity],
+  )
+
+  // Function to check and clear conversationId if inactive
+  const checkInactivity = useCallback(() => {
+    if (typeof window !== 'undefined' && ticker && conversationId) {
+      const activityKey = `${ACTIVITY_TIMESTAMP_PREFIX}${ticker}`
+      const lastActivityStr = localStorage.getItem(activityKey)
+
+      if (lastActivityStr) {
+        const lastActivity = parseInt(lastActivityStr, 10)
+        const now = Date.now()
+        const timeSinceActivity = now - lastActivity
+
+        if (timeSinceActivity >= INACTIVITY_TIMEOUT_MS) {
+          // Clear conversationId after 15 minutes of inactivity
+          setConversationId(null)
+        }
+      }
+    }
+  }, [ticker, conversationId, setConversationId])
+
+  // Update conversationId when ticker changes and check for expired conversations
+  useEffect(() => {
+    if (typeof window !== 'undefined' && ticker) {
+      const stored = localStorage.getItem(`${CONVERSATION_KEY_PREFIX}${ticker}`)
+      const activityKey = `${ACTIVITY_TIMESTAMP_PREFIX}${ticker}`
+      const lastActivityStr = localStorage.getItem(activityKey)
+
+      if (stored && lastActivityStr) {
+        const lastActivity = parseInt(lastActivityStr, 10)
+        const now = Date.now()
+        const timeSinceActivity = now - lastActivity
+
+        if (timeSinceActivity >= INACTIVITY_TIMEOUT_MS) {
+          // Conversation expired, clear it
+          localStorage.removeItem(`${CONVERSATION_KEY_PREFIX}${ticker}`)
+          localStorage.removeItem(activityKey)
+          // Use setTimeout to avoid calling setState synchronously in effect
+          setTimeout(() => setConversationId(null), 0)
+        } else {
+          // Use setTimeout to avoid calling setState synchronously in effect
+          setTimeout(() => setConversationIdState(stored), 0)
+        }
+      } else {
+        // Use setTimeout to avoid calling setState synchronously in effect
+        setTimeout(() => setConversationIdState(stored || null), 0)
+      }
+    } else {
+      // Use setTimeout to avoid calling setState synchronously in effect
+      setTimeout(() => setConversationIdState(null), 0)
+    }
+  }, [ticker, setConversationId])
+
+  // Set up interval to check for inactivity
+  useEffect(() => {
+    if (!ticker || !conversationId) return
+
+    // Check immediately (defer to avoid calling setState synchronously in effect)
+    const timeoutId = setTimeout(() => {
+      checkInactivity()
+    }, 0)
+
+    // Check every minute
+    const interval = setInterval(checkInactivity, 60 * 1000)
+
+    return () => {
+      clearTimeout(timeoutId)
+      clearInterval(interval)
+    }
+  }, [ticker, conversationId, checkInactivity])
+
+  // Clear conversationId on browser close
+  useEffect(() => {
+    if (typeof window === 'undefined' || !ticker) return
+
+    const handleBeforeUnload = () => {
+      // Clear conversationId for this ticker on browser close
+      localStorage.removeItem(`${CONVERSATION_KEY_PREFIX}${ticker}`)
+      localStorage.removeItem(`${ACTIVITY_TIMESTAMP_PREFIX}${ticker}`)
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [ticker])
+
+  // Function to start a new conversation (clear conversationId)
+  const startNewConversation = useCallback(() => {
+    setConversationId(null)
+  }, [setConversationId])
+
   // Debug logging for ticker changes
   const prevTickerRef = useRef<string | undefined>(ticker)
 
   useEffect(() => {
     if (ticker !== prevTickerRef.current) {
-      setThreads([])
-      setCurrentThreadId(null)
+      // Use setTimeout to avoid calling setState synchronously in effect
+      setTimeout(() => {
+        setThreads([])
+        setCurrentThreadId(null)
+      }, 0)
       prevTickerRef.current = ticker
     }
   }, [ticker])
@@ -152,5 +282,9 @@ export const useChatState = (ticker: string | undefined) => {
     setDeepAnalysis,
     preferredModel,
     setPreferredModel,
+    conversationId,
+    setConversationId,
+    startNewConversation,
+    recordActivity,
   }
 }

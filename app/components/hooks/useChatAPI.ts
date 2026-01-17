@@ -5,6 +5,9 @@ import { chatService } from '../services/chatService'
 export const useChatAPI = (
   ticker: string | undefined,
   updateThread: (threadId: string, updates: Partial<Thread>) => void,
+  conversationId: string | null = null,
+  setConversationId: (id: string | null) => void = () => {},
+  recordActivity: () => void = () => {},
 ) => {
   const [isLoading, setIsLoading] = useState(false)
   const isThinkingRef = useRef(false)
@@ -33,6 +36,8 @@ export const useChatAPI = (
 
     setIsLoading(true)
     isThinkingRef.current = true
+    // Record activity when a question is asked
+    recordActivity()
     try {
       const reader = await chatService.analyzeQuestion(
         question,
@@ -41,6 +46,7 @@ export const useChatAPI = (
         useUrlContext,
         deepAnalysis,
         preferredModel,
+        conversationId,
         signal,
       )
       if (!reader) throw new Error('Failed to get reader')
@@ -60,7 +66,15 @@ export const useChatAPI = (
           const jsonStrings = chunk.split('\n').filter((str) => str.trim())
           for (const jsonStr of jsonStrings) {
             const parsedChunk = JSON.parse(jsonStr)
-            if (parsedChunk.type === 'answer') {
+            if (parsedChunk.type === 'conversation') {
+              // Handle conversation event - store conversationId
+              const newConversationId = parsedChunk.body?.conversationId || null
+              if (newConversationId) {
+                setConversationId(newConversationId)
+                // Record activity when conversation is established
+                recordActivity()
+              }
+            } else if (parsedChunk.type === 'answer') {
               if (isThinkingRef.current) {
                 isThinkingRef.current = false
               }

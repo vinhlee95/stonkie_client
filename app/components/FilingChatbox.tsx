@@ -42,6 +42,9 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
     setDeepAnalysis,
     preferredModel,
     setPreferredModel,
+    conversationId,
+    setConversationId,
+    recordActivity,
   } = useChatState(ticker)
 
   const {
@@ -49,7 +52,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
     cancelRequest,
     handleSubmit,
     isThinking: isAnsweringNextQuestion,
-  } = useChatAPI(ticker, updateThread)
+  } = useChatAPI(ticker, updateThread, conversationId, setConversationId, recordActivity)
 
   // Determine if it's quarterly based on filing name
   const isQuarterly = filingName.includes('10-Q')
@@ -155,7 +158,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
         isFetchingAnalysisRef.current = false
       }
     }
-  }, [ticker, periodEndAt, periodType, addThread, updateThread])
+  }, [ticker, period, periodType, addThread, updateThread])
 
   const addCompanySpecificContext = (question: string): string => {
     return `${question}. Here is the 10K filing URL: ${filingUrl}. This question is specifically for company ${ticker}, not a general finance question.`

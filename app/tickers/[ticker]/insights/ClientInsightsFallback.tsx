@@ -103,7 +103,6 @@ export default function ClientInsightsFallback({
       }
     }
     fetchInsights()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticker, insightType])
 
   if (isChatOpen && currentInsight) {

@@ -32,7 +32,13 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const params = useParams()
   const ticker = params.ticker as string | undefined
   const chatState = useChatState(ticker)
-  const chatAPI = useChatAPI(ticker, chatState.updateThread)
+  const chatAPI = useChatAPI(
+    ticker,
+    chatState.updateThread,
+    chatState.conversationId,
+    chatState.setConversationId,
+    chatState.recordActivity,
+  )
   const { data: faqQuestions } = useFAQQuery(ticker)
   const faqProcessedRef = useRef<string | null>(null)
 
@@ -64,7 +70,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         }
       }
     }
-  }, [faqQuestions, ticker, chatState.updateThread])
+  }, [faqQuestions, ticker, chatState])
 
   // Reset ref when ticker changes
   useEffect(() => {
@@ -380,9 +386,18 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
     setDeepAnalysis,
     preferredModel,
     setPreferredModel,
+    conversationId,
+    setConversationId,
+    recordActivity,
   } = useChatState(ticker)
 
-  const { handleSubmit, isLoading, isThinking, cancelRequest } = useChatAPI(ticker, updateThread)
+  const { handleSubmit, isLoading, isThinking, cancelRequest } = useChatAPI(
+    ticker,
+    updateThread,
+    conversationId,
+    setConversationId,
+    recordActivity,
+  )
   const { data: faqQuestions } = useFAQQuery(ticker)
   const faqProcessedRef = useRef<string | null>(null)
 
@@ -414,7 +429,7 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
         }
       }
     }
-  }, [faqQuestions, ticker, updateThread])
+  }, [faqQuestions, ticker, updateThread, threads])
 
   // Reset ref when ticker changes
   useEffect(() => {
