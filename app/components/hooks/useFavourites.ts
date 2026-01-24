@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useLayoutEffect } from 'react'
 import { Company } from '@/app/CompanyList'
 
 const STORAGE_KEY = 'stonkie_favourites'
@@ -9,7 +9,8 @@ export function useFavourites() {
   const [isInitialized, setIsInitialized] = useState(false)
 
   // Initialize from localStorage on mount
-  useEffect(() => {
+  // Use useLayoutEffect to run synchronously before paint, preventing layout shift
+  useLayoutEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
