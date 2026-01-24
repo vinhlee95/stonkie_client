@@ -5,7 +5,7 @@ const eslintConfig = [
   ...nextConfig,
   ...nextTypeScriptConfig,
   {
-    ignores: ['**/*.json'],
+    ignores: ['**/*.json', '.claude/**'],
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',

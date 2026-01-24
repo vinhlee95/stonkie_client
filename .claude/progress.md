@@ -105,3 +105,136 @@ Tasks:
 - Helper scripts work reliably
 
 ---
+
+### Session: E2E Testing Integration
+
+**Session ID:** e2e-2026-01-24
+**Timestamp:** 2026-01-24
+**Feature:** E2E Infrastructure (Phase 2)
+**Type:** Infrastructure Enhancement
+
+#### Work Accomplished
+
+Integrated E2E browser testing with Puppeteer:
+
+- Researched MCP servers (Playwright/Puppeteer/Selenium) - MCP packages deprecated/unavailable
+- Installed Puppeteer 23.11.1 as dev dependency (117 packages)
+- Created `.claude/e2e-helpers.js` (5.8KB) - CLI tool for E2E testing
+- Created `.claude/templates/e2e-patterns.md` (3.8KB) - E2E usage documentation
+- Updated `.claude/templates/session-startup.md` - integrated smoke test
+- Updated `.claude/templates/session-completion.md` - integrated E2E verification
+- Updated `.gitignore` - exclude `.claude/screenshots/`
+- Created `.claude/screenshots/` directory
+
+#### E2E Helper Commands
+
+```bash
+# Smoke test (homepage + screenshot)
+node .claude/e2e-helpers.js smoke
+
+# Navigate and screenshot
+node .claude/e2e-helpers.js navigate <url> [filename.png]
+
+# Verify element exists/contains text
+node .claude/e2e-helpers.js verify <url> <selector> [expectedText]
+
+# Check console errors
+node .claude/e2e-helpers.js console <url>
+```
+
+#### Files Modified
+
+```
+Created:
+- .claude/e2e-helpers.js (5.8KB, executable)
+- .claude/templates/e2e-patterns.md (3.8KB)
+- .claude/screenshots/ (directory)
+
+Modified:
+- .claude/templates/session-startup.md (+4 lines)
+- .claude/templates/session-completion.md (+7 lines)
+- .gitignore (+1 line)
+- package.json (added puppeteer dev dependency)
+- package-lock.json (117 packages)
+```
+
+#### Verification Results
+
+**Phase 2 Success Criteria:**
+
+- ✓ Can navigate to localhost:3000 via Puppeteer
+- ✓ Can verify elements exist by selector
+- ✓ Can take screenshots (.claude/screenshots/)
+- ✓ Can check console for errors
+- ✓ Helper scripts work reliably
+- ✓ Documentation complete (e2e-patterns.md)
+
+**Testing Results:**
+
+- ✓ Smoke test: Passed, screenshot generated
+- ✓ Verify element: Passed (found h1)
+- ✓ Console check: Working (detects errors as expected)
+- ✓ Screenshots: 2 generated (50KB each)
+
+**Technical Checks:**
+
+- ✓ Puppeteer installed successfully
+- ✓ e2e-helpers.js executable and functional
+- ⚠️ Backend connection errors expected (backend not running)
+
+#### Learnings
+
+**MCP Challenges:**
+
+- @microsoft/playwright-mcp: Not in npm registry
+- @modelcontextprotocol/server-puppeteer: Deprecated
+- Solution: Direct Puppeteer integration more reliable
+
+**Design Decisions:**
+
+- CLI-based E2E helpers vs MCP - simpler, more maintainable
+- Screenshots gitignored but available locally for verification
+- Console error detection includes both console.error and pageerror events
+- Headless mode for CI/CD compatibility
+- 10s timeout for page loads (Next.js SSR can be slow)
+
+**Puppeteer Best Practices:**
+
+- Use `waitUntil: 'networkidle0'` for SSR apps
+- Replace deprecated `waitForTimeout` with Promise-based setTimeout
+- Listen to both 'console' and 'pageerror' events for comprehensive error detection
+- Headless 'new' mode for latest Chrome features
+
+**Integration Points:**
+
+- Session startup: Run smoke test after dev server ready
+- During development: Navigate/screenshot at milestones
+- Session completion: Execute ALL verification steps from features.json
+- Screenshots provide visual confirmation for user
+
+#### Next Session Plan (Phase 3)
+
+**Goal:** Demo Feature Workflow
+
+Tasks:
+
+1. Add simple feature to features.json (e.g., loading skeleton for ticker page)
+2. Run complete coding session:
+   - Execute session-startup.md checklist
+   - Implement feature following CLAUDE.md patterns
+   - Run E2E verification steps
+   - Update features.json and progress.md
+   - Commit code + workflow state
+3. Review workflow effectiveness
+4. Refine based on learnings
+5. Document production-ready workflow
+
+**Success Criteria:**
+
+- Feature implemented successfully
+- E2E tests pass
+- State files updated correctly
+- Workflow feels smooth
+- Ready for production use
+
+---

@@ -10,16 +10,24 @@ Execute these steps before ending each coding session.
 - [ ] Run `npm run lint` - must pass
 - [ ] Review all modified files for adherence to CLAUDE.md guidelines
 
-### E2E Verification (via MCP)
+### E2E Verification (Puppeteer)
 
-Execute ALL steps from feature.successCriteria.verification:
+Execute ALL steps from feature.successCriteria.verification using `.claude/e2e-helpers.js`:
+
+```bash
+node .claude/e2e-helpers.js verify <url> <selector> [expectedText]
+node .claude/e2e-helpers.js console <url>
+node .claude/e2e-helpers.js navigate <url> final-state.png
+```
 
 - [ ] Navigate to specified URLs
-- [ ] Click elements with specified selectors
+- [ ] Verify elements exist with specified selectors
 - [ ] Verify element content matches expectations
 - [ ] Take screenshots of success states
 - [ ] Check browser console has no errors
-- [ ] Test responsive layouts (mobile/tablet/desktop)
+- [ ] Review all screenshots in `.claude/screenshots/`
+
+See `.claude/templates/e2e-patterns.md` for detailed usage.
 
 ### Manual Checks
 

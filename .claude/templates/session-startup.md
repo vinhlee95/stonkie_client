@@ -16,12 +16,17 @@ Execute these steps at the beginning of each coding session (read-only phase).
 - [ ] Start dev server: `npm run dev` (background process)
 - [ ] Wait for server ready message on port 3000
 
-## 3. Smoke Test (E2E MCP)
+## 3. Smoke Test (E2E)
 
-- [ ] Navigate to `http://localhost:3000`
+Run automated smoke test:
+
+```bash
+node .claude/e2e-helpers.js smoke
+```
+
 - [ ] Verify homepage loads without errors
-- [ ] Check browser console - no errors
-- [ ] Take baseline screenshot
+- [ ] Check screenshot: `.claude/screenshots/smoke-test.png`
+- [ ] Review console errors (ignore backend ERR_CONNECTION_REFUSED if backend not running)
 
 ## 4. Feature Selection
 
