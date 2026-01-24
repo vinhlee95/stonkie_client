@@ -1,5 +1,5 @@
 // Mock API endpoint for E2E testing
-// Returns sample companies with industry data
+// Returns sample companies with sector data
 export async function GET() {
   const mockCompanies = {
     data: [
@@ -7,55 +7,55 @@ export async function GET() {
         name: 'Apple Inc.',
         ticker: 'AAPL',
         logo_url: 'https://logo.clearbit.com/apple.com',
-        industry: 'Technology',
+        sector: 'Technology',
       },
       {
         name: 'Microsoft Corp',
         ticker: 'MSFT',
         logo_url: 'https://logo.clearbit.com/microsoft.com',
-        industry: 'Technology',
+        sector: 'Technology',
       },
       {
         name: 'NVIDIA Corp',
         ticker: 'NVDA',
         logo_url: 'https://logo.clearbit.com/nvidia.com',
-        industry: 'Technology',
+        sector: 'Technology',
       },
       {
         name: 'JPMorgan Chase',
         ticker: 'JPM',
         logo_url: 'https://logo.clearbit.com/jpmorganchase.com',
-        industry: 'Financial Services',
+        sector: 'Financial Services',
       },
       {
         name: 'Bank of America',
         ticker: 'BAC',
         logo_url: 'https://logo.clearbit.com/bankofamerica.com',
-        industry: 'Financial Services',
+        sector: 'Financial Services',
       },
       {
         name: 'Goldman Sachs',
         ticker: 'GS',
         logo_url: 'https://logo.clearbit.com/goldmansachs.com',
-        industry: 'Financial Services',
+        sector: 'Financial Services',
       },
       {
         name: 'Johnson & Johnson',
         ticker: 'JNJ',
         logo_url: 'https://logo.clearbit.com/jnj.com',
-        industry: 'Healthcare',
+        sector: 'Healthcare',
       },
       {
         name: 'Pfizer Inc.',
         ticker: 'PFE',
         logo_url: 'https://logo.clearbit.com/pfizer.com',
-        industry: 'Healthcare',
+        sector: 'Healthcare',
       },
       {
         name: 'UnitedHealth Group',
         ticker: 'UNH',
         logo_url: 'https://logo.clearbit.com/unitedhealthgroup.com',
-        industry: 'Healthcare',
+        sector: 'Healthcare',
       },
     ],
   }

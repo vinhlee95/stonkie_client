@@ -6,7 +6,7 @@ export interface Company {
   name: string
   ticker: string
   logo_url: string
-  industry: string
+  sector: string
 }
 
 export default function CompanyList({

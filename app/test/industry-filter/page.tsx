@@ -1,8 +1,9 @@
-import CompanyList, { Company } from '@/app/CompanyList'
+import { Company } from '@/app/CompanyList'
+import MostViewedCompanies from '@/app/components/MostViewedCompanies'
 
-// Test page for E2E testing of industry filter functionality
-// Uses mock API endpoint with industry data
-export default async function TestIndustryFilterPage() {
+// Test page for E2E testing of sector filter functionality
+// Uses mock API endpoint with sector data
+export default async function TestSectorFilterPage() {
   // Fetch mock data from test API endpoint
   const response = await fetch('http://localhost:3000/api/test/companies', {
     cache: 'no-store', // Disable caching for testing
@@ -16,12 +17,12 @@ export default async function TestIndustryFilterPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Industry Filter Test Page</h1>
+      <h1 className="text-2xl font-bold mb-6">Sector Filter Test Page</h1>
       <p className="mb-4 text-gray-600">
-        This page uses mock data for E2E testing of the industry filter feature.
+        This page uses mock data for E2E testing of the sector filter feature.
       </p>
       <h2 className="text-xl font-bold mb-6">Most Viewed Companies</h2>
-      {data && <CompanyList companies={data} />}
+      {data && <MostViewedCompanies companies={data} />}
     </div>
   )
 }
