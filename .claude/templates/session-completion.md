@@ -10,24 +10,27 @@ Execute these steps before ending each coding session.
 - [ ] Run `npm run lint` - must pass
 - [ ] Review all modified files for adherence to CLAUDE.md guidelines
 
-### E2E Verification (Puppeteer)
+### E2E Verification (Playwright)
 
-Execute ALL steps from feature.successCriteria.verification using `.claude/e2e-helpers.js`:
+Execute E2E tests using standard npm scripts:
 
 ```bash
-node .claude/e2e-helpers.js verify <url> <selector> [expectedText]
-node .claude/e2e-helpers.js console <url>
-node .claude/e2e-helpers.js navigate <url> final-state.png
+# Run smoke test (fast, always-run)
+npm run e2e:smoke
+
+# Run full E2E suite (if feature touches user flows)
+npm run e2e
+
+# Run specific test file
+npm run e2e tests/e2e/console.spec.ts
 ```
 
-- [ ] Navigate to specified URLs
-- [ ] Verify elements exist with specified selectors
-- [ ] Verify element content matches expectations
-- [ ] Take screenshots of success states
-- [ ] Check browser console has no errors
-- [ ] Review all screenshots in `.claude/screenshots/`
+- [ ] Run `npm run e2e:smoke` - must pass
+- [ ] If feature touches UI/routing/data fetching, run full suite: `npm run e2e`
+- [ ] Check test results and screenshots in `test-results/` (on failure)
+- [ ] Review HTML report: `playwright-report/index.html` (if generated)
 
-See `.claude/templates/e2e-patterns.md` for detailed usage.
+**Note:** E2E tests are now standard TypeScript Playwright tests in `tests/e2e/`. The old `.claude/e2e-helpers.js` is deprecated. See `.claude/templates/e2e-patterns.md` for migration guide.
 
 ### Manual Checks
 
@@ -69,7 +72,7 @@ Add new session entry with:
 - [ ] Write clear commit message:
   - First line: imperative mood, <72 chars (e.g., "Add loading skeleton to ticker page")
   - Body: bullet points of changes (optional if obvious)
-  - Footer: `Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>`
+  - Footer: Include co-author tag if agent-assisted (format: `Co-Authored-By: [Agent Name] <[email]>`)
 - [ ] Commit with `git commit` (pre-commit hook will run)
 - [ ] Verify commit created successfully
 

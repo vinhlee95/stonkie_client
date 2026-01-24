@@ -2,6 +2,7 @@
 
 # Stonkie Workflow Infrastructure Initialization Script
 # Run once to set up the two-agent feature development workflow
+# Works with any AI coding assistant (Claude Code, Cursor Composer, GitHub Copilot, etc.)
 
 set -e  # Exit on error
 

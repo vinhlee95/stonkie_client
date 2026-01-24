@@ -2,6 +2,16 @@
 
 /**
  * E2E Testing Helper for Stonkie
+ *
+ * ⚠️ DEPRECATED: This file is deprecated. Use Playwright Test instead:
+ *   - npm run e2e:smoke (smoke test)
+ *   - npm run e2e (full suite)
+ *   - npm run e2e:ui (interactive mode)
+ *
+ * Tests are now in tests/e2e/*.spec.ts (standard TypeScript Playwright tests)
+ *
+ * This file is kept temporarily for reference but will be removed in a future update.
+ *
  * Usage: node .claude/e2e-helpers.js <command> [args]
  */
 

@@ -1,6 +1,6 @@
 # Stonkie Feature Development Progress
 
-This file tracks incremental progress across Claude Code sessions using the two-agent workflow pattern.
+This file tracks incremental progress across AI coding assistant sessions using the two-agent workflow pattern.
 
 ## Sessions Log
 
