@@ -46,3 +46,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .cursor
+
+# Claude Code workflow
+.claude/sessions/
+.claude/.initialized
