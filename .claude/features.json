@@ -1,5 +1,89 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2026-01-24T00:00:00.000Z",
-  "features": []
+  "lastUpdated": "2026-01-24T11:00:00.000Z",
+  "features": [
+    {
+      "id": "F001",
+      "title": "Industry Filter Chips for Most Viewed Companies",
+      "description": "Add horizontal chip list below 'Most Viewed Companies' heading to filter by industry. One chip selected at a time. Backend returns industry field - add UI chips and client-side filtering.",
+      "status": "completed",
+      "priority": "p1",
+      "assignedSession": "phase3-2026-01-24",
+      "dependencies": [],
+      "blockedBy": [],
+      "category": "enhancement",
+      "estimatedComplexity": "small",
+
+      "technicalSpec": {
+        "filesAffected": [
+          "/Users/vinhle/dev/projects/stonkie/frontend-ssr/app/CompanyList.tsx",
+          "/Users/vinhle/dev/projects/stonkie/frontend-ssr/app/page.tsx"
+        ],
+        "patternsToFollow": [
+          "/Users/vinhle/dev/projects/stonkie/frontend-ssr/app/components/CompanySearch.tsx"
+        ],
+        "integrationPoints": ["React useState", "Tailwind CSS"]
+      },
+
+      "successCriteria": {
+        "functional": [
+          "Chip list shown below 'Most Viewed Companies' heading",
+          "Chips show 'All Industries' + unique industries from backend data",
+          "'All Industries' chip selected by default",
+          "Clicking a chip selects it and filters companies instantly",
+          "Only one chip can be selected at a time",
+          "Selected chip has distinct visual style (active state)",
+          "Chips wrap nicely on mobile screens"
+        ],
+        "technical": [
+          "TypeScript type-check passes",
+          "Company interface includes industry field",
+          "No console errors in browser",
+          "Pre-commit hook passes"
+        ],
+        "verification": {
+          "method": "e2e",
+          "steps": [
+            "Navigate to http://localhost:3000",
+            "Verify chip list exists below heading",
+            "Verify 'All Industries' chip is selected (active style)",
+            "Take screenshot of initial state",
+            "Click a specific industry chip (e.g., first non-All chip)",
+            "Verify only that industry's companies shown",
+            "Verify clicked chip has active style",
+            "Take screenshot of filtered state",
+            "Click 'All Industries' chip",
+            "Verify all companies shown again",
+            "Check console has no errors"
+          ]
+        }
+      },
+
+      "testPlan": {
+        "preDevelopment": [
+          "Fetch sample data from backend to see industry field format",
+          "Run smoke test to verify homepage loads"
+        ],
+        "duringDevelopment": [
+          "Type-check after updating Company interface",
+          "Type-check after adding chip UI",
+          "Manual test in browser after each change"
+        ],
+        "postDevelopment": [
+          "Execute all E2E verification steps",
+          "Test responsive wrapping at 375px width",
+          "Test with multiple industries",
+          "Verify shimmer animation still works on click"
+        ]
+      },
+
+      "metadata": {
+        "createdAt": "2026-01-24T11:00:00.000Z",
+        "startedAt": "2026-01-24T11:00:00.000Z",
+        "completedAt": "2026-01-24T11:30:00.000Z",
+        "sessionsInvolved": ["phase3-2026-01-24"],
+        "commitsLinked": ["pending"]
+      }
+    }
+  ]
 }

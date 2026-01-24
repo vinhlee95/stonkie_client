@@ -18,6 +18,7 @@ async function LogoAndTickerBlock({ ticker }: { ticker: string }) {
         ticker: ticker.toUpperCase(),
         name: keyStats.name,
         logo_url: keyStats.logo_url || '',
+        industry: '',
       }
     : null
 
