@@ -82,7 +82,7 @@
         "startedAt": "2026-01-24T11:00:00.000Z",
         "completedAt": "2026-01-24T11:30:00.000Z",
         "sessionsInvolved": ["phase3-2026-01-24"],
-        "commitsLinked": ["pending"]
+        "commitsLinked": ["87d6484"]
       }
     }
   ]
