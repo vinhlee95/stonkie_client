@@ -212,6 +212,23 @@
           ],
           "mock_strategy": "Mock global fetch() function with jest.fn() or vi.fn()",
           "backend_schema": "Use example_response from api_contract.response_success.example_response"
+        },
+        "browser_verification": {
+          "description": "End-to-end browser testing with real backend",
+          "prerequisites": [
+            "Backend server running: cd ../backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload",
+            "Frontend dev server running: npm run dev"
+          ],
+          "steps": [
+            "Verify backend API accessible: curl http://localhost:8080/api/etf/SXR8",
+            "Verify frontend accessible: curl http://localhost:3000",
+            "Test API client with real backend (if applicable for phase)"
+          ],
+          "expected_results": [
+            "Backend returns valid ETF data",
+            "Frontend server responds",
+            "API client successfully fetches data (if applicable)"
+          ]
         }
       },
       "implementation_learnings": {
@@ -230,10 +247,11 @@
     {
       "id": "phase_2",
       "name": "ETF Page Route & Data Fetching",
-      "status": "pending",
+      "status": "completed",
       "priority": "critical",
       "blocked_by": ["phase_1"],
       "description": "Create Next.js page route for ETF detail page with server-side data fetching",
+      "completed_at": "2026-01-25",
       "files": {
         "new": ["app/etf/[ticker]/page.tsx"],
         "reference": ["app/companies/[ticker]/* (existing company page patterns)"]
@@ -310,13 +328,47 @@
         "Server-side rendering works (view page source shows content)",
         "Metadata properly set for SEO"
       ],
+      "implementation_learnings": {
+        "nextjs_params": "Next.js 15 uses params as Promise<{ ticker: string }>, must await params before use. Updated from Next.js 14 pattern.",
+        "revalidation": "Set revalidate: 120 (2 minutes) for ISR. Matches backend data freshness patterns.",
+        "error_boundary": "Error.tsx must be 'use client' directive. Uses reset() function for retry functionality.",
+        "not_found": "not-found.tsx is Server Component by default. Uses notFound() from next/navigation to trigger.",
+        "metadata_generation": "generateMetadata runs on server, can fetch data. Returns fallback metadata if fetch fails.",
+        "ticker_normalization": "Normalize ticker to uppercase in both generateMetadata and page component for consistency.",
+        "error_handling": "Try-catch in page component calls notFound() for any error (404 or network). Error boundary catches runtime errors.",
+        "file_structure": "Created app/etf/[ticker]/page.tsx, not-found.tsx, and error.tsx following Next.js App Router conventions."
+      },
       "testing": {
         "urls_to_test": [
           "http://localhost:3000/etf/SXR8 - should render ETF page",
           "http://localhost:3000/etf/sxr8 - should render ETF page",
           "http://localhost:3000/etf/SPYY - should render ETF page",
           "http://localhost:3000/etf/INVALID - should show 404"
-        ]
+        ],
+        "browser_verification": {
+          "description": "End-to-end browser testing with real backend",
+          "prerequisites": [
+            "Backend server running: cd ../backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload",
+            "Frontend dev server running: npm run dev"
+          ],
+          "steps": [
+            "Navigate to http://localhost:3000/etf/SXR8 - verify page loads with ETF name",
+            "Navigate to http://localhost:3000/etf/sxr8 - verify lowercase ticker works",
+            "Navigate to http://localhost:3000/etf/SPYY - verify different ETF loads",
+            "Navigate to http://localhost:3000/etf/INVALID - verify 404 page shows",
+            "Check page title includes ETF name in browser tab",
+            "View page source - verify server-side rendering (content visible in HTML)",
+            "Verify metadata (title, description) in page head"
+          ],
+          "expected_results": [
+            "All valid ETF URLs render correctly",
+            "Case-insensitive ticker routing works",
+            "404 page displays for invalid tickers",
+            "Page title includes ETF name",
+            "Server-side rendering works (content in HTML source)",
+            "Metadata properly set for SEO"
+          ]
+        }
       }
     },
     {
@@ -398,6 +450,30 @@
         "Null values handled gracefully",
         "Design consistent with existing Stonkie components"
       ],
+      "testing": {
+        "browser_verification": {
+          "description": "End-to-end browser testing with real backend",
+          "prerequisites": [
+            "Backend server running: cd ../backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload",
+            "Frontend dev server running: npm run dev"
+          ],
+          "steps": [
+            "Navigate to http://localhost:3000/etf/SXR8",
+            "Verify ETFOverview component displays all fields",
+            "Verify fund size formatted as $114.62B",
+            "Verify TER displayed as 0.07%",
+            "Verify launch date formatted as 'May 19, 2010'",
+            "Verify updated timestamp shows relative time",
+            "Test responsive layout on mobile and desktop viewports",
+            "Verify null values handled gracefully (if any)"
+          ],
+          "expected_results": [
+            "All ETF metadata fields visible and correctly formatted",
+            "Responsive layout adapts to screen size",
+            "Null values display 'N/A' or are hidden appropriately"
+          ]
+        }
+      },
       "design_notes": [
         "Use card/panel component for visual grouping",
         "Use grid layout for metrics (2 columns on mobile, 3-4 on desktop)",
@@ -475,6 +551,31 @@
         "Header row clearly labeled",
         "Alternating row colors for readability"
       ],
+      "testing": {
+        "browser_verification": {
+          "description": "End-to-end browser testing with real backend",
+          "prerequisites": [
+            "Backend server running: cd ../backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload",
+            "Frontend dev server running: npm run dev"
+          ],
+          "steps": [
+            "Navigate to http://localhost:3000/etf/SXR8",
+            "Verify HoldingsTable component displays",
+            "Verify all holdings from API are shown (typically 10)",
+            "Verify rank column shows 1, 2, 3...",
+            "Verify weight percentages formatted with 2 decimals and % symbol",
+            "Verify progress bars show relative weights",
+            "Test responsive layout on mobile (table should stack if needed)",
+            "Verify empty state if holdings array is empty"
+          ],
+          "expected_results": [
+            "All holdings displayed in table format",
+            "Rank, name, and weight columns correctly formatted",
+            "Visual progress bars reflect weight percentages",
+            "Responsive layout works on mobile"
+          ]
+        }
+      },
       "design_notes": [
         "Use existing table component if available",
         "Progress bar width relative to largest weight in dataset",
@@ -531,6 +632,32 @@
         "Empty state handled",
         "Chart has clear title: 'Sector Allocation'"
       ],
+      "testing": {
+        "browser_verification": {
+          "description": "End-to-end browser testing with real backend",
+          "prerequisites": [
+            "Backend server running: cd ../backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload",
+            "Frontend dev server running: npm run dev"
+          ],
+          "steps": [
+            "Navigate to http://localhost:3000/etf/SXR8",
+            "Verify SectorAllocationChart component displays",
+            "Verify chart renders all sectors from API",
+            "Verify percentages shown correctly (2 decimal places)",
+            "Verify legend displays all sector names",
+            "Verify colors are distinct and accessible",
+            "Hover over chart segments - verify tooltips show sector name and percentage",
+            "Test responsive chart sizing on mobile and desktop",
+            "Verify empty state if sector_allocation array is empty"
+          ],
+          "expected_results": [
+            "Chart renders with all sector data",
+            "Legend and tooltips work correctly",
+            "Chart is responsive and accessible",
+            "Empty state handled gracefully"
+          ]
+        }
+      },
       "design_notes": [
         "Pie chart preferred for quick visual comparison",
         "If using pie chart, consider showing percentages inside or outside slices",
@@ -582,6 +709,32 @@
         "Empty state handled",
         "Chart has clear title: 'Country Allocation'"
       ],
+      "testing": {
+        "browser_verification": {
+          "description": "End-to-end browser testing with real backend",
+          "prerequisites": [
+            "Backend server running: cd ../backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload",
+            "Frontend dev server running: npm run dev"
+          ],
+          "steps": [
+            "Navigate to http://localhost:3000/etf/SXR8",
+            "Verify CountryAllocationChart component displays",
+            "Verify chart renders all countries from API",
+            "Verify percentages shown correctly (2 decimal places)",
+            "Verify legend displays all country names",
+            "Verify colors are distinct and accessible",
+            "Hover over chart segments - verify tooltips show country name and percentage",
+            "Test responsive chart sizing on mobile and desktop",
+            "Verify empty state if country_allocation array is empty"
+          ],
+          "expected_results": [
+            "Chart renders with all country data",
+            "Legend and tooltips work correctly",
+            "Chart is responsive and accessible",
+            "Empty state handled gracefully"
+          ]
+        }
+      },
       "design_notes": [
         "Can reuse SectorAllocationChart component with different props/title",
         "Consider using flag icons next to country names if design allows",
@@ -655,7 +808,35 @@
         "Page accessible (passes WAVE or axe DevTools)",
         "Works with SXR8 and SPYY test data",
         "Looks professional and polished"
-      ]
+      ],
+      "testing": {
+        "browser_verification": {
+          "description": "End-to-end browser testing with real backend",
+          "prerequisites": [
+            "Backend server running: cd ../backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload",
+            "Frontend dev server running: npm run dev"
+          ],
+          "steps": [
+            "Navigate to http://localhost:3000/etf/SXR8",
+            "Verify all components integrated (Overview, Holdings, Sector Chart, Country Chart)",
+            "Verify components arranged in logical reading order",
+            "Verify breadcrumb navigation displays: Home > ETF > SXR8",
+            "Verify responsive layout on mobile (375px), tablet (768px), desktop (1920px)",
+            "Verify spacing consistent between sections",
+            "Test navigation links (breadcrumb, back button)",
+            "Navigate to http://localhost:3000/etf/SPYY - verify works with different ETF",
+            "Run accessibility check (WAVE or axe DevTools)",
+            "Verify loading skeletons appear during data fetch"
+          ],
+          "expected_results": [
+            "All components visible and properly arranged",
+            "Responsive layout works across all screen sizes",
+            "Navigation functional",
+            "Page accessible (no accessibility violations)",
+            "Works with multiple ETFs"
+          ]
+        }
+      }
     },
     {
       "id": "phase_8",
@@ -741,7 +922,35 @@
         "Documentation complete",
         "Screenshots captured",
         "Specs updated with completion results"
-      ]
+      ],
+      "testing": {
+        "browser_verification": {
+          "description": "Comprehensive end-to-end browser testing with real backend",
+          "prerequisites": [
+            "Backend server running: cd ../backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload",
+            "Frontend dev server running: npm run dev"
+          ],
+          "steps": [
+            "Run all functional tests from testing_checklist",
+            "Test responsive layout on mobile (375px), tablet (768px), desktop (1920px)",
+            "Run Lighthouse audit - verify score >90",
+            "Run accessibility check (WAVE or axe DevTools) - verify no violations",
+            "Test error scenarios: backend offline, invalid ticker, slow network",
+            "Test with multiple ETFs: SXR8, SPYY",
+            "Verify all components render correctly",
+            "Take screenshots for documentation",
+            "Verify performance metrics (FCP <1.5s, TTI <3s)"
+          ],
+          "expected_results": [
+            "All functional tests pass",
+            "Responsive tests pass on all screen sizes",
+            "Lighthouse score >90",
+            "No accessibility violations",
+            "Error scenarios handled gracefully",
+            "Performance metrics meet targets"
+          ]
+        }
+      }
     }
   ],
   "design_guidelines": {
