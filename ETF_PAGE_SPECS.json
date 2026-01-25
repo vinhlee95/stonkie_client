@@ -1,0 +1,862 @@
+{
+  "project": "ETF Detail Page - Frontend Implementation",
+  "overview": "Build ETF detail page to display comprehensive ETF data fetched from backend API. Page should render ETF overview, holdings table, sector allocation chart, country allocation chart, and key metadata.",
+  "api_contract": {
+    "backend_endpoint": {
+      "method": "GET",
+      "path": "/api/etf/{ticker}",
+      "base_url": "http://localhost:8080",
+      "description": "Fetch ETF fundamental data by ticker symbol",
+      "path_parameters": {
+        "ticker": {
+          "type": "string",
+          "description": "ETF ticker symbol (case-insensitive, backend normalizes to uppercase)",
+          "examples": ["SXR8", "CSPX", "SPYY", "sxr8"]
+        }
+      },
+      "response_success": {
+        "status_code": 200,
+        "content_type": "application/json",
+        "schema": {
+          "isin": "string - ISIN identifier",
+          "ticker": "string | null - Ticker symbol",
+          "name": "string - Full ETF name",
+          "fund_provider": "string - Provider name (e.g., 'iShares', 'SPDR ETF')",
+          "fund_size_billions": "number | null - Fund size in billions",
+          "ter_percent": "number - Total expense ratio as percentage",
+          "replication_method": "string - Replication method",
+          "distribution_policy": "string - Distribution policy",
+          "fund_currency": "string - Fund currency code",
+          "domicile": "string - Domicile country code",
+          "launch_date": "string | null - Launch date (YYYY-MM-DD format)",
+          "index_tracked": "string - Index tracked",
+          "holdings": "array - Top holdings with name and weight_percent",
+          "sector_allocation": "array - Sector allocation with sector and weight_percent",
+          "country_allocation": "array - Country allocation with country and weight_percent",
+          "source_url": "string | null - Source URL for data",
+          "created_at": "string | null - ISO 8601 timestamp",
+          "updated_at": "string | null - ISO 8601 timestamp"
+        },
+        "example_response": {
+          "isin": "IE00B5BMR087",
+          "ticker": "SXR8",
+          "name": "iShares Core S&P 500 UCITS ETF USD (Acc)",
+          "fund_provider": "iShares",
+          "fund_size_billions": 114.617,
+          "ter_percent": 0.07,
+          "replication_method": "Physical (Full replication)",
+          "distribution_policy": "Accumulating",
+          "fund_currency": "USD",
+          "domicile": "IE",
+          "launch_date": "2010-05-19",
+          "index_tracked": "S&P 500",
+          "holdings": [
+            { "name": "NVIDIA Corp.", "weight_percent": 7.38 },
+            { "name": "Apple", "weight_percent": 7.07 },
+            { "name": "Microsoft", "weight_percent": 6.25 },
+            { "name": "Amazon", "weight_percent": 3.94 },
+            { "name": "Alphabet (Class A)", "weight_percent": 1.94 },
+            { "name": "Meta Platforms", "weight_percent": 1.88 },
+            { "name": "Alphabet (Class C)", "weight_percent": 1.65 },
+            { "name": "Broadcom", "weight_percent": 1.48 },
+            { "name": "Tesla", "weight_percent": 1.42 },
+            { "name": "Berkshire Hathaway", "weight_percent": 1.4 }
+          ],
+          "sector_allocation": [
+            { "sector": "Technology", "weight_percent": 36.15 },
+            { "sector": "Financials", "weight_percent": 10.66 },
+            { "sector": "Telecommunication", "weight_percent": 10.63 },
+            { "sector": "Consumer Discretionary", "weight_percent": 10.36 },
+            { "sector": "Other", "weight_percent": 32.2 }
+          ],
+          "country_allocation": [
+            { "country": "United States", "weight_percent": 95.83 },
+            { "country": "Ireland", "weight_percent": 1.32 },
+            { "country": "Other", "weight_percent": 2.85 }
+          ],
+          "source_url": null,
+          "created_at": "2026-01-25T13:28:10.465852+00:00",
+          "updated_at": "2026-01-25T13:28:10.465852+00:00"
+        }
+      },
+      "response_error": {
+        "status_code": 404,
+        "content_type": "application/json",
+        "schema": {
+          "detail": "string - Error message"
+        },
+        "example_response": {
+          "detail": "ETF with ticker 'NONEXISTENT' not found"
+        }
+      },
+      "cors": {
+        "enabled": true,
+        "description": "Backend already configured with CORSMiddleware for frontend access"
+      }
+    },
+    "test_data": {
+      "available_etfs": [
+        {
+          "ticker": "SXR8",
+          "isin": "IE00B5BMR087",
+          "name": "iShares Core S&P 500 UCITS ETF USD (Acc)",
+          "fund_provider": "iShares",
+          "holdings_count": 10,
+          "sectors_count": 5,
+          "countries_count": 3
+        },
+        {
+          "ticker": "SPYY",
+          "isin": "IE00B44Z5B48",
+          "name": "SPDR MSCI All Country World UCITS ETF (Acc)",
+          "fund_provider": "SPDR ETF",
+          "note": "Available for testing"
+        }
+      ]
+    }
+  },
+  "phases": [
+    {
+      "id": "phase_1",
+      "name": "API Integration Layer",
+      "status": "completed",
+      "priority": "critical",
+      "blocked_by": [],
+      "description": "Create TypeScript API client to fetch ETF data from backend",
+      "completed_at": "2026-01-25",
+      "files": {
+        "new": ["lib/api/etf.ts", "types/etf.ts"],
+        "reference": [
+          "lib/api/* (existing API client patterns)",
+          "types/* (existing type definitions)"
+        ]
+      },
+      "requirements": [
+        "Create TypeScript types matching backend response schema",
+        "Create API client function to fetch ETF by ticker",
+        "Handle 404 errors gracefully",
+        "Handle network errors with retry logic",
+        "Support loading states",
+        "Add request timeout (5s recommended)",
+        "Use fetch API or existing HTTP client"
+      ],
+      "type_definitions": {
+        "file": "types/etf.ts",
+        "types": [
+          {
+            "name": "ETFHolding",
+            "definition": "{ name: string; weight_percent: number }"
+          },
+          {
+            "name": "ETFSectorAllocation",
+            "definition": "{ sector: string; weight_percent: number }"
+          },
+          {
+            "name": "ETFCountryAllocation",
+            "definition": "{ country: string; weight_percent: number }"
+          },
+          {
+            "name": "ETFFundamental",
+            "definition": "{\n  isin: string;\n  ticker: string | null;\n  name: string;\n  fund_provider: string;\n  fund_size_billions: number | null;\n  ter_percent: number;\n  replication_method: string;\n  distribution_policy: string;\n  fund_currency: string;\n  domicile: string;\n  launch_date: string | null;\n  index_tracked: string;\n  holdings: ETFHolding[];\n  sector_allocation: ETFSectorAllocation[];\n  country_allocation: ETFCountryAllocation[];\n  source_url: string | null;\n  created_at: string | null;\n  updated_at: string | null;\n}"
+          }
+        ]
+      },
+      "api_client_implementation": {
+        "file": "lib/api/etf.ts",
+        "function_signature": "export async function getETFByTicker(ticker: string): Promise<ETFFundamental>",
+        "error_handling": [
+          "throw Error for 404 with message 'ETF not found'",
+          "throw Error for network failures",
+          "throw Error for timeout",
+          "throw Error for invalid JSON response"
+        ],
+        "example_usage": [
+          "import { getETFByTicker } from '@/lib/api/etf';",
+          "",
+          "try {",
+          "  const etf = await getETFByTicker('SXR8');",
+          "  console.log(etf.name);",
+          "} catch (error) {",
+          "  console.error('Failed to fetch ETF:', error);",
+          "}"
+        ]
+      },
+      "success_criteria": [
+        "types/etf.ts created with all type definitions",
+        "lib/api/etf.ts created with getETFByTicker function",
+        "Function successfully fetches SXR8 data",
+        "Function throws error for NONEXISTENT ticker",
+        "Types match backend response exactly",
+        "Network errors handled gracefully",
+        "Loading states supported",
+        "Integration tests pass with mocked backend responses"
+      ],
+      "testing": {
+        "manual_tests": [
+          "Call getETFByTicker('SXR8') - should return data",
+          "Call getETFByTicker('SPYY') - should return data",
+          "Call getETFByTicker('NONEXISTENT') - should throw error",
+          "Call with backend offline - should throw network error"
+        ],
+        "integration_tests": {
+          "file": "lib/api/__tests__/etf.test.ts",
+          "description": "Integration tests with mocked fetch responses",
+          "test_cases": [
+            "Successfully fetches ETF data for valid ticker (SXR8)",
+            "Throws 'ETF not found' error for 404 response",
+            "Throws timeout error when request exceeds 5s",
+            "Throws network error for fetch failures",
+            "Throws error for invalid JSON response",
+            "Handles empty ticker string",
+            "Validates response data matches ETFFundamental type"
+          ],
+          "mock_strategy": "Mock global fetch() function with jest.fn() or vi.fn()",
+          "backend_schema": "Use example_response from api_contract.response_success.example_response"
+        }
+      },
+      "implementation_learnings": {
+        "test_framework": "Used Node.js built-in test runner (node:test) with tsx loader for TypeScript support. No additional test framework dependencies needed.",
+        "fetch_mocking": "Mocked globalThis.fetch instead of global.fetch for better compatibility. Used 'as unknown as Response' type assertion to satisfy TypeScript strict mode.",
+        "timeout_implementation": "AbortController with setTimeout works well for request timeouts. Mock fetch needs to respect AbortSignal to properly test timeout scenarios.",
+        "error_handling": "Error messages match backend error format. 404 errors throw 'ETF not found' message as specified. Network errors wrapped with descriptive messages.",
+        "type_safety": "All types match backend schema exactly. Nullable fields (ticker, fund_size_billions, launch_date, source_url, created_at, updated_at) properly typed.",
+        "environment_variables": "API client supports both BACKEND_URL (server-side) and NEXT_PUBLIC_BACKEND_URL (client-side) with fallback to localhost:8080.",
+        "test_coverage": "10 integration tests cover all success and error scenarios including timeout, network failures, invalid JSON, empty input, and type validation.",
+        "file_structure": "Created lib/api/etf.ts and types/etf.ts as specified. Tests in lib/api/__tests__/etf.test.ts following Next.js conventions.",
+        "dependencies_added": "Added tsx as dev dependency for running TypeScript tests with Node.js test runner. No runtime dependencies added.",
+        "type_checking": "All tests pass TypeScript strict mode. Used 'as unknown as Response' pattern for mock Response objects to avoid type errors."
+      }
+    },
+    {
+      "id": "phase_2",
+      "name": "ETF Page Route & Data Fetching",
+      "status": "pending",
+      "priority": "critical",
+      "blocked_by": ["phase_1"],
+      "description": "Create Next.js page route for ETF detail page with server-side data fetching",
+      "files": {
+        "new": ["app/etf/[ticker]/page.tsx"],
+        "reference": ["app/companies/[ticker]/* (existing company page patterns)"]
+      },
+      "requirements": [
+        "Create dynamic route: app/etf/[ticker]/page.tsx",
+        "Use Next.js 14+ App Router conventions",
+        "Server-side data fetching using async component",
+        "Pass ticker from URL params to API client",
+        "Handle loading states with Suspense",
+        "Handle error states with error.tsx boundary",
+        "Handle 404 with notFound() function",
+        "Set page metadata (title, description)",
+        "Support both uppercase and lowercase ticker URLs"
+      ],
+      "route_structure": {
+        "path": "app/etf/[ticker]/page.tsx",
+        "is_server_component": true,
+        "example_implementation": [
+          "import { notFound } from 'next/navigation';",
+          "import { getETFByTicker } from '@/lib/api/etf';",
+          "import { ETFOverview } from '@/components/etf/ETFOverview';",
+          "",
+          "export async function generateMetadata({ params }: { params: { ticker: string } }) {",
+          "  const ticker = params.ticker.toUpperCase();",
+          "  try {",
+          "    const etf = await getETFByTicker(ticker);",
+          "    return {",
+          "      title: `${etf.name} (${ticker}) - ETF Analysis`,",
+          "      description: `Comprehensive analysis of ${etf.name} including holdings, sector allocation, and key metrics.`",
+          "    };",
+          "  } catch {",
+          "    return { title: 'ETF Not Found' };",
+          "  }",
+          "}",
+          "",
+          "export default async function ETFPage({ params }: { params: { ticker: string } }) {",
+          "  const ticker = params.ticker.toUpperCase();",
+          "  ",
+          "  let etf;",
+          "  try {",
+          "    etf = await getETFByTicker(ticker);",
+          "  } catch (error) {",
+          "    notFound();",
+          "  }",
+          "",
+          "  return (",
+          "    <div className=\"container mx-auto p-6\">",
+          "      <ETFOverview etf={etf} />",
+          "      {/* Additional components */}",
+          "    </div>",
+          "  );",
+          "}"
+        ]
+      },
+      "error_handling": {
+        "404_handling": {
+          "file": "app/etf/[ticker]/not-found.tsx",
+          "description": "Custom 404 page for ETF not found",
+          "content": "Display message: 'ETF with ticker {ticker} not found'"
+        },
+        "error_boundary": {
+          "file": "app/etf/[ticker]/error.tsx",
+          "description": "Error boundary for runtime errors",
+          "content": "Display generic error message with retry button"
+        }
+      },
+      "success_criteria": [
+        "Route accessible at /etf/SXR8",
+        "Route accessible at /etf/sxr8 (lowercase)",
+        "Page title includes ETF name",
+        "404 page shown for invalid ticker",
+        "Error boundary handles API failures",
+        "Server-side rendering works (view page source shows content)",
+        "Metadata properly set for SEO"
+      ],
+      "testing": {
+        "urls_to_test": [
+          "http://localhost:3000/etf/SXR8 - should render ETF page",
+          "http://localhost:3000/etf/sxr8 - should render ETF page",
+          "http://localhost:3000/etf/SPYY - should render ETF page",
+          "http://localhost:3000/etf/INVALID - should show 404"
+        ]
+      }
+    },
+    {
+      "id": "phase_3",
+      "name": "ETF Overview Component",
+      "status": "pending",
+      "priority": "high",
+      "blocked_by": ["phase_2"],
+      "description": "Build ETF overview section displaying key metadata and statistics",
+      "files": {
+        "new": ["components/etf/ETFOverview.tsx"],
+        "reference": [
+          "components/* (existing component patterns)",
+          "app/companies/[ticker]/* (company overview for reference)"
+        ]
+      },
+      "requirements": [
+        "Display ETF name as main heading",
+        "Display ticker and ISIN",
+        "Display fund provider with badge/pill styling",
+        "Display fund size in billions (formatted: $114.62B)",
+        "Display TER (Total Expense Ratio) with % symbol",
+        "Display replication method",
+        "Display distribution policy",
+        "Display fund currency",
+        "Display domicile country",
+        "Display launch date (formatted: May 19, 2010)",
+        "Display index tracked",
+        "Display last updated timestamp",
+        "Use responsive grid layout",
+        "Use existing design system components (cards, badges, etc.)",
+        "Handle null values gracefully (show 'N/A' or hide field)"
+      ],
+      "component_structure": {
+        "file": "components/etf/ETFOverview.tsx",
+        "props": "{ etf: ETFFundamental }",
+        "sections": [
+          {
+            "name": "Header",
+            "fields": [
+              "name (h1)",
+              "ticker (badge)",
+              "isin (secondary text)",
+              "fund_provider (badge)"
+            ]
+          },
+          {
+            "name": "Key Metrics Grid",
+            "fields": [
+              "fund_size_billions (formatted with B suffix)",
+              "ter_percent (formatted with % suffix)",
+              "replication_method",
+              "distribution_policy",
+              "fund_currency",
+              "domicile",
+              "launch_date (formatted date)",
+              "index_tracked"
+            ]
+          },
+          {
+            "name": "Footer",
+            "fields": ["updated_at (relative time: 'Updated 2 hours ago')"]
+          }
+        ],
+        "formatting_utilities": {
+          "fund_size": "Format 114.617 as '$114.62B'",
+          "ter_percent": "Format 0.07 as '0.07%'",
+          "launch_date": "Format '2010-05-19' as 'May 19, 2010'",
+          "updated_at": "Format ISO timestamp as relative time"
+        }
+      },
+      "success_criteria": [
+        "Component renders all fields correctly",
+        "Fund size formatted as currency with B suffix",
+        "TER formatted with % symbol",
+        "Launch date formatted as readable date",
+        "Updated timestamp shown as relative time",
+        "Responsive layout works on mobile and desktop",
+        "Null values handled gracefully",
+        "Design consistent with existing Stonkie components"
+      ],
+      "design_notes": [
+        "Use card/panel component for visual grouping",
+        "Use grid layout for metrics (2 columns on mobile, 3-4 on desktop)",
+        "Use badge components for ticker, ISIN, provider",
+        "Use muted text color for labels",
+        "Use larger font for metric values",
+        "Follow existing spacing/padding conventions"
+      ]
+    },
+    {
+      "id": "phase_4",
+      "name": "Holdings Table Component",
+      "status": "pending",
+      "priority": "high",
+      "blocked_by": ["phase_2"],
+      "description": "Build table component to display top ETF holdings with weights",
+      "files": {
+        "new": ["components/etf/HoldingsTable.tsx"],
+        "reference": ["components/* (existing table components if any)"]
+      },
+      "requirements": [
+        "Display holdings in table format",
+        "Columns: Rank, Name, Weight %",
+        "Show all holdings from API response (typically top 10)",
+        "Format weight_percent with 2 decimal places and % symbol",
+        "Add rank numbers (1, 2, 3, ...)",
+        "Use alternating row colors for readability",
+        "Responsive: Stack on mobile if needed",
+        "Add table header with clear labels",
+        "Handle empty holdings array (show 'No holdings data')",
+        "Add visual weight indicator (progress bar)"
+      ],
+      "component_structure": {
+        "file": "components/etf/HoldingsTable.tsx",
+        "props": "{ holdings: ETFHolding[] }",
+        "columns": [
+          {
+            "header": "Rank",
+            "accessor": "index + 1",
+            "width": "60px",
+            "alignment": "center"
+          },
+          {
+            "header": "Holding",
+            "accessor": "name",
+            "width": "auto"
+          },
+          {
+            "header": "Weight",
+            "accessor": "weight_percent",
+            "width": "120px",
+            "alignment": "right",
+            "format": "7.38%"
+          },
+          {
+            "header": "Visual",
+            "description": "Progress bar showing weight relative to max weight",
+            "width": "100px"
+          }
+        ],
+        "example_row": {
+          "rank": "1",
+          "holding": "NVIDIA Corp.",
+          "weight": "7.38%",
+          "visual": "[=========>         ] (progress bar)"
+        }
+      },
+      "success_criteria": [
+        "Table displays all holdings",
+        "Rank column shows 1, 2, 3...",
+        "Weight percentages formatted correctly",
+        "Visual progress bars show relative weights",
+        "Responsive on mobile",
+        "Empty state handled",
+        "Header row clearly labeled",
+        "Alternating row colors for readability"
+      ],
+      "design_notes": [
+        "Use existing table component if available",
+        "Progress bar width relative to largest weight in dataset",
+        "Consider highlighting top 3 holdings with different color",
+        "Add 'Top Holdings' heading above table",
+        "Use monospace font for weight percentages for alignment"
+      ]
+    },
+    {
+      "id": "phase_5",
+      "name": "Sector Allocation Chart Component",
+      "status": "pending",
+      "priority": "high",
+      "blocked_by": ["phase_2"],
+      "description": "Build chart component to visualize sector allocation",
+      "files": {
+        "new": ["components/etf/SectorAllocationChart.tsx"],
+        "reference": []
+      },
+      "requirements": [
+        "Display sector allocation as pie chart or bar chart",
+        "Show sector name and weight percentage",
+        "Use distinct colors for each sector",
+        "Add legend with sector names",
+        "Format percentages with 2 decimal places",
+        "Handle 'Other' category (typically aggregated)",
+        "Responsive chart sizing",
+        "Handle empty sector_allocation array",
+        "Use chart library (recharts, chart.js, or similar)",
+        "Interactive tooltips on hover"
+      ],
+      "component_structure": {
+        "file": "components/etf/SectorAllocationChart.tsx",
+        "props": "{ sectorAllocation: ETFSectorAllocation[] }",
+        "chart_type": "Pie chart (recommended) or Horizontal bar chart",
+        "data_format": [
+          { "sector": "Technology", "weight_percent": 36.15 },
+          { "sector": "Financials", "weight_percent": 10.66 }
+        ],
+        "colors": "Use color palette from design system or define custom colors for each sector"
+      },
+      "recommended_libraries": [
+        "recharts (React-native charting library)",
+        "chart.js with react-chartjs-2",
+        "visx (Airbnb's visualization library)"
+      ],
+      "success_criteria": [
+        "Chart renders all sectors",
+        "Percentages shown correctly",
+        "Legend displays all sector names",
+        "Colors are distinct and accessible",
+        "Tooltips show sector name and exact percentage on hover",
+        "Responsive on mobile and desktop",
+        "Empty state handled",
+        "Chart has clear title: 'Sector Allocation'"
+      ],
+      "design_notes": [
+        "Pie chart preferred for quick visual comparison",
+        "If using pie chart, consider showing percentages inside or outside slices",
+        "For bar chart, sort sectors by weight (largest to smallest)",
+        "Highlight 'Other' category with distinct/muted color",
+        "Add percentage labels on chart segments"
+      ]
+    },
+    {
+      "id": "phase_6",
+      "name": "Country Allocation Chart Component",
+      "status": "pending",
+      "priority": "high",
+      "blocked_by": ["phase_2"],
+      "description": "Build chart component to visualize country/geographic allocation",
+      "files": {
+        "new": ["components/etf/CountryAllocationChart.tsx"],
+        "reference": ["components/etf/SectorAllocationChart.tsx (similar pattern)"]
+      },
+      "requirements": [
+        "Display country allocation as pie chart or bar chart",
+        "Show country name and weight percentage",
+        "Use distinct colors for each country",
+        "Add legend with country names",
+        "Format percentages with 2 decimal places",
+        "Handle 'Other' category (typically aggregated)",
+        "Responsive chart sizing",
+        "Handle empty country_allocation array",
+        "Use same chart library as sector allocation",
+        "Interactive tooltips on hover"
+      ],
+      "component_structure": {
+        "file": "components/etf/CountryAllocationChart.tsx",
+        "props": "{ countryAllocation: ETFCountryAllocation[] }",
+        "chart_type": "Pie chart (recommended) or Horizontal bar chart",
+        "data_format": [
+          { "country": "United States", "weight_percent": 95.83 },
+          { "country": "Ireland", "weight_percent": 1.32 }
+        ],
+        "colors": "Use color palette from design system or define custom colors for each country"
+      },
+      "success_criteria": [
+        "Chart renders all countries",
+        "Percentages shown correctly",
+        "Legend displays all country names",
+        "Colors are distinct and accessible",
+        "Tooltips show country name and exact percentage on hover",
+        "Responsive on mobile and desktop",
+        "Empty state handled",
+        "Chart has clear title: 'Country Allocation'"
+      ],
+      "design_notes": [
+        "Can reuse SectorAllocationChart component with different props/title",
+        "Consider using flag icons next to country names if design allows",
+        "Highlight dominant country (e.g., United States at 95.83%)",
+        "For highly concentrated allocations (one country >90%), consider displaying as table instead of chart"
+      ]
+    },
+    {
+      "id": "phase_7",
+      "name": "Page Layout & Integration",
+      "status": "pending",
+      "priority": "medium",
+      "blocked_by": ["phase_3", "phase_4", "phase_5", "phase_6"],
+      "description": "Integrate all components into cohesive page layout",
+      "files": {
+        "modify": ["app/etf/[ticker]/page.tsx"]
+      },
+      "requirements": [
+        "Arrange components in logical reading order",
+        "Add section headings",
+        "Use responsive grid layout",
+        "Add spacing between sections",
+        "Ensure consistent padding/margins",
+        "Add loading skeletons for each section",
+        "Add breadcrumb navigation (Home > ETF > {ticker})",
+        "Add back button or navigation links",
+        "Ensure page is accessible (semantic HTML, ARIA labels)",
+        "Test with multiple ETFs (SXR8, SPYY)"
+      ],
+      "page_layout": {
+        "sections": [
+          {
+            "order": 1,
+            "component": "Breadcrumb",
+            "description": "Home > ETF > SXR8"
+          },
+          {
+            "order": 2,
+            "component": "ETFOverview",
+            "description": "Hero section with key metadata"
+          },
+          {
+            "order": 3,
+            "component": "HoldingsTable",
+            "heading": "Top Holdings",
+            "description": "Table of top holdings"
+          },
+          {
+            "order": 4,
+            "component": "SectorAllocationChart + CountryAllocationChart",
+            "layout": "2-column grid on desktop, stacked on mobile",
+            "heading": "Asset Allocation",
+            "description": "Side-by-side charts"
+          }
+        ]
+      },
+      "loading_states": {
+        "use_suspense": true,
+        "skeletons": [
+          "ETFOverview skeleton (shimmer effect on cards)",
+          "HoldingsTable skeleton (shimmer rows)",
+          "Chart skeletons (circular shimmer for pie charts)"
+        ]
+      },
+      "success_criteria": [
+        "All components integrated",
+        "Page layout responsive",
+        "Loading states work correctly",
+        "Navigation functional",
+        "Spacing consistent",
+        "Page accessible (passes WAVE or axe DevTools)",
+        "Works with SXR8 and SPYY test data",
+        "Looks professional and polished"
+      ]
+    },
+    {
+      "id": "phase_8",
+      "name": "Testing & Documentation",
+      "status": "pending",
+      "priority": "medium",
+      "blocked_by": ["phase_7"],
+      "description": "Comprehensive testing and documentation",
+      "files": {
+        "new": ["ETF_PAGE_IMPLEMENTATION_RESULTS.md"],
+        "modify": []
+      },
+      "requirements": [
+        "Manual testing with multiple ETFs",
+        "Responsive testing (mobile, tablet, desktop)",
+        "Browser testing (Chrome, Firefox, Safari)",
+        "Accessibility testing",
+        "Performance testing (Lighthouse)",
+        "Error scenario testing (404, network errors)",
+        "Document implementation learnings",
+        "Screenshot ETF page for documentation",
+        "Update specs with completion results"
+      ],
+      "testing_checklist": {
+        "functional_tests": [
+          "Load /etf/SXR8 - displays correctly",
+          "Load /etf/SPYY - displays correctly",
+          "Load /etf/INVALID - shows 404",
+          "All data fields populated",
+          "Charts render correctly",
+          "Holdings table shows all rows",
+          "Percentages formatted correctly",
+          "Tooltips work on charts",
+          "Navigation works"
+        ],
+        "responsive_tests": [
+          "Mobile (375px) - components stack correctly",
+          "Tablet (768px) - layout adapts",
+          "Desktop (1920px) - full layout",
+          "Charts resize appropriately"
+        ],
+        "accessibility_tests": [
+          "Keyboard navigation works",
+          "Screen reader friendly (test with NVDA/JAWS)",
+          "Color contrast passes WCAG AA",
+          "ARIA labels present",
+          "Semantic HTML used"
+        ],
+        "performance_tests": [
+          "Lighthouse score >90",
+          "First Contentful Paint <1.5s",
+          "Time to Interactive <3s",
+          "No console errors",
+          "No memory leaks"
+        ],
+        "error_scenarios": [
+          "Backend offline - error boundary triggers",
+          "Slow network - loading states shown",
+          "Invalid ticker - 404 page",
+          "Empty holdings array - empty state shown",
+          "Null fund_size_billions - handled gracefully"
+        ]
+      },
+      "documentation": {
+        "file": "ETF_PAGE_IMPLEMENTATION_RESULTS.md",
+        "sections": [
+          "Overview",
+          "Implementation Summary",
+          "Components Created",
+          "API Integration",
+          "Testing Results",
+          "Learnings",
+          "Screenshots",
+          "Future Enhancements"
+        ]
+      },
+      "success_criteria": [
+        "All functional tests pass",
+        "Responsive tests pass on 3+ screen sizes",
+        "Lighthouse score >90",
+        "No accessibility violations",
+        "Error scenarios handled gracefully",
+        "Documentation complete",
+        "Screenshots captured",
+        "Specs updated with completion results"
+      ]
+    }
+  ],
+  "design_guidelines": {
+    "color_palette": {
+      "note": "Use existing Stonkie design system colors",
+      "suggestions": [
+        "Primary: Brand color for headings, CTAs",
+        "Secondary: Muted color for labels, secondary text",
+        "Success: Green for positive metrics",
+        "Chart colors: Use distinct, accessible color palette"
+      ]
+    },
+    "typography": {
+      "headings": "Use existing heading styles (h1, h2, h3)",
+      "body_text": "Use existing body text styles",
+      "data_values": "Use larger, bold font for metric values",
+      "labels": "Use smaller, muted font for labels"
+    },
+    "spacing": {
+      "section_spacing": "Large gap between major sections (e.g., 48px)",
+      "component_spacing": "Medium gap within sections (e.g., 24px)",
+      "element_spacing": "Small gap between related elements (e.g., 8-12px)"
+    },
+    "components": {
+      "use_existing": "Leverage existing component library (shadcn, MUI, etc.)",
+      "cards": "Use card/panel components for visual grouping",
+      "badges": "Use badge components for ticker, provider, etc.",
+      "tables": "Use table component if available",
+      "charts": "Install chart library if not already present"
+    }
+  },
+  "technical_notes": {
+    "next_js_version": "Assume Next.js 14+ with App Router",
+    "typescript": "Use TypeScript for all files",
+    "styling": "Use existing styling solution (CSS Modules, Tailwind, styled-components, etc.)",
+    "api_client": "Use fetch API or existing HTTP client (axios, etc.)",
+    "state_management": "Server components preferred (no client-side state needed for initial implementation)",
+    "chart_library": "Choose based on existing dependencies or install recharts (recommended)"
+  },
+  "backend_integration_notes": {
+    "backend_url": "http://localhost:8080 (development)",
+    "endpoint_tested": "Backend endpoint thoroughly tested with curl",
+    "data_quality": "Real ETF data from justetf.com via AI extraction",
+    "data_freshness": "updated_at timestamp shows last scrape",
+    "data_completeness": {
+      "critical_fields": "Always present: isin, name, ticker, ter_percent, fund_provider",
+      "optional_fields": "May be null: fund_size_billions, launch_date, source_url",
+      "arrays": "holdings, sector_allocation, country_allocation always arrays (may be empty)"
+    },
+    "known_data_patterns": {
+      "aggregated_data": "Sectors and countries may include 'Other' category (aggregated data from justetf.com)",
+      "typical_holdings": "Usually 10 holdings returned",
+      "typical_sectors": "Usually 5-11 sectors (depends on ETF complexity)",
+      "typical_countries": "Usually 3-8 countries (US-focused ETFs may be 95%+ USA)"
+    }
+  },
+  "learnings_from_backend": {
+    "api_architecture": "Backend uses 3-layer architecture (presentation -> service -> connector)",
+    "error_handling": "Backend returns 404 with descriptive message for invalid tickers",
+    "ticker_normalization": "Backend normalizes tickers to uppercase, frontend can send any case",
+    "cors_enabled": "Backend CORSMiddleware already configured, no CORS issues expected",
+    "response_format": "JSON with ISO 8601 timestamps, ready for frontend consumption",
+    "test_data_available": "SXR8 and SPYY confirmed working in backend"
+  },
+  "future_enhancements": {
+    "note": "These are not required for initial implementation but good to document",
+    "ideas": [
+      {
+        "enhancement": "Search functionality",
+        "description": "Add search bar to find ETFs by name or ticker",
+        "priority": "medium"
+      },
+      {
+        "enhancement": "ETF comparison",
+        "description": "Compare multiple ETFs side-by-side",
+        "priority": "low"
+      },
+      {
+        "enhancement": "Historical data charts",
+        "description": "Show fund size, TER over time (requires backend changes)",
+        "priority": "low"
+      },
+      {
+        "enhancement": "Export functionality",
+        "description": "Export ETF data as PDF or CSV",
+        "priority": "low"
+      },
+      {
+        "enhancement": "Favorites/Watchlist",
+        "description": "Save favorite ETFs for quick access",
+        "priority": "medium"
+      },
+      {
+        "enhancement": "ETF list page",
+        "description": "Browse all available ETFs with filtering",
+        "priority": "medium"
+      }
+    ]
+  },
+  "dependencies": {
+    "required": ["next (14+)", "react", "typescript"],
+    "recommended": [
+      "recharts or chart.js (for charts)",
+      "date-fns or dayjs (for date formatting)",
+      "existing UI component library (shadcn, MUI, etc.)"
+    ],
+    "optional": ["react-icons (for icons)", "clsx or classnames (for conditional classes)"]
+  },
+  "verification_workflow": {
+    "before_commit": [
+      "npm run build (verify no TypeScript errors)",
+      "npm run lint (if available)",
+      "Manual testing with SXR8 and SPYY",
+      "Lighthouse audit",
+      "Accessibility check"
+    ]
+  }
+}

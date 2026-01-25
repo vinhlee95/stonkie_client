@@ -13,7 +13,9 @@
     "format": "prettier --write .",
     "e2e": "playwright test",
     "e2e:smoke": "playwright test tests/e2e/smoke.spec.ts",
-    "e2e:ui": "playwright test --ui"
+    "e2e:ui": "playwright test --ui",
+    "test": "node --import tsx --test lib/api/__tests__/etf.test.ts",
+    "test:watch": "node --import tsx --test --watch lib/api/__tests__/etf.test.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -59,6 +61,7 @@
     "puppeteer": "^24.36.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   },
   "optionalDependencies": {
