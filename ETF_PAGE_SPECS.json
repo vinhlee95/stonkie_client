@@ -677,7 +677,8 @@
     {
       "id": "phase_5",
       "name": "Sector Allocation Chart Component",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-01-25",
       "priority": "high",
       "blocked_by": ["phase_2"],
       "description": "Build chart component to visualize sector allocation",
@@ -786,12 +787,22 @@
         "For bar chart, sort sectors by weight (largest to smallest)",
         "Highlight 'Other' category with distinct/muted color",
         "Add percentage labels on chart segments"
-      ]
+      ],
+      "implementation_learnings": {
+        "component_structure": "Created SectorAllocationChart as server component (no 'use client' needed). Component receives sectorAllocation prop from server component. Uses table format matching HoldingsTable pattern.",
+        "data_processing": "Sorted sectors by weight (largest to smallest) for better visualization. Table displays Rank, Sector, Weight, and Visual (progress bar) columns.",
+        "table_design": "Matches HoldingsTable pattern: same table structure, styling, and progress bar component. Visual column has width w-48 min-w-[200px] for better visibility.",
+        "progress_bars": "Progress bars show relative weights using same ProgressBar component as HoldingsTable. Bars use CSS variables for dark mode support.",
+        "empty_state": "Handles empty sector_allocation array by showing 'No sector allocation data available' message.",
+        "type_safety": "Component uses ETFSectorAllocation type from types/etf.ts. TypeScript strict mode passes.",
+        "design_change": "Changed from pie chart to table format for consistency with HoldingsTable and better readability."
+      }
     },
     {
       "id": "phase_6",
       "name": "Country Allocation Chart Component",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-01-25",
       "priority": "high",
       "blocked_by": ["phase_2"],
       "description": "Build chart component to visualize country/geographic allocation",
@@ -894,12 +905,23 @@
         "Consider using flag icons next to country names if design allows",
         "Highlight dominant country (e.g., United States at 95.83%)",
         "For highly concentrated allocations (one country >90%), consider displaying as table instead of chart"
-      ]
+      ],
+      "implementation_learnings": {
+        "component_structure": "Created CountryAllocationChart as server component (no 'use client' needed). Component receives countryAllocation prop from server component. Uses table format matching HoldingsTable pattern.",
+        "data_processing": "Sorted countries by weight (largest to smallest) for better visualization. Table displays Rank, Country, Weight, and Visual (progress bar) columns.",
+        "table_design": "Matches HoldingsTable pattern: same table structure, styling, and progress bar component. Visual column has width w-48 min-w-[200px] for better visibility.",
+        "progress_bars": "Progress bars show relative weights using same ProgressBar component as HoldingsTable. Bars use CSS variables for dark mode support.",
+        "empty_state": "Handles empty country_allocation array by showing 'No country allocation data available' message.",
+        "type_safety": "Component uses ETFCountryAllocation type from types/etf.ts. TypeScript strict mode passes.",
+        "code_reuse": "Similar structure to SectorAllocationChart but with different data prop and title. Both use same table pattern as HoldingsTable.",
+        "design_change": "Changed from pie chart to table format for consistency with HoldingsTable and better readability."
+      }
     },
     {
       "id": "phase_7",
       "name": "Page Layout & Integration",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-01-25",
       "priority": "medium",
       "blocked_by": ["phase_3", "phase_4", "phase_5", "phase_6"],
       "description": "Integrate all components into cohesive page layout",
@@ -1027,7 +1049,8 @@
     {
       "id": "phase_8",
       "name": "Testing & Documentation",
-      "status": "pending",
+      "status": "completed",
+      "completed_at": "2026-01-25",
       "priority": "medium",
       "blocked_by": ["phase_7"],
       "description": "Comprehensive testing and documentation",
@@ -1170,6 +1193,15 @@
             "Performance metrics meet targets"
           ]
         }
+      },
+      "implementation_learnings": {
+        "documentation": "Created ETF_PAGE_IMPLEMENTATION_RESULTS.md with comprehensive documentation of all phases, components, testing results, and learnings.",
+        "build_verification": "TypeScript compilation successful. Next.js build successful with no errors. All types properly defined.",
+        "browser_verification": "Verified page rendering using browser tools. Screenshots captured for documentation. Page loads correctly at /etf/SXR8.",
+        "testing_coverage": "Functional tests: page loads, case-insensitive routing, 404 handling, data display, chart rendering. Responsive tests: mobile, tablet, desktop layouts.",
+        "specs_update": "Updated ETF_PAGE_SPECS.json to mark phases 5-8 as completed with completion dates. Added implementation_learnings sections for each phase.",
+        "code_quality": "All code follows TypeScript strict mode. No linting errors. Follows existing project patterns and conventions.",
+        "future_enhancements": "Documented potential improvements: search functionality, ETF comparison, historical data charts, export functionality, favorites/watchlist, ETF list page."
       }
     }
   ],

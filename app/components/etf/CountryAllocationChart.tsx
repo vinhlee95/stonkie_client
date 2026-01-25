@@ -1,7 +1,7 @@
-import { ETFHolding } from '@/types/etf'
+import { ETFCountryAllocation } from '@/types/etf'
 
 /**
- * Format weight percentage with 2 decimal places and % symbol (e.g., 7.38 -> "7.38%")
+ * Format weight percentage with 2 decimal places and % symbol (e.g., 95.83 -> "95.83%")
  */
 function formatWeight(weight: number): string {
   return `${weight.toFixed(2)}%`
@@ -24,41 +24,47 @@ function ProgressBar({ weight, maxWeight }: ProgressBarProps) {
   )
 }
 
-export default function HoldingsTable({ holdings }: { holdings: ETFHolding[] }) {
-  if (holdings.length === 0) {
+export default function CountryAllocationChart({
+  countryAllocation,
+}: {
+  countryAllocation: ETFCountryAllocation[]
+}) {
+  if (countryAllocation.length === 0) {
     return (
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4">Top Holdings</h2>
-        <p className="text-gray-600 dark:text-gray-400">No holdings data available</p>
+        <h2 className="text-2xl font-bold mb-4">Country Allocation</h2>
+        <p className="text-gray-600 dark:text-gray-400">No country allocation data available</p>
       </div>
     )
   }
 
-  const maxWeight = Math.max(...holdings.map((h) => h.weight_percent))
+  // Sort countries by weight (largest to smallest) for better visualization
+  const sortedData = [...countryAllocation].sort((a, b) => b.weight_percent - a.weight_percent)
+  const maxWeight = Math.max(...sortedData.map((c) => c.weight_percent))
 
   return (
     <div className="mb-6">
-      <h2 className="text-2xl font-bold mb-4">Top Holdings</h2>
+      <h2 className="text-2xl font-bold mb-4">Country Allocation</h2>
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead>
             <tr>
               <th className="px-4 py-2 text-center border-b border-gray-200">Rank</th>
-              <th className="px-4 py-2 text-left border-b border-gray-200">Holding</th>
+              <th className="px-4 py-2 text-left border-b border-gray-200">Country</th>
               <th className="px-4 py-2 text-right border-b border-gray-200">Weight</th>
               <th className="px-4 py-2 border-b border-gray-200 w-48 min-w-[200px]"></th>
             </tr>
           </thead>
           <tbody>
-            {holdings.map((holding, index) => (
-              <tr key={`${holding.name}-${index}`}>
+            {sortedData.map((country, index) => (
+              <tr key={`${country.country}-${index}`}>
                 <td className="px-4 py-2 border-b border-gray-200 text-center">{index + 1}</td>
-                <td className="px-4 py-2 border-b border-gray-200">{holding.name}</td>
+                <td className="px-4 py-2 border-b border-gray-200">{country.country}</td>
                 <td className="px-4 py-2 border-b border-gray-200 text-right font-mono">
-                  {formatWeight(holding.weight_percent)}
+                  {formatWeight(country.weight_percent)}
                 </td>
                 <td className="px-4 py-2 border-b border-gray-200 w-48 min-w-[200px]">
-                  <ProgressBar weight={holding.weight_percent} maxWeight={maxWeight} />
+                  <ProgressBar weight={country.weight_percent} maxWeight={maxWeight} />
                 </td>
               </tr>
             ))}

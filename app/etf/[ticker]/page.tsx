@@ -1,8 +1,11 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { getETFByTicker } from '@/lib/api/etf'
 import type { Metadata } from 'next'
 import ETFOverview from '@/app/components/etf/ETFOverview'
 import HoldingsTable from '@/app/components/etf/HoldingsTable'
+import SectorAllocationChart from '@/app/components/etf/SectorAllocationChart'
+import CountryAllocationChart from '@/app/components/etf/CountryAllocationChart'
 
 export const revalidate = 120 // Revalidate every 2 minutes
 
@@ -39,11 +42,43 @@ export default async function ETFPage({ params }: { params: Promise<{ ticker: st
   }
 
   return (
-    <>
+    <div className="container mx-auto py-6">
+      {/* Breadcrumb Navigation */}
+      <nav className="mb-6" aria-label="Breadcrumb">
+        <ol className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+          <li>
+            <Link
+              href="/"
+              className="hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+            >
+              Home
+            </Link>
+          </li>
+          <li>/</li>
+          <li>
+            <span className="text-gray-900 dark:text-gray-200">ETF</span>
+          </li>
+          <li>/</li>
+          <li>
+            <span className="text-gray-900 dark:text-gray-200">{normalizedTicker}</span>
+          </li>
+        </ol>
+      </nav>
+
+      {/* ETF Overview Section */}
       <ETFOverview etf={etf} />
+
+      {/* Top Holdings Section */}
       <HoldingsTable holdings={etf.holdings} />
-      {/* SectorAllocationChart component will be added in Phase 5 */}
-      {/* CountryAllocationChart component will be added in Phase 6 */}
-    </>
+
+      {/* Asset Allocation Section - Charts side by side */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-6">Asset Allocation</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <SectorAllocationChart sectorAllocation={etf.sector_allocation} />
+          <CountryAllocationChart countryAllocation={etf.country_allocation} />
+        </div>
+      </div>
+    </div>
   )
 }
