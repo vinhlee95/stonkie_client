@@ -1,6 +1,12 @@
 {
   "project": "ETF Detail Page - Frontend Implementation",
   "overview": "Build ETF detail page to display comprehensive ETF data fetched from backend API. Page should render ETF overview, holdings table, sector allocation chart, country allocation chart, and key metadata.",
+  "mandatory_verification": {
+    "description": "CRITICAL: All UI component phases (phases 3-8) MUST be verified using @Browser tools before marking as completed. This is NOT optional. See verification_workflow.mandatory_browser_verification for details.",
+    "phases_requiring_browser_verification": [3, 4, 5, 6, 7, 8],
+    "required_tools": ["browser_navigate", "browser_snapshot", "browser_take_screenshot"],
+    "note": "Do not mark any phase as 'completed' without first performing browser verification using the specified tools."
+  },
   "api_contract": {
     "backend_endpoint": {
       "method": "GET",
@@ -374,10 +380,11 @@
     {
       "id": "phase_3",
       "name": "ETF Overview Component",
-      "status": "pending",
+      "status": "completed",
       "priority": "high",
       "blocked_by": ["phase_2"],
       "description": "Build ETF overview section displaying key metadata and statistics",
+      "completed_at": "2026-01-25",
       "files": {
         "new": ["components/etf/ETFOverview.tsx"],
         "reference": [
@@ -451,6 +458,36 @@
         "Design consistent with existing Stonkie components"
       ],
       "testing": {
+        "mandatory_browser_verification": {
+          "description": "MANDATORY: This phase MUST be verified using @Browser tools before marking as completed. Use browser_navigate, browser_snapshot, and browser_take_screenshot.",
+          "required": true,
+          "tools_to_use": [
+            "browser_navigate",
+            "browser_snapshot",
+            "browser_take_screenshot",
+            "browser_resize"
+          ],
+          "verification_steps": [
+            "1. Use browser_navigate to go to http://localhost:3000/etf/SXR8",
+            "2. Use browser_snapshot to verify component structure",
+            "3. Use browser_take_screenshot to capture visual verification",
+            "4. Verify ETFOverview component displays all fields",
+            "5. Verify fund size formatted as $114.62B",
+            "6. Verify TER displayed as 0.07%",
+            "7. Verify launch date formatted as 'May 19, 2010'",
+            "8. Verify updated timestamp shows relative time",
+            "9. Use browser_resize to test responsive layout (375px mobile, 1920px desktop)",
+            "10. Verify null values handled gracefully (if any)",
+            "11. Only mark phase as 'completed' after successful browser verification"
+          ],
+          "expected_results": [
+            "All ETF metadata fields visible and correctly formatted",
+            "Responsive layout adapts to screen size",
+            "Null values display 'N/A' or are hidden appropriately",
+            "Browser snapshot confirms component renders correctly",
+            "Screenshot shows proper visual rendering"
+          ]
+        },
         "browser_verification": {
           "description": "End-to-end browser testing with real backend",
           "prerequisites": [
@@ -481,7 +518,18 @@
         "Use muted text color for labels",
         "Use larger font for metric values",
         "Follow existing spacing/padding conventions"
-      ]
+      ],
+      "implementation_learnings": {
+        "component_structure": "Created ETFOverview component in app/components/etf/ETFOverview.tsx following existing component patterns. Used MetricCard sub-component for consistent card styling.",
+        "formatting_functions": "Implemented formatting utilities inline: formatFundSize (handles null), formatTER (2 decimal places), formatLaunchDate (uses toLocaleDateString), formatRelativeTime (calculates days/hours/minutes difference).",
+        "styling_patterns": "Used existing design system: CSS variables (--card-background, --tab-active, --button-background), Tailwind classes for responsive grid (grid-cols-1 md:grid-cols-2 lg:grid-cols-4), border and rounded-xl for cards.",
+        "badge_styling": "Ticker badge uses --tab-active background with white text. Fund provider badge uses --button-background. Both use rounded-full with px-3 py-1 padding.",
+        "null_handling": "Fund size shows 'N/A' when null. Launch date shows 'N/A' when null. Updated timestamp only renders if present. ISIN only renders if present.",
+        "responsive_design": "Grid layout: 1 column on mobile, 2 columns on md (768px+), 4 columns on lg (1024px+). Header badges wrap with flex-wrap. All spacing uses Tailwind gap utilities.",
+        "integration": "Component integrated into app/etf/[ticker]/page.tsx. Removed placeholder content. Component receives etf prop directly from server component data fetching.",
+        "type_safety": "All formatting functions properly typed. Component uses ETFFundamental type from types/etf.ts. TypeScript strict mode passes.",
+        "date_formatting": "Used native JavaScript Date API with toLocaleDateString for launch date formatting. No external date library needed. Relative time calculation handles days, hours, minutes, and 'just now' cases."
+      }
     },
     {
       "id": "phase_4",
@@ -552,6 +600,36 @@
         "Alternating row colors for readability"
       ],
       "testing": {
+        "mandatory_browser_verification": {
+          "description": "MANDATORY: This phase MUST be verified using @Browser tools before marking as completed. Use browser_navigate, browser_snapshot, and browser_take_screenshot.",
+          "required": true,
+          "tools_to_use": [
+            "browser_navigate",
+            "browser_snapshot",
+            "browser_take_screenshot",
+            "browser_resize"
+          ],
+          "verification_steps": [
+            "1. Use browser_navigate to go to http://localhost:3000/etf/SXR8",
+            "2. Use browser_snapshot to verify HoldingsTable component structure",
+            "3. Use browser_take_screenshot to capture visual verification",
+            "4. Verify HoldingsTable component displays",
+            "5. Verify all holdings from API are shown (typically 10)",
+            "6. Verify rank column shows 1, 2, 3...",
+            "7. Verify weight percentages formatted with 2 decimals and % symbol",
+            "8. Verify progress bars show relative weights",
+            "9. Use browser_resize to test responsive layout (375px mobile, 1920px desktop)",
+            "10. Verify empty state if holdings array is empty",
+            "11. Only mark phase as 'completed' after successful browser verification"
+          ],
+          "expected_results": [
+            "All holdings displayed in table format",
+            "Rank, name, and weight columns correctly formatted",
+            "Visual progress bars reflect weight percentages",
+            "Responsive layout works on mobile",
+            "Browser snapshot confirms component renders correctly"
+          ]
+        },
         "browser_verification": {
           "description": "End-to-end browser testing with real backend",
           "prerequisites": [
@@ -633,6 +711,38 @@
         "Chart has clear title: 'Sector Allocation'"
       ],
       "testing": {
+        "mandatory_browser_verification": {
+          "description": "MANDATORY: This phase MUST be verified using @Browser tools before marking as completed. Use browser_navigate, browser_snapshot, and browser_take_screenshot.",
+          "required": true,
+          "tools_to_use": [
+            "browser_navigate",
+            "browser_snapshot",
+            "browser_take_screenshot",
+            "browser_resize",
+            "browser_hover"
+          ],
+          "verification_steps": [
+            "1. Use browser_navigate to go to http://localhost:3000/etf/SXR8",
+            "2. Use browser_snapshot to verify SectorAllocationChart component structure",
+            "3. Use browser_take_screenshot to capture visual verification",
+            "4. Verify SectorAllocationChart component displays",
+            "5. Verify chart renders all sectors from API",
+            "6. Verify percentages shown correctly (2 decimal places)",
+            "7. Verify legend displays all sector names",
+            "8. Verify colors are distinct and accessible",
+            "9. Use browser_hover to test tooltips on chart segments",
+            "10. Use browser_resize to test responsive chart sizing (375px mobile, 1920px desktop)",
+            "11. Verify empty state if sector_allocation array is empty",
+            "12. Only mark phase as 'completed' after successful browser verification"
+          ],
+          "expected_results": [
+            "Chart renders with all sector data",
+            "Legend and tooltips work correctly",
+            "Chart is responsive and accessible",
+            "Empty state handled gracefully",
+            "Browser snapshot confirms component renders correctly"
+          ]
+        },
         "browser_verification": {
           "description": "End-to-end browser testing with real backend",
           "prerequisites": [
@@ -710,6 +820,38 @@
         "Chart has clear title: 'Country Allocation'"
       ],
       "testing": {
+        "mandatory_browser_verification": {
+          "description": "MANDATORY: This phase MUST be verified using @Browser tools before marking as completed. Use browser_navigate, browser_snapshot, and browser_take_screenshot.",
+          "required": true,
+          "tools_to_use": [
+            "browser_navigate",
+            "browser_snapshot",
+            "browser_take_screenshot",
+            "browser_resize",
+            "browser_hover"
+          ],
+          "verification_steps": [
+            "1. Use browser_navigate to go to http://localhost:3000/etf/SXR8",
+            "2. Use browser_snapshot to verify CountryAllocationChart component structure",
+            "3. Use browser_take_screenshot to capture visual verification",
+            "4. Verify CountryAllocationChart component displays",
+            "5. Verify chart renders all countries from API",
+            "6. Verify percentages shown correctly (2 decimal places)",
+            "7. Verify legend displays all country names",
+            "8. Verify colors are distinct and accessible",
+            "9. Use browser_hover to test tooltips on chart segments",
+            "10. Use browser_resize to test responsive chart sizing (375px mobile, 1920px desktop)",
+            "11. Verify empty state if country_allocation array is empty",
+            "12. Only mark phase as 'completed' after successful browser verification"
+          ],
+          "expected_results": [
+            "Chart renders with all country data",
+            "Legend and tooltips work correctly",
+            "Chart is responsive and accessible",
+            "Empty state handled gracefully",
+            "Browser snapshot confirms component renders correctly"
+          ]
+        },
         "browser_verification": {
           "description": "End-to-end browser testing with real backend",
           "prerequisites": [
@@ -810,6 +952,38 @@
         "Looks professional and polished"
       ],
       "testing": {
+        "mandatory_browser_verification": {
+          "description": "MANDATORY: This phase MUST be verified using @Browser tools before marking as completed. Use browser_navigate, browser_snapshot, and browser_take_screenshot.",
+          "required": true,
+          "tools_to_use": [
+            "browser_navigate",
+            "browser_snapshot",
+            "browser_take_screenshot",
+            "browser_resize",
+            "browser_click"
+          ],
+          "verification_steps": [
+            "1. Use browser_navigate to go to http://localhost:3000/etf/SXR8",
+            "2. Use browser_snapshot to verify all components integrated",
+            "3. Use browser_take_screenshot to capture visual verification",
+            "4. Verify all components integrated (Overview, Holdings, Sector Chart, Country Chart)",
+            "5. Verify components arranged in logical reading order",
+            "6. Verify breadcrumb navigation displays: Home > ETF > SXR8",
+            "7. Use browser_resize to test responsive layout (375px mobile, 768px tablet, 1920px desktop)",
+            "8. Verify spacing consistent between sections",
+            "9. Use browser_click to test navigation links (breadcrumb, back button)",
+            "10. Use browser_navigate to go to http://localhost:3000/etf/SPYY - verify works with different ETF",
+            "11. Verify loading skeletons appear during data fetch",
+            "12. Only mark phase as 'completed' after successful browser verification"
+          ],
+          "expected_results": [
+            "All components visible and properly arranged",
+            "Responsive layout works across all screen sizes",
+            "Navigation functional",
+            "Works with multiple ETFs",
+            "Browser snapshot confirms all components render correctly"
+          ]
+        },
         "browser_verification": {
           "description": "End-to-end browser testing with real backend",
           "prerequisites": [
@@ -924,6 +1098,40 @@
         "Specs updated with completion results"
       ],
       "testing": {
+        "mandatory_browser_verification": {
+          "description": "MANDATORY: This phase MUST be verified using @Browser tools before marking as completed. Use browser_navigate, browser_snapshot, and browser_take_screenshot for comprehensive verification.",
+          "required": true,
+          "tools_to_use": [
+            "browser_navigate",
+            "browser_snapshot",
+            "browser_take_screenshot",
+            "browser_resize",
+            "browser_click",
+            "browser_console_messages"
+          ],
+          "verification_steps": [
+            "1. Use browser_navigate to go to http://localhost:3000/etf/SXR8",
+            "2. Use browser_snapshot to verify all components render correctly",
+            "3. Use browser_take_screenshot to capture screenshots for documentation",
+            "4. Use browser_resize to test responsive layout (375px mobile, 768px tablet, 1920px desktop)",
+            "5. Use browser_console_messages to verify no console errors",
+            "6. Run all functional tests from testing_checklist using browser tools",
+            "7. Test error scenarios: navigate to /etf/INVALID to verify 404",
+            "8. Use browser_navigate to test with multiple ETFs: SXR8, SPYY",
+            "9. Verify all components render correctly via browser_snapshot",
+            "10. Take screenshots for documentation using browser_take_screenshot",
+            "11. Only mark phase as 'completed' after successful browser verification"
+          ],
+          "expected_results": [
+            "All functional tests pass",
+            "Responsive tests pass on all screen sizes",
+            "No console errors (verified via browser_console_messages)",
+            "Error scenarios handled gracefully",
+            "Performance metrics meet targets",
+            "Browser snapshot confirms all components render correctly",
+            "Screenshots captured for documentation"
+          ]
+        },
         "browser_verification": {
           "description": "Comprehensive end-to-end browser testing with real backend",
           "prerequisites": [
@@ -1060,9 +1268,34 @@
     "optional": ["react-icons (for icons)", "clsx or classnames (for conditional classes)"]
   },
   "verification_workflow": {
+    "mandatory_browser_verification": {
+      "description": "MANDATORY: All UI components and page implementations MUST be verified using browser tools (@Browser) before marking a phase as completed. This is not optional.",
+      "required_tools": ["browser_navigate", "browser_snapshot", "browser_take_screenshot"],
+      "verification_steps": [
+        "1. Navigate to the implemented page/component using browser_navigate",
+        "2. Take browser_snapshot to verify component structure and accessibility",
+        "3. Take browser_take_screenshot to capture visual verification",
+        "4. Verify responsive layout by resizing browser (mobile: 375px, desktop: 1920px)",
+        "5. Verify all data fields render correctly",
+        "6. Verify formatting matches specifications",
+        "7. Check for console errors",
+        "8. Only mark phase as 'completed' after successful browser verification"
+      ],
+      "prerequisites": [
+        "Backend server must be running: cd ../backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload",
+        "Frontend dev server must be running: npm run dev",
+        "Verify backend API accessible: curl http://localhost:8080/api/etf/SXR8"
+      ],
+      "test_urls": [
+        "http://localhost:3000/etf/SXR8 - Primary test ETF",
+        "http://localhost:3000/etf/SPYY - Secondary test ETF",
+        "http://localhost:3000/etf/INVALID - Verify 404 handling"
+      ]
+    },
     "before_commit": [
       "npm run build (verify no TypeScript errors)",
       "npm run lint (if available)",
+      "MANDATORY: Browser verification using @Browser tools",
       "Manual testing with SXR8 and SPYY",
       "Lighthouse audit",
       "Accessibility check"
