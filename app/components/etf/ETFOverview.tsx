@@ -52,69 +52,69 @@ function formatRelativeTime(timestamp: string | null): string {
   }
 }
 
-interface MetricCardProps {
-  label: string
-  value: string | number
-}
-
-function MetricCard({ label, value }: MetricCardProps) {
-  return (
-    <div
-      className="border border-gray-200 dark:border-gray-600 rounded-xl p-4"
-      style={{ backgroundColor: 'var(--card-background)' }}
-    >
-      <h3 className="text-sm text-gray-600 dark:text-gray-400 mb-2">{label}</h3>
-      <p className="text-xl font-semibold">{value}</p>
-    </div>
-  )
-}
-
 export default function ETFOverview({ etf }: { etf: ETFFundamental }) {
   return (
-    <div className="mb-8">
-      {/* Header Section */}
-      <div className="mb-6">
-        <div className="flex flex-wrap items-center gap-3 mb-2">
-          <h1 className="text-3xl font-bold">{etf.name}</h1>
-          {etf.ticker && (
-            <span
-              className="px-3 py-1 rounded-full text-sm font-medium"
-              style={{ backgroundColor: 'var(--tab-active)', color: 'white' }}
-            >
-              {etf.ticker}
-            </span>
-          )}
-          <span
-            className="px-3 py-1 rounded-full text-sm font-medium"
-            style={{
-              backgroundColor: 'var(--button-background)',
-              color: 'var(--foreground)',
-            }}
-          >
-            {etf.fund_provider}
-          </span>
-        </div>
-        {etf.isin && <p className="text-gray-600 dark:text-gray-400 text-sm">ISIN: {etf.isin}</p>}
+    <>
+      {/* Header Section - matching stock page style */}
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold">{etf.name}</h1>
+        <h2 className="text-gray-600 dark:text-gray-400">
+          {etf.ticker || 'N/A'}
+          {etf.isin && ` • ISIN: ${etf.isin}`}
+        </h2>
       </div>
 
-      {/* Key Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <MetricCard label="Fund Size" value={formatFundSize(etf.fund_size_billions)} />
-        <MetricCard label="Total Expense Ratio" value={formatTER(etf.ter_percent)} />
-        <MetricCard label="Replication Method" value={etf.replication_method} />
-        <MetricCard label="Distribution Policy" value={etf.distribution_policy} />
-        <MetricCard label="Fund Currency" value={etf.fund_currency} />
-        <MetricCard label="Domicile" value={etf.domicile} />
-        <MetricCard label="Launch Date" value={formatLaunchDate(etf.launch_date)} />
-        <MetricCard label="Index Tracked" value={etf.index_tracked} />
+      {/* Key Metrics Grid - using stat-card class like stock page */}
+      <div className="mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="stat-card">
+            <h3>Fund Size</h3>
+            <p className="text-2xl font-semibold">{formatFundSize(etf.fund_size_billions)}</p>
+          </div>
+
+          <div className="stat-card">
+            <h3>Total Expense Ratio</h3>
+            <p className="text-2xl font-semibold">{formatTER(etf.ter_percent)}</p>
+          </div>
+
+          <div className="stat-card">
+            <h3>Replication Method</h3>
+            <p className="text-2xl font-semibold">{etf.replication_method}</p>
+          </div>
+
+          <div className="stat-card">
+            <h3>Distribution Policy</h3>
+            <p className="text-2xl font-semibold">{etf.distribution_policy}</p>
+          </div>
+
+          <div className="stat-card">
+            <h3>Fund Currency</h3>
+            <p className="text-2xl font-semibold">{etf.fund_currency}</p>
+          </div>
+
+          <div className="stat-card">
+            <h3>Domicile</h3>
+            <p className="text-2xl font-semibold">{etf.domicile}</p>
+          </div>
+
+          <div className="stat-card">
+            <h3>Launch Date</h3>
+            <p className="text-2xl font-semibold">{formatLaunchDate(etf.launch_date)}</p>
+          </div>
+
+          <div className="stat-card">
+            <h3>Index Tracked</h3>
+            <p className="text-2xl font-semibold">{etf.index_tracked}</p>
+          </div>
+        </div>
       </div>
 
       {/* Footer */}
       {etf.updated_at && (
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
           {formatRelativeTime(etf.updated_at)}
         </div>
       )}
-    </div>
+    </>
   )
 }

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getETFByTicker } from '@/lib/api/etf'
 import type { Metadata } from 'next'
 import ETFOverview from '@/app/components/etf/ETFOverview'
+import HoldingsTable from '@/app/components/etf/HoldingsTable'
 
 export const revalidate = 120 // Revalidate every 2 minutes
 
@@ -38,11 +39,11 @@ export default async function ETFPage({ params }: { params: Promise<{ ticker: st
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <>
       <ETFOverview etf={etf} />
-      {/* HoldingsTable component will be added in Phase 4 */}
+      <HoldingsTable holdings={etf.holdings} />
       {/* SectorAllocationChart component will be added in Phase 5 */}
       {/* CountryAllocationChart component will be added in Phase 6 */}
-    </div>
+    </>
   )
 }

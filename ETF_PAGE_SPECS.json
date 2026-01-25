@@ -534,10 +534,11 @@
     {
       "id": "phase_4",
       "name": "Holdings Table Component",
-      "status": "pending",
+      "status": "completed",
       "priority": "high",
       "blocked_by": ["phase_2"],
       "description": "Build table component to display top ETF holdings with weights",
+      "completed_at": "2026-01-25",
       "files": {
         "new": ["components/etf/HoldingsTable.tsx"],
         "reference": ["components/* (existing table components if any)"]
@@ -660,7 +661,18 @@
         "Consider highlighting top 3 holdings with different color",
         "Add 'Top Holdings' heading above table",
         "Use monospace font for weight percentages for alignment"
-      ]
+      ],
+      "implementation_learnings": {
+        "component_structure": "Created HoldingsTable component in app/components/etf/HoldingsTable.tsx following existing table patterns from ProductRevenueTable. Used ProgressBar sub-component for visual weight indicators.",
+        "table_styling": "Used existing table patterns: overflow-x-auto wrapper, min-w-full table, border styling, alternating row colors using index % 2, dark mode support with CSS variables.",
+        "progress_bar": "Implemented ProgressBar component that calculates percentage relative to maxWeight. Uses CSS variables (--tab-active, --tab-active-dark) for consistent theming. Height 2 (h-2) with rounded-full for visual appeal.",
+        "formatting": "formatWeight function formats percentages with 2 decimal places and % symbol. Weight column uses font-mono for alignment.",
+        "empty_state": "Handles empty holdings array by showing 'No holdings data' message. Early return pattern keeps component clean.",
+        "responsive_design": "Table wrapped in overflow-x-auto for horizontal scrolling on mobile. Table structure adapts naturally to screen size. Verified on 375px mobile viewport.",
+        "integration": "Component integrated into app/etf/[ticker]/page.tsx. Receives holdings prop directly from etf.holdings array.",
+        "type_safety": "Component uses ETFHolding type from types/etf.ts. TypeScript strict mode passes. ProgressBar props properly typed.",
+        "browser_verification": "Verified using browser_navigate, browser_snapshot, browser_take_screenshot, and browser_resize. All 10 holdings display correctly with proper formatting. Progress bars show relative weights. Table responsive on mobile (375px) and desktop (1920px)."
+      }
     },
     {
       "id": "phase_5",
