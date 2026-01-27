@@ -6,7 +6,18 @@ let server: ReturnType<typeof createServer> | null = null
 export default async function globalSetup(_config: FullConfig) {
   // Start a mock backend server on port 8080 for tests
   server = createServer((req, res) => {
+    // Set CORS headers for browser requests
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
     res.setHeader('Content-Type', 'application/json')
+
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      res.writeHead(200)
+      res.end()
+      return
+    }
 
     // Mock most-viewed companies endpoint
     if (req.url === '/api/companies/most-viewed') {
@@ -83,6 +94,13 @@ export default async function globalSetup(_config: FullConfig) {
     if (req.url === '/api/etf') {
       res.writeHead(200)
       res.end(JSON.stringify([]))
+      return
+    }
+
+    // Mock FAQ endpoint
+    if (req.url?.match(/\/api\/company\/faq/)) {
+      res.writeHead(200)
+      res.end(JSON.stringify({ data: [] }))
       return
     }
 

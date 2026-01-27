@@ -3,6 +3,8 @@ import { test, expect } from '@playwright/test'
 /**
  * E2E test for price chart rendering on stock and ETF pages
  * Uses mock backend server (see tests/global-setup.ts)
+ *
+ * Test workflow verification
  */
 test.describe('Price Chart', () => {
   test('renders on stock ticker page', async ({ page }) => {

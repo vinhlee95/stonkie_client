@@ -146,11 +146,10 @@ isQuarterlyStatement(statement) // Check if QuarterlyFinancialStatement
 
 ```bash
 npm run type-check    # TypeScript type checking
-npm run build         # Production build verification
 npm run e2e           # E2E tests
 ```
 
-All three must pass before pushing. This ensures changes won't break production deployment.
+Both must pass before pushing. Build verification happens on Vercel with production env vars.
 
 ## Deployment
 
