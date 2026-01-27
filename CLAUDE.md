@@ -140,6 +140,18 @@ isQuarterlyStatement(statement) // Check if QuarterlyFinancialStatement
 
 - `@/*` maps to the root directory (configured in `tsconfig.json`)
 
+## Pre-Push Checklist
+
+**CRITICAL: Run these commands before pushing to remote:**
+
+```bash
+npm run type-check    # TypeScript type checking
+npm run build         # Production build verification
+npm run e2e           # E2E tests
+```
+
+All three must pass before pushing. This ensures changes won't break production deployment.
+
 ## Deployment
 
 **Production:** All commits to `main` auto-deploy to Vercel (https://stonkie.vercel.app/) within 1-2 minutes.
