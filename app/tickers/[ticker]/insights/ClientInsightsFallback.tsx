@@ -92,11 +92,14 @@ export default function ClientInsightsFallback({
                     return null
                   })
                 }
-              } catch {}
+              } catch (error) {
+                console.error('Failed to parse insight stream chunk:', error, 'Line:', line)
+              }
             }
           }
         }
-      } catch {
+      } catch (error) {
+        console.error(`Failed to fetch insights for ticker ${ticker}, type ${insightType}:`, error)
         setIsLoading(false)
       } finally {
         isFetching.current = false

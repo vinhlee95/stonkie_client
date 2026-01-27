@@ -174,3 +174,26 @@ isQuarterlyStatement(statement) // Check if QuarterlyFinancialStatement
 7. **TypeScript:** Strict mode enabled. Run `npm run type-check` before committing.
 
 8. **Charts:** Use Chart.js with react-chartjs-2 wrapper. Chart utilities in `app/tickers/[ticker]/chartUtils.tsx`
+
+## Testing
+
+### E2E Tests (Playwright)
+
+**CRITICAL: Never use production URLs or production data in tests.**
+
+- Tests located in `tests/e2e/`
+- Run via `npm run e2e`
+- Config in `playwright.config.ts`
+
+**Backend Mocking:**
+
+- Mock server runs on localhost:8080 during tests
+- Global setup (`tests/global-setup.ts`) starts HTTP mock server before tests
+- NEVER set `BACKEND_URL` to production URL in test config
+- Tests work with mocked backend responses
+
+**Mock Server:**
+
+- HTTP server mocks backend API endpoints
+- Handles both SSR (server-side) and client-side requests
+- Auto-starts/stops with test suite via globalSetup/teardown

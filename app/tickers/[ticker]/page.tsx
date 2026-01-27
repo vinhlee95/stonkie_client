@@ -13,38 +13,58 @@ export const revalidate = 30
 
 // Pre-render popular ticker pages at build time for even faster initial loads.
 export async function generateStaticParams() {
-  const response = await fetch(`${process.env.BACKEND_URL}/api/companies/most-viewed`)
-  if (!response.ok) {
+  try {
+    const response = await fetch(`${process.env.BACKEND_URL}/api/companies/most-viewed`)
+    if (!response.ok) {
+      return []
+    }
+
+    const data = (await response.json()).data as Company[]
+    return data.map((company) => ({ ticker: company.ticker }))
+  } catch (error) {
+    console.error('Failed to fetch most-viewed companies for generateStaticParams:', error)
+    // Return empty array if backend is unavailable (e.g., during tests)
     return []
   }
-
-  const data = (await response.json()).data as Company[]
-  return data.map((company) => ({ ticker: company.ticker }))
 }
 
 export default async function TickerDetails({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = await params
 
-  const keyStatsResponse = await fetch(
-    `${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/key-stats`,
-    {
-      next: { revalidate: 2 * 60 },
-    },
-  )
-  const keyStats =
-    keyStatsResponse.status === 200 ? ((await keyStatsResponse.json()).data as KeyStatsType) : null
+  let keyStats: KeyStatsType | null = null
+  let statements: CompanyFinancialStatement[] | null = null
 
-  const statementsResponse = await fetch(
-    `${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/statements`,
-    {
-      next: { revalidate: 2 * 60 },
-    },
-  )
+  try {
+    const keyStatsResponse = await fetch(
+      `${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/key-stats`,
+      {
+        next: { revalidate: 2 * 60 },
+      },
+    )
+    keyStats =
+      keyStatsResponse.status === 200
+        ? ((await keyStatsResponse.json()).data as KeyStatsType)
+        : null
+  } catch (error) {
+    console.error(`Failed to fetch key stats for ticker ${ticker}:`, error)
+    // Backend unavailable, keyStats will be null
+  }
 
-  const statements =
-    statementsResponse.status === 200
-      ? ((await statementsResponse.json()) as CompanyFinancialStatement[])
-      : null
+  try {
+    const statementsResponse = await fetch(
+      `${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/statements`,
+      {
+        next: { revalidate: 2 * 60 },
+      },
+    )
+    statements =
+      statementsResponse.status === 200
+        ? ((await statementsResponse.json()) as CompanyFinancialStatement[])
+        : null
+  } catch (error) {
+    console.error(`Failed to fetch financial statements for ticker ${ticker}:`, error)
+    // Backend unavailable, statements will be null
+  }
   const incomeStatements =
     statements && statements.length > 0
       ? statements

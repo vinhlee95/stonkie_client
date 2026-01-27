@@ -10,17 +10,22 @@ export const revalidate = 120
 
 // Pre-render popular ticker pages at build time for even faster initial loads.
 export async function generateStaticParams() {
-  const response = await fetch(`${process.env.BACKEND_URL}/api/companies/most-viewed`)
-  if (!response.ok) {
+  try {
+    const response = await fetch(`${process.env.BACKEND_URL}/api/companies/most-viewed`)
+    if (!response.ok) {
+      return []
+    }
+
+    const data = (await response.json()).data as Company[]
+
+    // Generate all combinations of ticker and insight type
+    return data.flatMap((company) =>
+      Object.values(InsightType).map((type) => ({ ticker: company.ticker, type })),
+    )
+  } catch (error) {
+    console.error('Failed to fetch most-viewed companies for generateStaticParams:', error)
     return []
   }
-
-  const data = (await response.json()).data as Company[]
-
-  // Generate all combinations of ticker and insight type
-  return data.flatMap((company) =>
-    Object.values(InsightType).map((type) => ({ ticker: company.ticker, type })),
-  )
 }
 
 interface Insight {
@@ -49,7 +54,8 @@ export default async function InsightsPage({ params }: InsightsPageProps) {
     } else {
       fetchError = true
     }
-  } catch {
+  } catch (error) {
+    console.error(`Failed to fetch insights for ticker ${ticker}, type ${insightType}:`, error)
     fetchError = true
   }
 
