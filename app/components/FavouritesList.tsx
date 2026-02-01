@@ -1,6 +1,7 @@
 'use client'
 import { useFavourites } from './hooks/useFavourites'
-import CompanyList from '@/app/CompanyList'
+import CompanyList, { Company } from '@/app/CompanyList'
+import ETFList, { ETFListItem } from '@/app/components/ETFList'
 
 function FavouritesSkeleton() {
   return (
@@ -25,22 +26,30 @@ function FavouritesSkeleton() {
 }
 
 export default function FavouritesList() {
-  const { favourites, isInitialized } = useFavourites()
+  const { favourites: companyFavourites, isInitialized: isCompanyInitialized } =
+    useFavourites<Company>('stonkie_favourites')
+  const { favourites: etfFavourites, isInitialized: isETFInitialized } =
+    useFavourites<ETFListItem>('stonkie_favourites_etf')
 
   // Show skeleton while loading to prevent layout shift
-  if (!isInitialized) {
+  if (!isCompanyInitialized || !isETFInitialized) {
     return <FavouritesSkeleton />
   }
 
   // Hide completely if no favourites
-  if (favourites.length === 0) {
+  if (companyFavourites.length === 0 && etfFavourites.length === 0) {
     return null
   }
 
   return (
     <div className="mb-6">
-      <h1 className="text-2xl font-bold mb-6">Favourite Companies</h1>
-      <CompanyList companies={favourites} />
+      <h1 className="text-2xl font-bold mb-6">Favourite Tickers</h1>
+      {companyFavourites.length > 0 && <CompanyList companies={companyFavourites} />}
+      {etfFavourites.length > 0 && (
+        <div className={companyFavourites.length > 0 ? 'mt-4' : ''}>
+          <ETFList etfs={etfFavourites} />
+        </div>
+      )}
     </div>
   )
 }

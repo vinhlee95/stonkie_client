@@ -1,20 +1,22 @@
 'use client'
 import { useState, useEffect, useCallback, useLayoutEffect } from 'react'
-import { Company } from '@/app/CompanyList'
 
-const STORAGE_KEY = 'stonkie_favourites'
+// Generic type constraint: items must have a ticker property
+type TickerItem = {
+  ticker: string
+}
 
-export function useFavourites() {
-  const [favourites, setFavourites] = useState<Company[]>([])
+export function useFavourites<T extends TickerItem>(storageKey: string) {
+  const [favourites, setFavourites] = useState<T[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
 
   // Initialize from localStorage on mount
   // Use useLayoutEffect to run synchronously before paint, preventing layout shift
   useLayoutEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = localStorage.getItem(storageKey)
       if (stored) {
-        const parsed = JSON.parse(stored) as Company[]
+        const parsed = JSON.parse(stored) as T[]
         setFavourites(parsed)
       }
     } catch (error) {
@@ -22,26 +24,26 @@ export function useFavourites() {
     } finally {
       setIsInitialized(true)
     }
-  }, [])
+  }, [storageKey])
 
   // Save to localStorage whenever favourites change
   useEffect(() => {
     if (isInitialized) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(favourites))
+        localStorage.setItem(storageKey, JSON.stringify(favourites))
       } catch (error) {
         console.error('Error saving favourites to localStorage:', error)
       }
     }
-  }, [favourites, isInitialized])
+  }, [favourites, isInitialized, storageKey])
 
-  const addFavourite = useCallback((company: Company) => {
+  const addFavourite = useCallback((item: T) => {
     setFavourites((prev) => {
       // Check if already exists
-      if (prev.some((fav) => fav.ticker === company.ticker)) {
+      if (prev.some((fav) => fav.ticker === item.ticker)) {
         return prev
       }
-      return [...prev, company]
+      return [...prev, item]
     })
   }, [])
 
@@ -57,11 +59,11 @@ export function useFavourites() {
   )
 
   const toggleFavourite = useCallback(
-    (company: Company) => {
-      if (isFavourite(company.ticker)) {
-        removeFavourite(company.ticker)
+    (item: T) => {
+      if (isFavourite(item.ticker)) {
+        removeFavourite(item.ticker)
       } else {
-        addFavourite(company)
+        addFavourite(item)
       }
     },
     [isFavourite, addFavourite, removeFavourite],

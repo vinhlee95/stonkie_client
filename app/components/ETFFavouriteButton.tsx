@@ -1,17 +1,17 @@
 'use client'
 import { Star } from 'lucide-react'
 import { useFavourites } from './hooks/useFavourites'
-import { Company } from '@/app/CompanyList'
+import { ETFListItem } from '@/app/components/ETFList'
 
-interface FavouriteButtonProps {
-  company: Company
+interface ETFFavouriteButtonProps {
+  etf: ETFListItem
   className?: string
 }
 
-export default function FavouriteButton({ company, className = '' }: FavouriteButtonProps) {
+export default function ETFFavouriteButton({ etf, className = '' }: ETFFavouriteButtonProps) {
   const { isFavourite, toggleFavourite, isInitialized } =
-    useFavourites<Company>('stonkie_favourites')
-  const isFav = isFavourite(company.ticker)
+    useFavourites<ETFListItem>('stonkie_favourites_etf')
+  const isFav = isFavourite(etf.ticker)
 
   if (!isInitialized) {
     return null
@@ -19,7 +19,7 @@ export default function FavouriteButton({ company, className = '' }: FavouriteBu
 
   return (
     <button
-      onClick={() => toggleFavourite(company)}
+      onClick={() => toggleFavourite(etf)}
       className={`p-2 rounded-full transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
       aria-label={isFav ? 'Remove from favourites' : 'Add to favourites'}
       title={isFav ? 'Remove from favourites' : 'Add to favourites'}

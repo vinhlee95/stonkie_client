@@ -1,4 +1,6 @@
+'use client'
 import { ETFFundamental } from '@/types/etf'
+import ETFFavouriteButton from '@/app/components/ETFFavouriteButton'
 
 /**
  * Format fund size in billions to currency string (e.g., 114.617 -> "$114.62B")
@@ -53,15 +55,28 @@ function formatRelativeTime(timestamp: string | null): string {
 }
 
 export default function ETFOverview({ etf }: { etf: ETFFundamental }) {
+  const etfListItem = {
+    ticker: etf.ticker || '',
+    name: etf.name,
+    fund_provider: etf.fund_provider,
+  }
+
   return (
     <>
       {/* Header Section - matching stock page style */}
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold">{etf.name}</h1>
-        <h2 className="text-gray-600 dark:text-gray-400">
-          {etf.ticker || 'N/A'}
-          {etf.isin && ` • ISIN: ${etf.isin}`}
-        </h2>
+      <div className="mb-4 flex items-start justify-between">
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold">{etf.name}</h1>
+          <h2 className="text-gray-600 dark:text-gray-400">
+            {etf.ticker || 'N/A'}
+            {etf.isin && ` • ISIN: ${etf.isin}`}
+          </h2>
+        </div>
+        {etf.ticker && (
+          <div className="ml-4">
+            <ETFFavouriteButton etf={etfListItem} />
+          </div>
+        )}
       </div>
 
       {/* Key Metrics Grid - using stat-card class like stock page */}

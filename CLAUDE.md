@@ -166,28 +166,30 @@ All must pass before pushing. Build verification happens on Vercel with producti
 
 ## Development Guidelines
 
-1. **Styling:** Use Tailwind CSS exclusively. No inline styles or CSS files.
+1. **Test Coverage for New Features:** When implementing new features, ALWAYS ask the user if unit tests should be created. New features must be covered by tests to ensure quality and prevent regressions.
 
-2. **Icons:** Use Lucide React icon library
+2. **Styling:** Use Tailwind CSS exclusively. No inline styles or CSS files.
 
-3. **Routing:** Next.js App Router file-based routing. New pages go in `app/` directory.
+3. **Icons:** Use Lucide React icon library
 
-4. **Data Fetching:**
+4. **Routing:** Next.js App Router file-based routing. New pages go in `app/` directory.
+
+5. **Data Fetching:**
    - Server Components: Use native `fetch()` with appropriate revalidation
    - Client Components: Use React Query via custom hooks
 
-5. **Components:**
+6. **Components:**
    - Place reusable components in `app/components/`
    - Server Components are the default; add `'use client'` only when needed
 
-6. **Caching:**
+7. **Caching:**
    - Root route cached via `headers()` in `next.config.ts`
    - Individual routes use `revalidate` export constant
    - Client-side caching managed by React Query
 
-7. **TypeScript:** Strict mode enabled. Run `npm run type-check` before committing.
+8. **TypeScript:** Strict mode enabled. Run `npm run type-check` before committing.
 
-8. **Charts:** Use Chart.js with react-chartjs-2 wrapper. Chart utilities in `app/tickers/[ticker]/chartUtils.tsx`
+9. **Charts:** Use Chart.js with react-chartjs-2 wrapper. Chart utilities in `app/tickers/[ticker]/chartUtils.tsx`
 
 ## Testing
 
