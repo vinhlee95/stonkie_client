@@ -178,6 +178,8 @@ isQuarterlyStatement(statement) // Check if QuarterlyFinancialStatement
    - Run ALL checks explicitly: `npm run type-check && npm run test:unit && npm run e2e`
    - Ask user if they want to commit the changes
    - Ask user if they want to push to remote
+   - After pushing to remote, run `./scripts/check-deployment.sh` to monitor Vercel deployment
+   - Report deployment status (success/failure) to user
    - Never commit or push without explicit approval
 
 2. **Test Coverage for New Features:** When implementing new features, ALWAYS ask the user if unit tests should be created. New features must be covered by tests to ensure quality and prevent regressions.
