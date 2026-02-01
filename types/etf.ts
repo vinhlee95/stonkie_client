@@ -30,6 +30,7 @@ export type ETFFundamental = {
   sector_allocation: ETFSectorAllocation[]
   country_allocation: ETFCountryAllocation[]
   source_url: string | null
+  logo_url?: string
   created_at: string | null
   updated_at: string | null
 }

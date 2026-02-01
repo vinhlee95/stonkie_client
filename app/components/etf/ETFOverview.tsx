@@ -1,5 +1,6 @@
 'use client'
 import { ETFFundamental } from '@/types/etf'
+import { Wallet } from 'lucide-react'
 import ETFFavouriteButton from '@/app/components/ETFFavouriteButton'
 import dynamic from 'next/dynamic'
 
@@ -101,18 +102,34 @@ export default function ETFOverview({ etf }: { etf: ETFFundamental }) {
     ticker: etf.ticker || '',
     name: etf.name,
     fund_provider: etf.fund_provider,
+    logo_url: etf.logo_url,
   }
 
   return (
     <>
       {/* Header Section - matching stock page style */}
       <div className="mb-4 flex items-start justify-between">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">{etf.name}</h1>
-          <h2 className="text-gray-600 dark:text-gray-400">
-            {etf.ticker || 'N/A'}
-            {etf.isin && ` • ISIN: ${etf.isin}`}
-          </h2>
+        <div className="flex items-center gap-4 flex-1">
+          <div className="w-12 h-12 flex-shrink-0">
+            {etf.logo_url ? (
+              <img
+                src={etf.logo_url}
+                alt={`${etf.name} logo`}
+                className="w-full h-full object-contain rounded-full"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full">
+                <Wallet className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+              </div>
+            )}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">{etf.name}</h1>
+            <h2 className="text-gray-600 dark:text-gray-400">
+              {etf.ticker || 'N/A'}
+              {etf.isin && ` • ISIN: ${etf.isin}`}
+            </h2>
+          </div>
         </div>
         {etf.ticker && (
           <div className="ml-4">

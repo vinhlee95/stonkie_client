@@ -1,12 +1,14 @@
 'use client'
 import Link from 'next/link'
 import { useState, ReactNode } from 'react'
+import { Wallet } from 'lucide-react'
 import ETFFavouriteButton from './ETFFavouriteButton'
 
 export interface ETFListItem {
   ticker: string
   name: string
   fund_provider: string
+  logo_url?: string
 }
 
 export default function ETFList({ etfs, children }: { etfs: ETFListItem[]; children?: ReactNode }) {
@@ -30,6 +32,19 @@ export default function ETFList({ etfs, children }: { etfs: ETFListItem[]; child
               className="flex-1 flex items-center p-4 hover:bg-[var(--button-hover)] dark:hover:bg-[var(--button-hover-dark)] transition-colors duration-200 cursor-pointer rounded-l-xl"
               onClick={() => setLoadingTicker(etf.ticker)}
             >
+              <div className="w-12 h-12 mr-4 flex-shrink-0 relative z-10">
+                {etf.logo_url ? (
+                  <img
+                    src={etf.logo_url}
+                    alt={`${etf.name} logo`}
+                    className="w-full h-full object-contain rounded-full"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full">
+                    <Wallet className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                  </div>
+                )}
+              </div>
               <div className="relative z-10 flex-1">
                 <h3 className="text-gray-800 dark:text-white text-lg font-medium" title={etf.name}>
                   <span className="md:hidden">{etf.name}</span>
