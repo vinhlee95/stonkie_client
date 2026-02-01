@@ -14,8 +14,11 @@
     "e2e": "playwright test",
     "e2e:smoke": "playwright test tests/e2e/smoke.spec.ts",
     "e2e:ui": "playwright test --ui",
-    "test": "node --import tsx --test lib/api/__tests__/etf.test.ts",
-    "test:watch": "node --import tsx --test --watch lib/api/__tests__/etf.test.ts"
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:unit": "vitest run",
+    "test:node": "node --import tsx --test lib/api/__tests__/etf.test.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -50,19 +53,25 @@
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.58.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "husky": "^9.1.7",
+    "jsdom": "^25.0.1",
     "lint-staged": "^15.5.0",
     "prettier": "^3.6.2",
     "puppeteer": "^24.36.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.9"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",

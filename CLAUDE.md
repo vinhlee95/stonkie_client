@@ -11,6 +11,8 @@ In all interactions and commit messages, be extremely concise. Sacrifice grammar
 At the end of each plan, give me a list of unresolved questions to answer, if any.
 Make the questions extremely concise. Sacrifice grammar for the sake of concision.
 
+**Plan Workflow:** After plan approval, automatically create GitHub issue with plan content using `scripts/create-plan-issue.sh`. Issue gets labeled with `plan` and `enhancement`.
+
 ## Project Overview
 
 Stonkie is a Next.js 15-based stock analysis application deployed at https://stonkie.vercel.app/. The app provides financial data visualization, AI-powered company insights, and real-time stock information.
@@ -146,10 +148,11 @@ isQuarterlyStatement(statement) // Check if QuarterlyFinancialStatement
 
 ```bash
 npm run type-check    # TypeScript type checking
+npm run test:unit     # Component/unit tests
 npm run e2e           # E2E tests
 ```
 
-Both must pass before pushing. Build verification happens on Vercel with production env vars.
+All must pass before pushing. Build verification happens on Vercel with production env vars.
 
 ## Deployment
 
@@ -187,6 +190,28 @@ Both must pass before pushing. Build verification happens on Vercel with product
 8. **Charts:** Use Chart.js with react-chartjs-2 wrapper. Chart utilities in `app/tickers/[ticker]/chartUtils.tsx`
 
 ## Testing
+
+### Component/Unit Tests (Vitest + React Testing Library)
+
+- Tests located in `app/components/__tests__/` and `app/components/hooks/__tests__/`
+- Run via `npm run test` (watch mode) or `npm run test:unit` (CI/single run)
+- Config in `vitest.config.ts`, setup in `tests/setup.ts`
+- Test utilities in `tests/test-utils.tsx` (custom render with QueryClient wrapper)
+
+**Testing Patterns:**
+
+| Component Type      | Test Approach            | Example                  |
+| ------------------- | ------------------------ | ------------------------ |
+| Pure presentational | Render + assertions      | ResourceChips            |
+| Interactive         | userEvent + state checks | FavouriteButton          |
+| Hooks               | renderHook + act         | useFavourites            |
+| React Query         | Mock QueryClient         | Data-fetching components |
+
+**Mocks:**
+
+- Next.js navigation mocked in `tests/setup.ts`
+- localStorage mocked for favourites tests
+- matchMedia mocked for responsive components
 
 ### E2E Tests (Playwright)
 
