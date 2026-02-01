@@ -1,11 +1,47 @@
 'use client'
 import { ETFFundamental } from '@/types/etf'
 import ETFFavouriteButton from '@/app/components/ETFFavouriteButton'
-import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 
 const PriceChart = dynamic(() => import('@/app/tickers/[ticker]/PriceChart'), {
   ssr: false,
+  loading: () => (
+    <div className="h-[250px] mb-6">
+      <div className="h-full bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden animate-pulse flex flex-col">
+        {/* Header with date range buttons */}
+        <div className="flex gap-2 p-3 border-b border-gray-200 dark:border-gray-800">
+          {['12M', '1W', 'YTD', 'ALL'].map((label) => (
+            <div key={label} className="h-6 w-12 bg-gray-200 dark:bg-gray-800 rounded" />
+          ))}
+        </div>
+
+        {/* Chart area */}
+        <div className="flex-1 p-4 relative">
+          {/* Placeholder chart line pattern */}
+          <div className="absolute inset-4 flex items-end justify-between gap-1">
+            {[40, 65, 45, 70, 55, 80, 60, 75, 50, 85, 70, 90].map((height, i) => (
+              <div
+                key={i}
+                className="flex-1 bg-gradient-to-t from-gray-300 dark:from-gray-700 to-gray-200 dark:to-gray-800 rounded-t"
+                style={{ height: `${height}%` }}
+              />
+            ))}
+          </div>
+
+          {/* Volume bars at bottom */}
+          <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-1 h-8">
+            {[30, 50, 40, 60, 45, 55, 50, 65, 40, 70, 55, 75].map((height, i) => (
+              <div
+                key={i}
+                className="flex-1 bg-gray-300 dark:bg-gray-700 rounded-t opacity-40"
+                style={{ height: `${height}%` }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
 })
 
 /**
@@ -86,9 +122,7 @@ export default function ETFOverview({ etf }: { etf: ETFFundamental }) {
       </div>
 
       {/* Price Chart */}
-      <Suspense fallback={<p>Loading price chart...</p>}>
-        <PriceChart ticker={etf.ticker || ''} />
-      </Suspense>
+      <PriceChart ticker={etf.ticker || ''} />
 
       {/* Key Metrics Grid - using stat-card class like stock page */}
       <div className="mb-6">

@@ -40,6 +40,26 @@ npm run format       # Format code with Prettier
 
 **Pre-commit Hook:** Runs `type-check` and `lint-staged` automatically. The lint-staged config formats and lints staged files.
 
+### Preview Changes
+
+**When user asks to preview changes, ALWAYS start BOTH servers:**
+
+1. **Start backend server** (required for all data):
+
+   ```bash
+   cd /Users/vinhle/dev/projects/stonkie/backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload
+   ```
+
+2. **Start frontend dev server** (in background):
+
+   ```bash
+   npm run dev
+   ```
+
+3. **Direct user to** http://localhost:3000
+
+**Backend must run first** - frontend needs API at localhost:8080. Both should run in background.
+
 ## Architecture
 
 ### Rendering Strategy
