@@ -142,17 +142,11 @@ isQuarterlyStatement(statement) // Check if QuarterlyFinancialStatement
 
 - `@/*` maps to the root directory (configured in `tsconfig.json`)
 
-## Pre-Push Checklist
+## Pre-Push Checks
 
-**CRITICAL: Run these commands before pushing to remote:**
+**Automated via Claude hook:** Type-check, unit tests, and e2e tests run automatically before any `git push` operation. Hook configured in `~/.claude/settings.json`.
 
-```bash
-npm run type-check    # TypeScript type checking
-npm run test:unit     # Component/unit tests
-npm run e2e           # E2E tests
-```
-
-All must pass before pushing. Build verification happens on Vercel with production env vars.
+Build verification happens on Vercel with production env vars.
 
 ## Deployment
 
@@ -166,30 +160,32 @@ All must pass before pushing. Build verification happens on Vercel with producti
 
 ## Development Guidelines
 
-1. **Test Coverage for New Features:** When implementing new features, ALWAYS ask the user if unit tests should be created. New features must be covered by tests to ensure quality and prevent regressions.
+1. **Git Workflow:** After completing any code changes, ALWAYS ask the user whether to commit and push to remote. Never commit or push without explicit approval.
 
-2. **Styling:** Use Tailwind CSS exclusively. No inline styles or CSS files.
+2. **Test Coverage for New Features:** When implementing new features, ALWAYS ask the user if unit tests should be created. New features must be covered by tests to ensure quality and prevent regressions.
 
-3. **Icons:** Use Lucide React icon library
+3. **Styling:** Use Tailwind CSS exclusively. No inline styles or CSS files.
 
-4. **Routing:** Next.js App Router file-based routing. New pages go in `app/` directory.
+4. **Icons:** Use Lucide React icon library
 
-5. **Data Fetching:**
+5. **Routing:** Next.js App Router file-based routing. New pages go in `app/` directory.
+
+6. **Data Fetching:**
    - Server Components: Use native `fetch()` with appropriate revalidation
    - Client Components: Use React Query via custom hooks
 
-6. **Components:**
+7. **Components:**
    - Place reusable components in `app/components/`
    - Server Components are the default; add `'use client'` only when needed
 
-7. **Caching:**
+8. **Caching:**
    - Root route cached via `headers()` in `next.config.ts`
    - Individual routes use `revalidate` export constant
    - Client-side caching managed by React Query
 
-8. **TypeScript:** Strict mode enabled. Run `npm run type-check` before committing.
+9. **TypeScript:** Strict mode enabled. Run `npm run type-check` before committing.
 
-9. **Charts:** Use Chart.js with react-chartjs-2 wrapper. Chart utilities in `app/tickers/[ticker]/chartUtils.tsx`
+10. **Charts:** Use Chart.js with react-chartjs-2 wrapper. Chart utilities in `app/tickers/[ticker]/chartUtils.tsx`
 
 ## Testing
 
