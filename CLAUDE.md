@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+<!-- Test comment to verify pre-push hook -->
+
 ## Communication Style
 
 In all interactions and commit messages, be extremely concise. Sacrifice grammar for the sake of concision.
