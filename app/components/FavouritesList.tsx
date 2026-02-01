@@ -1,8 +1,7 @@
 'use client'
 import { useFavourites } from './hooks/useFavourites'
-import { useFavouritesETF } from './hooks/useFavouritesETF'
-import CompanyList from '@/app/CompanyList'
-import ETFList from '@/app/components/ETFList'
+import CompanyList, { Company } from '@/app/CompanyList'
+import ETFList, { ETFListItem } from '@/app/components/ETFList'
 
 function FavouritesSkeleton() {
   return (
@@ -27,8 +26,10 @@ function FavouritesSkeleton() {
 }
 
 export default function FavouritesList() {
-  const { favourites: companyFavourites, isInitialized: isCompanyInitialized } = useFavourites()
-  const { favourites: etfFavourites, isInitialized: isETFInitialized } = useFavouritesETF()
+  const { favourites: companyFavourites, isInitialized: isCompanyInitialized } =
+    useFavourites<Company>('stonkie_favourites')
+  const { favourites: etfFavourites, isInitialized: isETFInitialized } =
+    useFavourites<ETFListItem>('stonkie_favourites_etf')
 
   // Show skeleton while loading to prevent layout shift
   if (!isCompanyInitialized || !isETFInitialized) {

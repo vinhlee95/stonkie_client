@@ -9,7 +9,8 @@ interface FavouriteButtonProps {
 }
 
 export default function FavouriteButton({ company, className = '' }: FavouriteButtonProps) {
-  const { isFavourite, toggleFavourite, isInitialized } = useFavourites()
+  const { isFavourite, toggleFavourite, isInitialized } =
+    useFavourites<Company>('stonkie_favourites')
   const isFav = isFavourite(company.ticker)
 
   if (!isInitialized) {

@@ -1,19 +1,20 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { useFavouritesETF } from '../useFavouritesETF'
+import { useFavourites } from '../useFavourites'
+import { ETFListItem } from '@/app/components/ETFList'
 
-const mockETF = {
+const mockETF: ETFListItem = {
   ticker: 'SPY',
   name: 'SPDR S&P 500 ETF Trust',
   fund_provider: 'State Street',
 }
 
-describe('useFavouritesETF', () => {
+describe('useFavourites with ETF type', () => {
   beforeEach(() => {
     localStorage.clear()
   })
 
   it('initializes with empty favourites', async () => {
-    const { result } = renderHook(() => useFavouritesETF())
+    const { result } = renderHook(() => useFavourites<ETFListItem>('stonkie_favourites_etf'))
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true)
@@ -23,7 +24,7 @@ describe('useFavouritesETF', () => {
   })
 
   it('adds a favourite', async () => {
-    const { result } = renderHook(() => useFavouritesETF())
+    const { result } = renderHook(() => useFavourites<ETFListItem>('stonkie_favourites_etf'))
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true)
@@ -38,7 +39,7 @@ describe('useFavouritesETF', () => {
   })
 
   it('removes a favourite', async () => {
-    const { result } = renderHook(() => useFavouritesETF())
+    const { result } = renderHook(() => useFavourites<ETFListItem>('stonkie_favourites_etf'))
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true)
@@ -57,7 +58,7 @@ describe('useFavouritesETF', () => {
   })
 
   it('prevents duplicate favourites', async () => {
-    const { result } = renderHook(() => useFavouritesETF())
+    const { result } = renderHook(() => useFavourites<ETFListItem>('stonkie_favourites_etf'))
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true)
@@ -72,7 +73,7 @@ describe('useFavouritesETF', () => {
   })
 
   it('persists to localStorage', async () => {
-    const { result } = renderHook(() => useFavouritesETF())
+    const { result } = renderHook(() => useFavourites<ETFListItem>('stonkie_favourites_etf'))
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true)

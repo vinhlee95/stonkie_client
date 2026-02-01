@@ -1,7 +1,8 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useFavourites } from '../useFavourites'
+import { Company } from '@/app/CompanyList'
 
-const mockCompany = {
+const mockCompany: Company = {
   ticker: 'AAPL',
   name: 'Apple Inc.',
   logo_url: '',
@@ -14,7 +15,7 @@ describe('useFavourites', () => {
   })
 
   it('initializes with empty favourites', async () => {
-    const { result } = renderHook(() => useFavourites())
+    const { result } = renderHook(() => useFavourites<Company>('stonkie_favourites'))
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true)
@@ -24,7 +25,7 @@ describe('useFavourites', () => {
   })
 
   it('adds a favourite', async () => {
-    const { result } = renderHook(() => useFavourites())
+    const { result } = renderHook(() => useFavourites<Company>('stonkie_favourites'))
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true)
@@ -39,7 +40,7 @@ describe('useFavourites', () => {
   })
 
   it('removes a favourite', async () => {
-    const { result } = renderHook(() => useFavourites())
+    const { result } = renderHook(() => useFavourites<Company>('stonkie_favourites'))
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true)
@@ -58,7 +59,7 @@ describe('useFavourites', () => {
   })
 
   it('prevents duplicate favourites', async () => {
-    const { result } = renderHook(() => useFavourites())
+    const { result } = renderHook(() => useFavourites<Company>('stonkie_favourites'))
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true)
@@ -73,7 +74,7 @@ describe('useFavourites', () => {
   })
 
   it('persists to localStorage', async () => {
-    const { result } = renderHook(() => useFavourites())
+    const { result } = renderHook(() => useFavourites<Company>('stonkie_favourites'))
 
     await waitFor(() => {
       expect(result.current.isInitialized).toBe(true)

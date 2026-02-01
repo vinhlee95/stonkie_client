@@ -1,6 +1,6 @@
 'use client'
 import { Star } from 'lucide-react'
-import { useFavouritesETF } from './hooks/useFavouritesETF'
+import { useFavourites } from './hooks/useFavourites'
 import { ETFListItem } from '@/app/components/ETFList'
 
 interface ETFFavouriteButtonProps {
@@ -9,7 +9,8 @@ interface ETFFavouriteButtonProps {
 }
 
 export default function ETFFavouriteButton({ etf, className = '' }: ETFFavouriteButtonProps) {
-  const { isFavourite, toggleFavourite, isInitialized } = useFavouritesETF()
+  const { isFavourite, toggleFavourite, isInitialized } =
+    useFavourites<ETFListItem>('stonkie_favourites_etf')
   const isFav = isFavourite(etf.ticker)
 
   if (!isInitialized) {
