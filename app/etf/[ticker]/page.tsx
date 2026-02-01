@@ -1,13 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Suspense } from 'react'
 import { getETFByTicker } from '@/lib/api/etf'
 import type { Metadata } from 'next'
 import ETFOverview from '@/app/components/etf/ETFOverview'
 import HoldingsTable from '@/app/components/etf/HoldingsTable'
 import SectorAllocationChart from '@/app/components/etf/SectorAllocationChart'
 import CountryAllocationChart from '@/app/components/etf/CountryAllocationChart'
-import PriceChart from '@/app/tickers/[ticker]/PriceChart'
 
 export const revalidate = 120 // Revalidate every 2 minutes
 
@@ -71,11 +69,6 @@ export default async function ETFPage({ params }: { params: Promise<{ ticker: st
 
       {/* ETF Overview Section */}
       <ETFOverview etf={etf} />
-
-      {/* Price Chart */}
-      <Suspense fallback={<p>Loading price chart...</p>}>
-        <PriceChart ticker={normalizedTicker} />
-      </Suspense>
 
       {/* Top Holdings Section */}
       <HoldingsTable holdings={etf.holdings} />

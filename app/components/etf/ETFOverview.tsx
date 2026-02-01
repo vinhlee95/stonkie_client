@@ -1,6 +1,12 @@
 'use client'
 import { ETFFundamental } from '@/types/etf'
 import ETFFavouriteButton from '@/app/components/ETFFavouriteButton'
+import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
+
+const PriceChart = dynamic(() => import('@/app/tickers/[ticker]/PriceChart'), {
+  ssr: false,
+})
 
 /**
  * Format fund size in billions to currency string (e.g., 114.617 -> "$114.62B")
@@ -78,6 +84,11 @@ export default function ETFOverview({ etf }: { etf: ETFFundamental }) {
           </div>
         )}
       </div>
+
+      {/* Price Chart */}
+      <Suspense fallback={<p>Loading price chart...</p>}>
+        <PriceChart ticker={etf.ticker || ''} />
+      </Suspense>
 
       {/* Key Metrics Grid - using stat-card class like stock page */}
       <div className="mb-6">
