@@ -2,8 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-<!-- Test comment to verify pre-push hook -->
-
 ## Communication Style
 
 In all interactions and commit messages, be extremely concise. Sacrifice grammar for the sake of concision.
@@ -144,12 +142,6 @@ isQuarterlyStatement(statement) // Check if QuarterlyFinancialStatement
 
 - `@/*` maps to the root directory (configured in `tsconfig.json`)
 
-## Pre-Push Checks
-
-**Automated via Claude hook:** Type-check, unit tests, and e2e tests run automatically before any `git push` operation. Hook configured in `~/.claude/settings.json`.
-
-Build verification happens on Vercel with production env vars.
-
 ## Deployment
 
 **Production:** All commits to `main` auto-deploy to Vercel (https://stonkie.vercel.app/) within 1-2 minutes.
@@ -162,7 +154,11 @@ Build verification happens on Vercel with production env vars.
 
 ## Development Guidelines
 
-1. **Git Workflow:** After completing any code changes, ALWAYS ask the user whether to commit and push to remote. Never commit or push without explicit approval.
+1. **Git Workflow:** After completing code changes, ALWAYS follow this workflow:
+   - Run ALL checks explicitly: `npm run type-check && npm run test:unit && npm run e2e`
+   - Ask user if they want to commit the changes
+   - Ask user if they want to push to remote
+   - Never commit or push without explicit approval
 
 2. **Test Coverage for New Features:** When implementing new features, ALWAYS ask the user if unit tests should be created. New features must be covered by tests to ensure quality and prevent regressions.
 
