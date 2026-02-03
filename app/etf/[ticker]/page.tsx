@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { getETFByTicker } from '@/lib/api/etf'
 import type { Metadata } from 'next'
 import ETFOverview from '@/app/components/etf/ETFOverview'
@@ -45,28 +44,6 @@ export default async function ETFPage({ params }: { params: Promise<{ ticker: st
 
   return (
     <div className="container mx-auto py-6">
-      {/* Breadcrumb Navigation */}
-      <nav className="mb-6" aria-label="Breadcrumb">
-        <ol className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-          <li>
-            <Link
-              href="/"
-              className="hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
-            >
-              Home
-            </Link>
-          </li>
-          <li>/</li>
-          <li>
-            <span className="text-gray-900 dark:text-gray-200">ETF</span>
-          </li>
-          <li>/</li>
-          <li>
-            <span className="text-gray-900 dark:text-gray-200">{normalizedTicker}</span>
-          </li>
-        </ol>
-      </nav>
-
       {/* ETF Overview Section */}
       <ETFOverview etf={etf} />
 

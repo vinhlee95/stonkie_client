@@ -73,30 +73,6 @@ function formatLaunchDate(dateString: string | null): string {
   })
 }
 
-/**
- * Format ISO timestamp to relative time (e.g., "Updated 2 hours ago")
- */
-function formatRelativeTime(timestamp: string | null): string {
-  if (!timestamp) return ''
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffSeconds = Math.floor(diffMs / 1000)
-  const diffMinutes = Math.floor(diffSeconds / 60)
-  const diffHours = Math.floor(diffMinutes / 60)
-  const diffDays = Math.floor(diffHours / 24)
-
-  if (diffDays > 0) {
-    return `Updated ${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`
-  } else if (diffHours > 0) {
-    return `Updated ${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`
-  } else if (diffMinutes > 0) {
-    return `Updated ${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`
-  } else {
-    return 'Updated just now'
-  }
-}
-
 export default function ETFOverview({ etf }: { etf: ETFFundamental }) {
   const etfListItem = {
     ticker: etf.ticker || '',
@@ -185,13 +161,6 @@ export default function ETFOverview({ etf }: { etf: ETFFundamental }) {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      {etf.updated_at && (
-        <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          {formatRelativeTime(etf.updated_at)}
-        </div>
-      )}
     </>
   )
 }
