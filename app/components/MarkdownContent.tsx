@@ -29,8 +29,8 @@ export default function MarkdownContent({
           ul: ({ children }) => <ul className="pl-4 mb-1.5 list-disc">{children}</ul>,
           li: ({ children }) => <li className="mb-2 leading-relaxed">{children}</li>,
           table: ({ children }) => (
-            <div className="overflow-x-auto my-4 -mx-2 px-2">
-              <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+            <div className="my-4">
+              <table className="w-full table-fixed divide-y divide-gray-300 dark:divide-gray-600">
                 {children}
               </table>
             </div>
@@ -52,7 +52,7 @@ export default function MarkdownContent({
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-3 py-3 text-sm text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">
+            <td className="px-3 py-3 text-sm text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 break-words">
               {children}
             </td>
           ),
