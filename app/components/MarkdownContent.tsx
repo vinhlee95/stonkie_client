@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Link } from 'lucide-react'
 
 export default function MarkdownContent({
   content,
@@ -55,6 +56,21 @@ export default function MarkdownContent({
             <td className="px-3 py-3 text-sm text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 break-words">
               {children}
             </td>
+          ),
+          a: ({ href, children }) => (
+            <span className="relative inline-flex align-middle mx-0.5 group/link">
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-[var(--accent-active)] dark:border-[var(--accent-active-dark)] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)] hover:bg-[var(--accent-active)] hover:text-white dark:hover:bg-[var(--accent-active-dark)] dark:hover:text-white transition-all cursor-pointer"
+              >
+                <Link className="w-3 h-3" />
+              </a>
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 px-2.5 py-1.5 text-xs leading-tight rounded-md shadow-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 max-w-60 w-max opacity-0 pointer-events-none group-hover/link:opacity-100 transition-opacity">
+                {children}
+              </span>
+            </span>
           ),
         }}
       >

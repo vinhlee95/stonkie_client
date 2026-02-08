@@ -131,7 +131,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
       {/* Only show answer for normal threads */}
       {isNormalThread(thread) && thread.answer && <MarkdownContent content={thread.answer} />}
 
-      {/* Only show grounds for normal threads */}
+      {/* Show grounds (Google search) */}
       {isNormalThread(thread) && thread.grounds && thread.grounds.length > 0 && (
         <>
           <div className="flex my-4">

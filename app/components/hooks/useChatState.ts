@@ -5,6 +5,11 @@ export interface AnswerGround {
   url: string
 }
 
+export interface AnswerSource {
+  name: string
+  url: string
+}
+
 export interface Attachment {
   title: string
   url: string
@@ -23,6 +28,7 @@ export interface NormalThread {
   answer: string | null
   relatedQuestions: string[]
   grounds: AnswerGround[]
+  sources: AnswerSource[]
   modelName: string | undefined
   attachment: Attachment | undefined
 }
@@ -35,7 +41,7 @@ export const isFaqThread = (thread: Thread): thread is FaqThread => {
 }
 
 export const isNormalThread = (thread: Thread): thread is NormalThread => {
-  return 'thoughts' in thread && 'answer' in thread && 'grounds' in thread
+  return 'thoughts' in thread && 'answer' in thread && 'grounds' in thread && 'sources' in thread
 }
 
 const STORAGE_KEY = 'stonkie-preferred-model'
@@ -214,6 +220,7 @@ export const useChatState = (ticker: string | undefined) => {
       answer: null,
       relatedQuestions: [],
       grounds: [],
+      sources: [],
       modelName: undefined,
       attachment: undefined,
     }
@@ -240,6 +247,7 @@ export const useChatState = (ticker: string | undefined) => {
             answer: (updates as Partial<NormalThread>).answer || null,
             relatedQuestions: updates.relatedQuestions || [],
             grounds: (updates as Partial<NormalThread>).grounds || [],
+            sources: (updates as Partial<NormalThread>).sources || [],
             modelName: (updates as Partial<NormalThread>).modelName || undefined,
             attachment: (updates as Partial<NormalThread>).attachment || undefined,
           }

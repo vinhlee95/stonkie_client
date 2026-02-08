@@ -56,16 +56,22 @@ export const useChatAPI = (
       let thoughts: string[] = []
       let relatedQuestions: string[] = []
       let grounds: AnswerGround[] = []
+      let buffer = ''
 
       while (true) {
         const { value, done } = await reader.read()
         if (done) break
 
-        const chunk = decoder.decode(value)
-        try {
-          const jsonStrings = chunk.split('\n').filter((str) => str.trim())
-          for (const jsonStr of jsonStrings) {
-            const parsedChunk = JSON.parse(jsonStr)
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        // Keep the last element as it may be incomplete
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed) continue
+          try {
+            const parsedChunk = JSON.parse(trimmed)
             if (parsedChunk.type === 'conversation') {
               // Handle conversation event - store conversationId
               const newConversationId = parsedChunk.body?.conversationId || null
@@ -92,6 +98,17 @@ export const useChatAPI = (
             } else if (parsedChunk.type === 'google_search_ground') {
               grounds = [...grounds, { body: parsedChunk.body, url: parsedChunk.url }]
               updateThread(threadId, { grounds })
+            } else if (parsedChunk.type === 'sources') {
+              if (Array.isArray(parsedChunk.body)) {
+                const links = parsedChunk.body
+                  .filter((s: { name: string; url?: string }) => s.url)
+                  .map((s: { name: string; url: string }) => `[${s.name}](${s.url})`)
+                  .join(' ')
+                if (links) {
+                  accumulatedContent += links + '\n'
+                  updateThread(threadId, { answer: accumulatedContent })
+                }
+              }
             } else if (parsedChunk.type === 'model_used') {
               updateThread(threadId, { modelName: parsedChunk.body })
             } else if (parsedChunk.type === 'attachment_url') {
@@ -102,9 +119,30 @@ export const useChatAPI = (
                 },
               })
             }
+          } catch (e) {
+            console.error('Error parsing chunk:', e)
+          }
+        }
+      }
+
+      // Process any remaining buffer
+      if (buffer.trim()) {
+        try {
+          const parsedChunk = JSON.parse(buffer.trim())
+          if (parsedChunk.type === 'sources' && Array.isArray(parsedChunk.body)) {
+            const links = parsedChunk.body
+              .filter((s: { name: string; url?: string }) => s.url)
+              .map((s: { name: string; url: string }) => `[${s.name}](${s.url})`)
+              .join(' ')
+            if (links) {
+              accumulatedContent += links + '\n'
+              updateThread(threadId, { answer: accumulatedContent })
+            }
+          } else if (parsedChunk.type === 'model_used') {
+            updateThread(threadId, { modelName: parsedChunk.body })
           }
         } catch (e) {
-          console.error('Error parsing chunk:', e)
+          console.error('Error parsing remaining buffer:', e)
         }
       }
     } catch (error) {
