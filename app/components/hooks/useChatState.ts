@@ -8,6 +8,7 @@ export interface AnswerGround {
 export interface AnswerSource {
   name: string
   url: string
+  paragraphIndices?: number[]
 }
 
 export interface Attachment {

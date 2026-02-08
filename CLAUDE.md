@@ -1,15 +1,6 @@
-# CLAUDE.md
+# CLAUDE.md — Stonkie Frontend
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Communication Style
-
-In all interactions and commit messages, be extremely concise. Sacrifice grammar for the sake of concision.
-
-## Plans
-
-At the end of each plan, give me a list of unresolved questions to answer, if any.
-Make the questions extremely concise. Sacrifice grammar for the sake of concision.
+See root `../CLAUDE.md` for shared conventions (communication style, plans, monorepo structure).
 
 **Plan Workflow:** After plan approval, automatically create GitHub issue with plan content using `scripts/create-plan-issue.sh`. Issue gets labeled with `plan` and `enhancement`.
 

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { AnswerGround, Thread } from './useChatState'
+import { AnswerGround, AnswerSource, Thread } from './useChatState'
 import { chatService } from '../services/chatService'
 
 export const useChatAPI = (
@@ -105,10 +105,21 @@ export const useChatAPI = (
                   .map((s: { name: string; url: string }) => `[${s.name}](${s.url})`)
                   .join(' ')
                 if (links) {
-                  accumulatedContent += links + '\n'
+                  // Trim trailing newlines so links render inline with paragraph
+                  const trimmed = accumulatedContent.replace(/\n+$/, '')
+                  accumulatedContent = trimmed + ' ' + links + '\n\n'
                   updateThread(threadId, { answer: accumulatedContent })
                 }
               }
+            } else if (parsedChunk.type === 'sources_grouped') {
+              const groupedSources: AnswerSource[] = (parsedChunk.body?.sources || [])
+                .filter((s: { name: string; url?: string }) => s.url)
+                .map((s: { name: string; url: string; paragraph_indices?: number[] }) => ({
+                  name: s.name,
+                  url: s.url,
+                  paragraphIndices: s.paragraph_indices,
+                }))
+              updateThread(threadId, { sources: groupedSources })
             } else if (parsedChunk.type === 'model_used') {
               updateThread(threadId, { modelName: parsedChunk.body })
             } else if (parsedChunk.type === 'attachment_url') {
@@ -135,7 +146,8 @@ export const useChatAPI = (
               .map((s: { name: string; url: string }) => `[${s.name}](${s.url})`)
               .join(' ')
             if (links) {
-              accumulatedContent += links + '\n'
+              const trimmed = accumulatedContent.replace(/\n+$/, '')
+              accumulatedContent = trimmed + ' ' + links + '\n\n'
               updateThread(threadId, { answer: accumulatedContent })
             }
           } else if (parsedChunk.type === 'model_used') {

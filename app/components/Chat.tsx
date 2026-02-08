@@ -131,16 +131,30 @@ const ThreadView: React.FC<ThreadViewProps> = ({
       {/* Only show answer for normal threads */}
       {isNormalThread(thread) && thread.answer && <MarkdownContent content={thread.answer} />}
 
-      {/* Show grounds (Google search) */}
-      {isNormalThread(thread) && thread.grounds && thread.grounds.length > 0 && (
+      {/* Show sources (grouped citations from answer) */}
+      {isNormalThread(thread) && thread.sources && thread.sources.length > 0 && (
         <>
-          <div className="flex my-4">
-            <FileSearch />
+          <div className="flex gap-1.5 items-center my-4">
+            <FileSearch className="w-5 h-5" />
             <div className="font-semibold">Sources</div>
           </div>
-          <ResourceChips resources={thread.grounds.map((i) => ({ url: i.url, label: i.body }))} />
+          <ResourceChips resources={thread.sources.map((s) => ({ url: s.url, label: s.name }))} />
         </>
       )}
+
+      {/* Show grounds (Google search) — only if no grouped sources */}
+      {isNormalThread(thread) &&
+        (!thread.sources || thread.sources.length === 0) &&
+        thread.grounds &&
+        thread.grounds.length > 0 && (
+          <>
+            <div className="flex gap-1.5 items-center my-4">
+              <FileSearch className="w-5 h-5" />
+              <div className="font-semibold">Sources</div>
+            </div>
+            <ResourceChips resources={thread.grounds.map((i) => ({ url: i.url, label: i.body }))} />
+          </>
+        )}
 
       {isNormalThread(thread) && thread.modelName && (
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400">

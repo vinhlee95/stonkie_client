@@ -67,7 +67,7 @@ export default function MarkdownContent({
               >
                 <Link className="w-3 h-3" />
               </a>
-              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 z-50 px-2.5 py-1.5 text-xs leading-tight rounded-md shadow-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 max-w-60 w-max opacity-0 pointer-events-none group-hover/link:opacity-100 transition-opacity">
+              <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 z-[100] px-2.5 py-1.5 text-xs leading-tight rounded-md shadow-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 max-w-60 w-max opacity-0 pointer-events-none group-hover/link:opacity-100 transition-opacity">
                 {children}
               </span>
             </span>
