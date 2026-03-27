@@ -46,7 +46,7 @@ export const isNormalThread = (thread: Thread): thread is NormalThread => {
 }
 
 const STORAGE_KEY = 'stonkie-preferred-model'
-const DEFAULT_MODEL = 'fastest'
+const DEFAULT_MODEL = 'gemini-3.0-flash'
 const CONVERSATION_KEY_PREFIX = 'stonkie_conversation_'
 const ACTIVITY_TIMESTAMP_PREFIX = 'stonkie_activity_'
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000 // 15 minutes

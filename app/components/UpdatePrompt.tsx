@@ -1,19 +1,11 @@
 'use client'
 
 import { useServiceWorker } from './hooks/useServiceWorker'
-import { useEffect, useState } from 'react'
 
 export default function UpdatePrompt() {
   const { updateAvailable, updateServiceWorker } = useServiceWorker()
-  const [isVisible, setIsVisible] = useState(false)
 
-  useEffect(() => {
-    if (updateAvailable) {
-      setIsVisible(true)
-    }
-  }, [updateAvailable])
-
-  if (!isVisible) {
+  if (!updateAvailable) {
     return null
   }
 

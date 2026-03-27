@@ -1,22 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
+
+const subscribe = (callback: () => void) => {
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  mediaQuery.addEventListener('change', callback)
+  return () => mediaQuery.removeEventListener('change', callback)
+}
+
+const getSnapshot = () => window.matchMedia('(prefers-color-scheme: dark)').matches
+const getServerSnapshot = () => false
 
 // Custom hook to detect dark mode
 export function useDarkMode() {
-  const [isDarkMode, setIsDarkMode] = useState(false)
-
-  useEffect(() => {
-    // Check initial preference
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    setIsDarkMode(mediaQuery.matches)
-
-    // Listen for changes
-    const handler = (event: MediaQueryListEvent) => {
-      setIsDarkMode(event.matches)
-    }
-
-    mediaQuery.addEventListener('change', handler)
-    return () => mediaQuery.removeEventListener('change', handler)
-  }, [])
+  const isDarkMode = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   return isDarkMode
 }

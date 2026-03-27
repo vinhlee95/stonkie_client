@@ -10,8 +10,7 @@ export interface ModelOption {
 const MODEL_OPTIONS: ModelOption[] = [
   { label: 'Lightning', value: 'fastest' },
   { label: 'Gemini 3.0 Flash', value: 'gemini-3.0-flash' },
-  { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
-  { label: 'Gemini 2.5 Flash Lite', value: 'gemini-2.5-flash-lite' },
+  { label: 'Sonnet 4.6', value: 'sonnet-4.6' },
 ]
 
 interface ModelSelectorProps {
