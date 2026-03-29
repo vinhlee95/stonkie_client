@@ -7,7 +7,7 @@ export interface AnswerGround {
 
 export interface AnswerSource {
   name: string
-  url: string
+  url?: string
   paragraphIndices?: number[]
 }
 

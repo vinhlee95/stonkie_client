@@ -36,8 +36,7 @@ export function processStreamLine(
     case 'sources': {
       if (Array.isArray(parsed.body)) {
         const links = parsed.body
-          .filter((s: { name: string; url?: string }) => s.url)
-          .map((s: { name: string; url: string }) => `[${s.name}](${s.url})`)
+          .map((s: { name: string; url?: string }) => (s.url ? `[${s.name}](${s.url})` : s.name))
           .join(' ')
         if (links) {
           next.accumulatedContent += links + '\n'

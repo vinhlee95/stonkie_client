@@ -101,8 +101,9 @@ export const useChatAPI = (
             } else if (parsedChunk.type === 'sources') {
               if (Array.isArray(parsedChunk.body)) {
                 const links = parsedChunk.body
-                  .filter((s: { name: string; url?: string }) => s.url)
-                  .map((s: { name: string; url: string }) => `[${s.name}](${s.url})`)
+                  .map((s: { name: string; url?: string }) =>
+                    s.url ? `[${s.name}](${s.url})` : s.name,
+                  )
                   .join(' ')
                 if (links) {
                   // Trim trailing newlines so links render inline with paragraph
@@ -112,13 +113,13 @@ export const useChatAPI = (
                 }
               }
             } else if (parsedChunk.type === 'sources_grouped') {
-              const groupedSources: AnswerSource[] = (parsedChunk.body?.sources || [])
-                .filter((s: { name: string; url?: string }) => s.url)
-                .map((s: { name: string; url: string; paragraph_indices?: number[] }) => ({
+              const groupedSources: AnswerSource[] = (parsedChunk.body?.sources || []).map(
+                (s: { name: string; url?: string; paragraph_indices?: number[] }) => ({
                   name: s.name,
                   url: s.url,
                   paragraphIndices: s.paragraph_indices,
-                }))
+                }),
+              )
               updateThread(threadId, { sources: groupedSources })
             } else if (parsedChunk.type === 'model_used') {
               updateThread(threadId, { modelName: parsedChunk.body })
@@ -142,8 +143,9 @@ export const useChatAPI = (
           const parsedChunk = JSON.parse(buffer.trim())
           if (parsedChunk.type === 'sources' && Array.isArray(parsedChunk.body)) {
             const links = parsedChunk.body
-              .filter((s: { name: string; url?: string }) => s.url)
-              .map((s: { name: string; url: string }) => `[${s.name}](${s.url})`)
+              .map((s: { name: string; url?: string }) =>
+                s.url ? `[${s.name}](${s.url})` : s.name,
+              )
               .join(' ')
             if (links) {
               const trimmed = accumulatedContent.replace(/\n+$/, '')
