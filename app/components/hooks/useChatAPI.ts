@@ -25,7 +25,6 @@ export const useChatAPI = (
   const handleSubmit = async (
     question: string,
     threadId: string,
-    useGoogleSearch: boolean = false,
     useUrlContext: boolean = false,
     deepAnalysis: boolean = false,
     preferredModel: string = 'fastest',
@@ -42,7 +41,6 @@ export const useChatAPI = (
       const reader = await chatService.analyzeQuestion(
         question,
         ticker,
-        useGoogleSearch,
         useUrlContext,
         deepAnalysis,
         preferredModel,

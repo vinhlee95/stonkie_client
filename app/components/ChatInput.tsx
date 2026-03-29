@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react'
-import { ArrowUp, Square, Globe, Zap, Brain } from 'lucide-react'
+import { ArrowUp, Square, Zap, Brain } from 'lucide-react'
 import ModelSelector from './ModelSelector'
 
 interface ChatInputProps {
@@ -8,8 +8,6 @@ interface ChatInputProps {
   handleSubmit: (e: React.FormEvent) => void
   isLoading: boolean
   onCancel?: () => void
-  useGoogleSearch: boolean
-  setUseGoogleSearch: Dispatch<SetStateAction<boolean>>
   deepAnalysis: boolean
   setDeepAnalysis: Dispatch<SetStateAction<boolean>>
   preferredModel: string
@@ -22,8 +20,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   handleSubmit,
   isLoading,
   onCancel,
-  useGoogleSearch,
-  setUseGoogleSearch,
   deepAnalysis,
   setDeepAnalysis,
   preferredModel,
@@ -104,25 +100,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
             </div>
           </div>
 
-          {/* Right side: Model selector, Google search and submit */}
+          {/* Right side: Model selector and submit */}
           <div className="flex items-center gap-2">
             <ModelSelector selectedModel={preferredModel} onModelChange={setPreferredModel} />
-            <div className="relative group">
-              <button
-                type="button"
-                className={`p-2 cursor-pointer rounded-full transition-colors ${useGoogleSearch ? 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]' : 'hover:bg-gray-100 dark:hover:bg-[#232323]'}`}
-                aria-label="Web search"
-                onClick={() => setUseGoogleSearch(!useGoogleSearch)}
-              >
-                <Globe
-                  className={`w-4 h-4 ${useGoogleSearch ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`}
-                />
-              </button>
-              {/* Tooltip */}
-              <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
-                Enable Google Search
-              </div>
-            </div>
             <button
               onClick={
                 isLoading

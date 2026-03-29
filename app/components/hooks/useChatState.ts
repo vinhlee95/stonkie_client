@@ -55,7 +55,6 @@ export const useChatState = (ticker: string | undefined) => {
   const [threads, setThreads] = useState<Thread[]>([])
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null)
   const [input, setInput] = useState('')
-  const [useGoogleSearch, setUseGoogleSearch] = useState<boolean>(false)
   const [deepAnalysis, setDeepAnalysis] = useState<boolean>(false)
 
   // Initialize conversationId from localStorage (hybrid approach)
@@ -285,8 +284,6 @@ export const useChatState = (ticker: string | undefined) => {
     setInput,
     addThread,
     updateThread,
-    useGoogleSearch,
-    setUseGoogleSearch,
     deepAnalysis,
     setDeepAnalysis,
     preferredModel,

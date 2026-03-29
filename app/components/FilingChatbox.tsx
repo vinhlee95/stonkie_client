@@ -36,8 +36,6 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
     setInput,
     addThread,
     updateThread,
-    useGoogleSearch,
-    setUseGoogleSearch,
     deepAnalysis,
     setDeepAnalysis,
     preferredModel,
@@ -167,12 +165,12 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
     const questionWithFilingContext = addCompanySpecificContext(question)
-    await handleSubmit(questionWithFilingContext, threadId, false, true)
+    await handleSubmit(questionWithFilingContext, threadId, true, deepAnalysis, preferredModel)
   }
 
   const handleSubmitNewQuestion = async (question: string, threadId: string) => {
     const questionWithFilingContext = addCompanySpecificContext(question)
-    await handleSubmit(questionWithFilingContext, threadId, false, true)
+    await handleSubmit(questionWithFilingContext, threadId, true, deepAnalysis, preferredModel)
   }
 
   useEffect(() => {
@@ -226,8 +224,6 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
       onClose={onClose}
       isDesktop={isDesktop}
       handleFAQClick={handleFAQClick}
-      useGoogleSearch={useGoogleSearch}
-      setUseGoogleSearch={setUseGoogleSearch}
       deepAnalysis={deepAnalysis}
       setDeepAnalysis={setDeepAnalysis}
       preferredModel={preferredModel}

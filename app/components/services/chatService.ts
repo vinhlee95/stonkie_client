@@ -4,7 +4,6 @@ export const chatService = {
   async analyzeQuestion(
     question: string,
     ticker: string | undefined,
-    useGoogleSearch: boolean,
     useUrlContext: boolean = false,
     deepAnalysis: boolean = false,
     preferredModel: string = 'fastest',
@@ -20,7 +19,6 @@ export const chatService = {
       body: JSON.stringify({
         question,
         conversationId, // Include conversationId for conversation memory
-        useGoogleSearch,
         useUrlContext,
         deepAnalysis,
         preferredModel,

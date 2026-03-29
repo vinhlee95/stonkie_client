@@ -1,14 +1,5 @@
 'use client'
-import React, {
-  useEffect,
-  useRef,
-  useContext,
-  createContext,
-  ReactNode,
-  Dispatch,
-  SetStateAction,
-  useState,
-} from 'react'
+import React, { useEffect, useRef, useContext, createContext, ReactNode, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { ListPlus, FileSearch, Cpu, FileText } from 'lucide-react'
 import ChatHeader from './ChatHeader'
@@ -204,10 +195,8 @@ interface ChatboxUIProps {
   onClose: () => void
   isDesktop?: boolean
   handleFAQClick: (question: string) => void
-  useGoogleSearch: boolean
-  setUseGoogleSearch: Dispatch<SetStateAction<boolean>>
   deepAnalysis: boolean
-  setDeepAnalysis: Dispatch<SetStateAction<boolean>>
+  setDeepAnalysis: React.Dispatch<React.SetStateAction<boolean>>
   preferredModel: string
   setPreferredModel: (model: string) => void
 }
@@ -225,8 +214,6 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   onClose,
   isDesktop,
   handleFAQClick,
-  useGoogleSearch,
-  setUseGoogleSearch,
   deepAnalysis,
   setDeepAnalysis,
   preferredModel,
@@ -313,8 +300,6 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
             }}
             isLoading={isLoading}
             onCancel={cancelRequest}
-            useGoogleSearch={useGoogleSearch}
-            setUseGoogleSearch={setUseGoogleSearch}
             deepAnalysis={deepAnalysis}
             setDeepAnalysis={setDeepAnalysis}
             preferredModel={preferredModel}
@@ -339,8 +324,6 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
     isLoading,
     isThinking,
     cancelRequest,
-    useGoogleSearch,
-    setUseGoogleSearch,
     deepAnalysis,
     setDeepAnalysis,
     preferredModel,
@@ -349,7 +332,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
-    await handleSubmit(question, threadId, useGoogleSearch, false, deepAnalysis, preferredModel)
+    await handleSubmit(question, threadId, false, deepAnalysis, preferredModel)
   }
 
   return (
@@ -359,7 +342,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
       setInput={setInput}
       addThread={addThread}
       handleSubmit={(question: string, threadId: string) =>
-        handleSubmit(question, threadId, useGoogleSearch, false, deepAnalysis, preferredModel)
+        handleSubmit(question, threadId, false, deepAnalysis, preferredModel)
       }
       isLoading={isLoading}
       isThinking={isThinking}
@@ -368,8 +351,6 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
       onClose={onClose}
       isDesktop={isDesktop}
       handleFAQClick={handleFAQClick}
-      useGoogleSearch={useGoogleSearch}
-      setUseGoogleSearch={setUseGoogleSearch}
       deepAnalysis={deepAnalysis}
       setDeepAnalysis={setDeepAnalysis}
       preferredModel={preferredModel}
@@ -394,8 +375,6 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
     setInput,
     addThread,
     updateThread,
-    useGoogleSearch,
-    setUseGoogleSearch,
     deepAnalysis,
     setDeepAnalysis,
     preferredModel,
@@ -452,7 +431,7 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
-    await handleSubmit(question, threadId, useGoogleSearch, false, deepAnalysis, preferredModel)
+    await handleSubmit(question, threadId, false, deepAnalysis, preferredModel)
   }
 
   return (
@@ -462,7 +441,7 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
       setInput={setInput}
       addThread={addThread}
       handleSubmit={(question: string, threadId: string) =>
-        handleSubmit(question, threadId, useGoogleSearch, false, deepAnalysis, preferredModel)
+        handleSubmit(question, threadId, false, deepAnalysis, preferredModel)
       }
       isLoading={isLoading}
       isThinking={isThinking}
@@ -471,8 +450,6 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
       onClose={onClose}
       isDesktop={isDesktop}
       handleFAQClick={handleFAQClick}
-      useGoogleSearch={useGoogleSearch}
-      setUseGoogleSearch={setUseGoogleSearch}
       deepAnalysis={deepAnalysis}
       setDeepAnalysis={setDeepAnalysis}
       preferredModel={preferredModel}
