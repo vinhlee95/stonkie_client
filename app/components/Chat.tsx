@@ -9,7 +9,7 @@ import { useChatAPI } from './hooks/useChatAPI'
 import { useFAQQuery } from './hooks/useFAQQuery'
 import { ThoughtBubble } from './ThoughtBubble'
 import { Plus } from 'lucide-react'
-import MarkdownContent from './MarkdownContent'
+import AnswerContent from './AnswerContent'
 import ResourceChips from './ResourceChips'
 
 // Compose the context type from useChatState and useChatAPI return types
@@ -120,7 +120,9 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         </div>
       )}
       {/* Only show answer for normal threads */}
-      {isNormalThread(thread) && thread.answer && <MarkdownContent content={thread.answer} />}
+      {isNormalThread(thread) && thread.answer && (
+        <AnswerContent content={thread.answer} isStreaming={isLastThread && isThinking} />
+      )}
 
       {/* Show sources (grouped citations from answer) */}
       {isNormalThread(thread) && thread.sources && thread.sources.length > 0 && (
