@@ -13,16 +13,15 @@ interface AnswerContentProps {
 
 type RenderPart = { type: 'text'; content: string } | { type: 'visual'; blockId: string }
 
-const VISUAL_MARKER_RE = /\[\[VISUAL_BLOCK:([a-zA-Z0-9_-]+)\]\]/g
-
 function splitByVisualMarkers(content: string): RenderPart[] {
   if (!content) return []
 
+  const re = /\[\[VISUAL_BLOCK:([a-zA-Z0-9_-]+)\]\]/g
   const parts: RenderPart[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null
 
-  while ((match = VISUAL_MARKER_RE.exec(content)) !== null) {
+  while ((match = re.exec(content)) !== null) {
     if (match.index > lastIndex) {
       const text = content.slice(lastIndex, match.index)
       if (text) {
@@ -39,10 +38,6 @@ function splitByVisualMarkers(content: string): RenderPart[] {
     if (text) {
       parts.push({ type: 'text', content: text })
     }
-  }
-
-  if (parts.length === 0 && content) {
-    parts.push({ type: 'text', content })
   }
 
   return parts

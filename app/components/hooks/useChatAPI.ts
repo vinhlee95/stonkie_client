@@ -66,7 +66,6 @@ export const useChatAPI = (
       let relatedQuestions: string[] = []
       let grounds: AnswerGround[] = []
       let visualBlocks: VisualBlock[] = []
-      let visualOrder: string[] = []
       let buffer = ''
 
       const upsertVisualBlock = (
@@ -127,19 +126,16 @@ export const useChatAPI = (
             isThinkingRef.current = false
           }
 
-          const body = (parsedChunk.body || {}) as { block_id?: string; lang?: VisualLang }
+          const body = (parsedChunk.body || {}) as { block_id?: string; lang?: string }
           if (!body.block_id || !body.lang) return
+          if (!(['svg', 'html'] as string[]).includes(body.lang)) return
 
           upsertVisualBlock(body.block_id, {
             blockId: body.block_id,
-            lang: body.lang,
+            lang: body.lang as VisualLang,
             status: 'streaming',
             content: '',
           })
-
-          if (!visualOrder.includes(body.block_id)) {
-            visualOrder = [...visualOrder, body.block_id]
-          }
 
           const markerToken = `[[VISUAL_BLOCK:${body.block_id}]]`
           if (!accumulatedContent.includes(markerToken)) {
@@ -149,7 +145,6 @@ export const useChatAPI = (
           updateThread(threadId, {
             answer: accumulatedContent,
             visualBlocks,
-            visualOrder,
           })
           return
         }
@@ -166,36 +161,27 @@ export const useChatAPI = (
             lang: existing?.lang || 'html',
           })
 
-          updateThread(threadId, {
-            visualBlocks,
-            visualOrder,
-          })
+          updateThread(threadId, { visualBlocks })
           return
         }
 
         if (parsedChunk.type === 'answer_visual_done') {
           const body = (parsedChunk.body || {}) as {
             block_id?: string
-            lang?: VisualLang
+            lang?: string
             content?: string
           }
           if (!body.block_id || !body.lang) return
+          if (!(['svg', 'html'] as string[]).includes(body.lang)) return
 
           upsertVisualBlock(body.block_id, {
             blockId: body.block_id,
-            lang: body.lang,
+            lang: body.lang as VisualLang,
             content: body.content || '',
             status: 'done',
           })
 
-          if (!visualOrder.includes(body.block_id)) {
-            visualOrder = [...visualOrder, body.block_id]
-          }
-
-          updateThread(threadId, {
-            visualBlocks,
-            visualOrder,
-          })
+          updateThread(threadId, { visualBlocks })
           return
         }
 
@@ -212,7 +198,7 @@ export const useChatAPI = (
             content: existing?.content || '',
           })
 
-          updateThread(threadId, { visualBlocks, visualOrder })
+          updateThread(threadId, { visualBlocks })
           return
         }
 
@@ -322,7 +308,6 @@ export const useChatAPI = (
           thoughts: [],
           relatedQuestions: [],
           visualBlocks: [],
-          visualOrder: [],
         })
         return
       }
@@ -333,7 +318,6 @@ export const useChatAPI = (
         thoughts: [],
         relatedQuestions: [],
         visualBlocks: [],
-        visualOrder: [],
       })
     } finally {
       setIsLoading(false)
