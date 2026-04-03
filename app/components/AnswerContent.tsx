@@ -38,7 +38,7 @@ export default function AnswerContent({
         }
         return <HtmlIframe key={i} content={block.content} />
       })}
-      {pendingVisual && isStreaming && (
+      {pendingVisual && (
         <div className="my-4 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center text-sm text-gray-500">
           Rendering visual...
         </div>

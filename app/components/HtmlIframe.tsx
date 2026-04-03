@@ -22,9 +22,13 @@ function withResizeScript(html: string): string {
   // Report after load and on resize
   window.addEventListener('load', function() { setTimeout(postHeight, 100); });
   window.addEventListener('resize', postHeight);
-  // Also report on mutation (for Chart.js async rendering)
+  // Also report on mutation (for Chart.js async rendering), with debounce to avoid oscillation
   if (typeof MutationObserver !== 'undefined') {
-    new MutationObserver(postHeight).observe(document.body, { childList: true, subtree: true });
+    var mutationTimer;
+    new MutationObserver(function() {
+      clearTimeout(mutationTimer);
+      mutationTimer = setTimeout(postHeight, 50);
+    }).observe(document.body, { childList: true, subtree: true });
   }
   // Initial report
   setTimeout(postHeight, 50);
@@ -52,8 +56,8 @@ export default function HtmlIframe({ content }: HtmlIframeProps) {
         iframeRef.current &&
         event.source === iframeRef.current.contentWindow
       ) {
-        // Clamp between 100 and 600
-        setHeight(Math.min(600, Math.max(100, event.data.height)))
+        // Clamp between 100 and 800
+        setHeight(Math.min(800, Math.max(100, event.data.height)))
       }
     }
 

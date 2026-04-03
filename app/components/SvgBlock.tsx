@@ -1,20 +1,17 @@
 'use client'
 
 import { useMemo } from 'react'
+import DOMPurify from 'dompurify'
 
 interface SvgBlockProps {
   content: string
 }
 
-/** Strip <script> tags and on* event attributes from SVG for safety. */
-function sanitizeSvg(svg: string): string {
-  return svg
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, '')
-}
-
 export default function SvgBlock({ content }: SvgBlockProps) {
-  const sanitized = useMemo(() => sanitizeSvg(content), [content])
+  const sanitized = useMemo(
+    () => DOMPurify.sanitize(content, { USE_PROFILES: { svg: true } }),
+    [content],
+  )
 
   return (
     <div

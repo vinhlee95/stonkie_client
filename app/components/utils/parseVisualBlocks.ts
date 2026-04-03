@@ -38,7 +38,8 @@ export function parseVisualBlocks(raw: string, isStreaming: boolean = false): Pa
       const unclosedIdx = Math.max(lastSvgIdx, lastHtmlIdx)
 
       // Verify this isn't part of a complete fence by checking if there's a closing ``` after it
-      const afterOpen = raw.substring(unclosedIdx + 7) // skip past ```svg\n or ```html
+      // Find the end of the opening fence line (after the newline following the lang tag)
+      const afterOpen = raw.substring(raw.indexOf('\n', unclosedIdx) + 1)
       // Find first ``` that's on its own line (closing fence)
       const closingMatch = afterOpen.match(/^([\s\S]*?)```(?:\s*$|\n)/m)
 
