@@ -22,8 +22,8 @@ export default function AnswerContent({
     [content, isStreaming],
   )
 
-  // If only text blocks, render as single MarkdownContent for consistency
-  if (blocks.length === 1 && blocks[0].type === 'text') {
+  // If only text blocks and no pending visual, render as single MarkdownContent for consistency
+  if (blocks.length === 1 && blocks[0].type === 'text' && !pendingVisual) {
     return <MarkdownContent content={blocks[0].content} smallSize={smallSize} />
   }
 
