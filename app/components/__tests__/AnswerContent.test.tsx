@@ -1,6 +1,7 @@
 import { render, screen } from '@/tests/test-utils'
 import { vi, describe, it, expect } from 'vitest'
 import AnswerContent from '../AnswerContent'
+import { VisualBlock } from '../hooks/useChatState'
 
 vi.mock('dompurify', () => ({
   default: { sanitize: (_: string, __: unknown) => _ },
@@ -25,37 +26,47 @@ describe('AnswerContent', () => {
     expect(screen.queryByTestId('svg-block')).not.toBeInTheDocument()
   })
 
-  it('renders SVG block', () => {
-    const content = 'Before\n\n```svg\n<svg></svg>\n```\n\nAfter'
-    render(<AnswerContent content={content} />)
+  it('renders SVG block when marker is completed', () => {
+    const content = 'Before\n\n[[VISUAL_BLOCK:vis_1]]\n\nAfter'
+    const visualBlocks: VisualBlock[] = [
+      { blockId: 'vis_1', lang: 'svg', content: '<svg></svg>', status: 'done' },
+    ]
+    render(<AnswerContent content={content} visualBlocks={visualBlocks} />)
     expect(screen.getByTestId('svg-block')).toBeInTheDocument()
     expect(screen.getAllByTestId('markdown')).toHaveLength(2)
   })
 
-  it('renders HTML iframe', () => {
-    const content = 'Intro\n\n```html\n<div>chart</div>\n```'
-    render(<AnswerContent content={content} />)
+  it('renders HTML iframe when marker is completed', () => {
+    const content = 'Intro\n\n[[VISUAL_BLOCK:vis_1]]'
+    const visualBlocks: VisualBlock[] = [
+      { blockId: 'vis_1', lang: 'html', content: '<div>chart</div>', status: 'done' },
+    ]
+    render(<AnswerContent content={content} visualBlocks={visualBlocks} />)
     expect(screen.getByTestId('html-iframe')).toBeInTheDocument()
   })
 
-  it('shows loading skeleton when text precedes a streaming visual', () => {
-    // Text before an unclosed html fence — fast-path must NOT fire
-    const content = 'Here is the chart:\n\n```html\n<div>partial'
-    render(<AnswerContent content={content} isStreaming={true} />)
+  it('shows loading skeleton when visual block is still streaming', () => {
+    const content = 'Here is the chart:\n\n[[VISUAL_BLOCK:vis_1]]'
+    const visualBlocks: VisualBlock[] = [
+      { blockId: 'vis_1', lang: 'html', content: '<div>partial', status: 'streaming' },
+    ]
+    render(<AnswerContent content={content} visualBlocks={visualBlocks} />)
     expect(screen.getByText('Rendering visual...')).toBeInTheDocument()
-    // The preceding text is still rendered
     expect(screen.getByTestId('markdown')).toBeInTheDocument()
   })
 
-  it('does NOT show skeleton for plain text with no pending visual', () => {
-    render(<AnswerContent content="Just text" isStreaming={true} />)
-    expect(screen.queryByText('Rendering visual...')).not.toBeInTheDocument()
-  })
-
-  it('does NOT show skeleton after streaming completes', () => {
-    const content = 'Here is the chart:\n\n```html\n<div>complete</div>\n```'
-    render(<AnswerContent content={content} isStreaming={false} />)
-    expect(screen.queryByText('Rendering visual...')).not.toBeInTheDocument()
-    expect(screen.getByTestId('html-iframe')).toBeInTheDocument()
+  it('shows visual error message when block fails', () => {
+    const content = '[[VISUAL_BLOCK:vis_1]]'
+    const visualBlocks: VisualBlock[] = [
+      {
+        blockId: 'vis_1',
+        lang: 'html',
+        content: '',
+        status: 'error',
+        errorMessage: 'Could not render chart.',
+      },
+    ]
+    render(<AnswerContent content={content} visualBlocks={visualBlocks} />)
+    expect(screen.getByText('Could not render chart.')).toBeInTheDocument()
   })
 })

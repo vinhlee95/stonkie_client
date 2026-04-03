@@ -1,48 +1,102 @@
 'use client'
 
-import { useMemo } from 'react'
 import MarkdownContent from './MarkdownContent'
 import SvgBlock from './SvgBlock'
 import HtmlIframe from './HtmlIframe'
-import { parseVisualBlocks } from './utils/parseVisualBlocks'
+import { VisualBlock } from './hooks/useChatState'
 
 interface AnswerContentProps {
   content: string
-  isStreaming?: boolean
+  visualBlocks?: VisualBlock[]
   smallSize?: boolean
+}
+
+type RenderPart = { type: 'text'; content: string } | { type: 'visual'; blockId: string }
+
+const VISUAL_MARKER_RE = /\[\[VISUAL_BLOCK:([a-zA-Z0-9_-]+)\]\]/g
+
+function splitByVisualMarkers(content: string): RenderPart[] {
+  if (!content) return []
+
+  const parts: RenderPart[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+
+  while ((match = VISUAL_MARKER_RE.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      const text = content.slice(lastIndex, match.index)
+      if (text) {
+        parts.push({ type: 'text', content: text })
+      }
+    }
+
+    parts.push({ type: 'visual', blockId: match[1] })
+    lastIndex = match.index + match[0].length
+  }
+
+  if (lastIndex < content.length) {
+    const text = content.slice(lastIndex)
+    if (text) {
+      parts.push({ type: 'text', content: text })
+    }
+  }
+
+  if (parts.length === 0 && content) {
+    parts.push({ type: 'text', content })
+  }
+
+  return parts
 }
 
 export default function AnswerContent({
   content,
-  isStreaming = false,
+  visualBlocks = [],
   smallSize = false,
 }: AnswerContentProps) {
-  const { blocks, pendingVisual } = useMemo(
-    () => parseVisualBlocks(content, isStreaming),
-    [content, isStreaming],
-  )
+  const parts = splitByVisualMarkers(content)
+  const blockMap = new Map(visualBlocks.map((block) => [block.blockId, block]))
 
-  // If only text blocks and no pending visual, render as single MarkdownContent for consistency
-  if (blocks.length === 1 && blocks[0].type === 'text' && !pendingVisual) {
-    return <MarkdownContent content={blocks[0].content} smallSize={smallSize} />
+  // Fast path for simple text-only responses
+  if (!content.includes('[[VISUAL_BLOCK:')) {
+    return <MarkdownContent content={content} smallSize={smallSize} />
   }
 
   return (
     <div>
-      {blocks.map((block, i) => {
-        if (block.type === 'text') {
-          return <MarkdownContent key={i} content={block.content} smallSize={smallSize} />
+      {parts.map((part, i) => {
+        if (part.type === 'text') {
+          return <MarkdownContent key={`text-${i}`} content={part.content} smallSize={smallSize} />
         }
-        if (block.lang === 'svg') {
-          return <SvgBlock key={i} content={block.content} />
+
+        const visual = blockMap.get(part.blockId)
+        if (!visual || visual.status === 'streaming') {
+          return (
+            <div
+              key={`visual-${part.blockId}`}
+              className="my-4 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center text-sm text-gray-500"
+            >
+              Rendering visual...
+            </div>
+          )
         }
-        return <HtmlIframe key={i} content={block.content} />
+
+        if (visual.status === 'error') {
+          return (
+            <div
+              key={`visual-${part.blockId}`}
+              className="my-4 rounded-lg border border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300 px-4 py-3 text-sm"
+            >
+              {visual.errorMessage || 'Failed to render visual content.'}
+            </div>
+          )
+        }
+
+        if (visual.lang === 'svg') {
+          return <SvgBlock key={`visual-${part.blockId}`} content={visual.content} />
+        }
+
+        return <HtmlIframe key={`visual-${part.blockId}`} content={visual.content} />
       })}
-      {pendingVisual && (
-        <div className="my-4 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse flex items-center justify-center text-sm text-gray-500">
-          Rendering visual...
-        </div>
-      )}
     </div>
   )
 }

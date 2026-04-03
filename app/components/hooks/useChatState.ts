@@ -11,6 +11,14 @@ export interface AnswerSource {
   paragraphIndices?: number[]
 }
 
+export interface VisualBlock {
+  blockId: string
+  lang: 'html' | 'svg'
+  content: string
+  status: 'streaming' | 'done' | 'error'
+  errorMessage?: string
+}
+
 export interface Attachment {
   title: string
   url: string
@@ -30,6 +38,8 @@ export interface NormalThread {
   relatedQuestions: string[]
   grounds: AnswerGround[]
   sources: AnswerSource[]
+  visualBlocks: VisualBlock[]
+  visualOrder: string[]
   modelName: string | undefined
   attachment: Attachment | undefined
 }
@@ -221,6 +231,8 @@ export const useChatState = (ticker: string | undefined) => {
       relatedQuestions: [],
       grounds: [],
       sources: [],
+      visualBlocks: [],
+      visualOrder: [],
       modelName: undefined,
       attachment: undefined,
     }
@@ -248,6 +260,8 @@ export const useChatState = (ticker: string | undefined) => {
             relatedQuestions: updates.relatedQuestions || [],
             grounds: (updates as Partial<NormalThread>).grounds || [],
             sources: (updates as Partial<NormalThread>).sources || [],
+            visualBlocks: (updates as Partial<NormalThread>).visualBlocks || [],
+            visualOrder: (updates as Partial<NormalThread>).visualOrder || [],
             modelName: (updates as Partial<NormalThread>).modelName || undefined,
             attachment: (updates as Partial<NormalThread>).attachment || undefined,
           }
