@@ -1,6 +1,17 @@
 import { useRef, useState } from 'react'
-import { AnswerGround, AnswerSource, Thread } from './useChatState'
+import { AnswerGround, AnswerSource, Thread, VisualBlock } from './useChatState'
 import { chatService } from '../services/chatService'
+
+type VisualLang = 'html' | 'svg'
+
+type StreamChunk = {
+  type: string
+  body?: unknown
+  url?: string
+  title?: string
+}
+
+const visualMarker = (blockId: string) => `\n\n[[VISUAL_BLOCK:${blockId}]]\n\n`
 
 export const useChatAPI = (
   ticker: string | undefined,
@@ -54,7 +65,211 @@ export const useChatAPI = (
       let thoughts: string[] = []
       let relatedQuestions: string[] = []
       let grounds: AnswerGround[] = []
+      let visualBlocks: VisualBlock[] = []
       let buffer = ''
+
+      const upsertVisualBlock = (
+        blockId: string,
+        updates: Partial<VisualBlock> & Pick<VisualBlock, 'blockId'>,
+      ) => {
+        const existingIndex = visualBlocks.findIndex((b) => b.blockId === blockId)
+        if (existingIndex === -1) {
+          const next: VisualBlock = {
+            blockId,
+            lang: (updates.lang as VisualLang) || 'html',
+            content: updates.content || '',
+            status: updates.status || 'streaming',
+            errorMessage: updates.errorMessage,
+          }
+          visualBlocks = [...visualBlocks, next]
+          return
+        }
+
+        const existing = visualBlocks[existingIndex]
+        const merged: VisualBlock = {
+          ...existing,
+          ...updates,
+          blockId,
+          lang: (updates.lang as VisualLang) || existing.lang,
+        }
+        visualBlocks = [
+          ...visualBlocks.slice(0, existingIndex),
+          merged,
+          ...visualBlocks.slice(existingIndex + 1),
+        ]
+      }
+
+      const handleParsedChunk = (parsedChunk: StreamChunk) => {
+        if (parsedChunk.type === 'conversation') {
+          // Handle conversation event - store conversationId
+          const body = (parsedChunk.body || {}) as { conversationId?: string }
+          const newConversationId = body.conversationId || null
+          if (newConversationId) {
+            setConversationId(newConversationId)
+            // Record activity when conversation is established
+            recordActivity()
+          }
+          return
+        }
+
+        if (parsedChunk.type === 'answer') {
+          if (isThinkingRef.current) {
+            isThinkingRef.current = false
+          }
+          accumulatedContent += String(parsedChunk.body || '')
+          updateThread(threadId, { answer: accumulatedContent })
+          return
+        }
+
+        if (parsedChunk.type === 'answer_visual_start') {
+          if (isThinkingRef.current) {
+            isThinkingRef.current = false
+          }
+
+          const body = (parsedChunk.body || {}) as { block_id?: string; lang?: string }
+          if (!body.block_id || !body.lang) return
+          if (!(['svg', 'html'] as string[]).includes(body.lang)) return
+
+          upsertVisualBlock(body.block_id, {
+            blockId: body.block_id,
+            lang: body.lang as VisualLang,
+            status: 'streaming',
+            content: '',
+          })
+
+          const markerToken = `[[VISUAL_BLOCK:${body.block_id}]]`
+          if (!accumulatedContent.includes(markerToken)) {
+            accumulatedContent += visualMarker(body.block_id)
+          }
+
+          updateThread(threadId, {
+            answer: accumulatedContent,
+            visualBlocks,
+          })
+          return
+        }
+
+        if (parsedChunk.type === 'answer_visual_delta') {
+          const body = (parsedChunk.body || {}) as { block_id?: string; delta?: string }
+          if (!body.block_id) return
+
+          const existing = visualBlocks.find((b) => b.blockId === body.block_id)
+          upsertVisualBlock(body.block_id, {
+            blockId: body.block_id,
+            status: existing?.status || 'streaming',
+            content: `${existing?.content || ''}${body.delta || ''}`,
+            lang: existing?.lang || 'html',
+          })
+
+          updateThread(threadId, { visualBlocks })
+          return
+        }
+
+        if (parsedChunk.type === 'answer_visual_done') {
+          const body = (parsedChunk.body || {}) as {
+            block_id?: string
+            lang?: string
+            content?: string
+          }
+          if (!body.block_id || !body.lang) return
+          if (!(['svg', 'html'] as string[]).includes(body.lang)) return
+
+          upsertVisualBlock(body.block_id, {
+            blockId: body.block_id,
+            lang: body.lang as VisualLang,
+            content: body.content || '',
+            status: 'done',
+          })
+
+          updateThread(threadId, { visualBlocks })
+          return
+        }
+
+        if (parsedChunk.type === 'answer_visual_error') {
+          const body = (parsedChunk.body || {}) as { block_id?: string; message?: string }
+          if (!body.block_id) return
+
+          const existing = visualBlocks.find((b) => b.blockId === body.block_id)
+          upsertVisualBlock(body.block_id, {
+            blockId: body.block_id,
+            status: 'error',
+            errorMessage: body.message || 'Failed to render visual block.',
+            lang: existing?.lang || 'html',
+            content: existing?.content || '',
+          })
+
+          updateThread(threadId, { visualBlocks })
+          return
+        }
+
+        if (parsedChunk.type === 'thinking_status') {
+          if (!isThinkingRef.current) {
+            isThinkingRef.current = true
+          }
+          thoughts = [...thoughts, String(parsedChunk.body || '')]
+          updateThread(threadId, { thoughts })
+          return
+        }
+
+        if (parsedChunk.type === 'related_question') {
+          relatedQuestions = [...relatedQuestions, String(parsedChunk.body || '')]
+          updateThread(threadId, { relatedQuestions })
+          return
+        }
+
+        if (parsedChunk.type === 'google_search_ground') {
+          grounds = [
+            ...grounds,
+            { body: String(parsedChunk.body || ''), url: String(parsedChunk.url || '') },
+          ]
+          updateThread(threadId, { grounds })
+          return
+        }
+
+        if (parsedChunk.type === 'sources') {
+          if (Array.isArray(parsedChunk.body)) {
+            const links = parsedChunk.body
+              .map((s: { name: string; url?: string }) =>
+                s.url ? `[${s.name}](${s.url})` : s.name,
+              )
+              .join(' ')
+            if (links) {
+              // Trim trailing newlines so links render inline with paragraph
+              const trimmed = accumulatedContent.replace(/\n+$/, '')
+              accumulatedContent = trimmed + ' ' + links + '\n\n'
+              updateThread(threadId, { answer: accumulatedContent })
+            }
+          }
+          return
+        }
+
+        if (parsedChunk.type === 'sources_grouped') {
+          const body = (parsedChunk.body || {}) as {
+            sources?: { name: string; url?: string; paragraph_indices?: number[] }[]
+          }
+          const groupedSources: AnswerSource[] = (body.sources || []).map((s) => ({
+            name: s.name,
+            url: s.url,
+            paragraphIndices: s.paragraph_indices,
+          }))
+          updateThread(threadId, { sources: groupedSources })
+          return
+        }
+
+        if (parsedChunk.type === 'model_used') {
+          updateThread(threadId, { modelName: String(parsedChunk.body || '') })
+          return
+        }
+
+        if (parsedChunk.type === 'attachment_url') {
+          updateThread(threadId, {
+            attachment: {
+              title: String(parsedChunk.title || 'Attachment'),
+              url: String(parsedChunk.body || ''),
+            },
+          })
+        }
+      }
 
       while (true) {
         const { value, done } = await reader.read()
@@ -69,66 +284,8 @@ export const useChatAPI = (
           const trimmed = line.trim()
           if (!trimmed) continue
           try {
-            const parsedChunk = JSON.parse(trimmed)
-            if (parsedChunk.type === 'conversation') {
-              // Handle conversation event - store conversationId
-              const newConversationId = parsedChunk.body?.conversationId || null
-              if (newConversationId) {
-                setConversationId(newConversationId)
-                // Record activity when conversation is established
-                recordActivity()
-              }
-            } else if (parsedChunk.type === 'answer') {
-              if (isThinkingRef.current) {
-                isThinkingRef.current = false
-              }
-              accumulatedContent += parsedChunk.body
-              updateThread(threadId, { answer: accumulatedContent })
-            } else if (parsedChunk.type === 'thinking_status') {
-              if (!isThinkingRef.current) {
-                isThinkingRef.current = true
-              }
-              thoughts = [...thoughts, parsedChunk.body]
-              updateThread(threadId, { thoughts })
-            } else if (parsedChunk.type === 'related_question') {
-              relatedQuestions = [...relatedQuestions, parsedChunk.body]
-              updateThread(threadId, { relatedQuestions })
-            } else if (parsedChunk.type === 'google_search_ground') {
-              grounds = [...grounds, { body: parsedChunk.body, url: parsedChunk.url }]
-              updateThread(threadId, { grounds })
-            } else if (parsedChunk.type === 'sources') {
-              if (Array.isArray(parsedChunk.body)) {
-                const links = parsedChunk.body
-                  .map((s: { name: string; url?: string }) =>
-                    s.url ? `[${s.name}](${s.url})` : s.name,
-                  )
-                  .join(' ')
-                if (links) {
-                  // Trim trailing newlines so links render inline with paragraph
-                  const trimmed = accumulatedContent.replace(/\n+$/, '')
-                  accumulatedContent = trimmed + ' ' + links + '\n\n'
-                  updateThread(threadId, { answer: accumulatedContent })
-                }
-              }
-            } else if (parsedChunk.type === 'sources_grouped') {
-              const groupedSources: AnswerSource[] = (parsedChunk.body?.sources || []).map(
-                (s: { name: string; url?: string; paragraph_indices?: number[] }) => ({
-                  name: s.name,
-                  url: s.url,
-                  paragraphIndices: s.paragraph_indices,
-                }),
-              )
-              updateThread(threadId, { sources: groupedSources })
-            } else if (parsedChunk.type === 'model_used') {
-              updateThread(threadId, { modelName: parsedChunk.body })
-            } else if (parsedChunk.type === 'attachment_url') {
-              updateThread(threadId, {
-                attachment: {
-                  title: parsedChunk.title || 'Attachment',
-                  url: parsedChunk.body,
-                },
-              })
-            }
+            const parsedChunk = JSON.parse(trimmed) as StreamChunk
+            handleParsedChunk(parsedChunk)
           } catch (e) {
             console.error('Error parsing chunk:', e)
           }
@@ -138,21 +295,8 @@ export const useChatAPI = (
       // Process any remaining buffer
       if (buffer.trim()) {
         try {
-          const parsedChunk = JSON.parse(buffer.trim())
-          if (parsedChunk.type === 'sources' && Array.isArray(parsedChunk.body)) {
-            const links = parsedChunk.body
-              .map((s: { name: string; url?: string }) =>
-                s.url ? `[${s.name}](${s.url})` : s.name,
-              )
-              .join(' ')
-            if (links) {
-              const trimmed = accumulatedContent.replace(/\n+$/, '')
-              accumulatedContent = trimmed + ' ' + links + '\n\n'
-              updateThread(threadId, { answer: accumulatedContent })
-            }
-          } else if (parsedChunk.type === 'model_used') {
-            updateThread(threadId, { modelName: parsedChunk.body })
-          }
+          const parsedChunk = JSON.parse(buffer.trim()) as StreamChunk
+          handleParsedChunk(parsedChunk)
         } catch (e) {
           console.error('Error parsing remaining buffer:', e)
         }
@@ -163,6 +307,7 @@ export const useChatAPI = (
           answer: 'Request cancelled.',
           thoughts: [],
           relatedQuestions: [],
+          visualBlocks: [],
         })
         return
       }
@@ -172,6 +317,7 @@ export const useChatAPI = (
         answer: 'Sorry, I encountered an error analyzing the data.',
         thoughts: [],
         relatedQuestions: [],
+        visualBlocks: [],
       })
     } finally {
       setIsLoading(false)

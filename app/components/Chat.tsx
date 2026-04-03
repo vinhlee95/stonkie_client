@@ -120,8 +120,8 @@ const ThreadView: React.FC<ThreadViewProps> = ({
         </div>
       )}
       {/* Only show answer for normal threads */}
-      {isNormalThread(thread) && thread.answer && (
-        <AnswerContent content={thread.answer} isStreaming={isLastThread && isThinking} />
+      {isNormalThread(thread) && (thread.answer || thread.visualBlocks.length > 0) && (
+        <AnswerContent content={thread.answer || ''} visualBlocks={thread.visualBlocks} />
       )}
 
       {/* Show sources (grouped citations from answer) */}
