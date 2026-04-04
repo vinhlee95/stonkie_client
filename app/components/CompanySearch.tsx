@@ -91,7 +91,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({
         const results = data.result
           .filter((match: FinnhubMatch) => match.type === 'Common Stock')
           .map((match: FinnhubMatch) => ({
-            symbol: match.symbol,
+            symbol: match.displaySymbol,
             name: match.description,
           }))
         setSearchResults(results)

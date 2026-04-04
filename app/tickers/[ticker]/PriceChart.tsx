@@ -16,7 +16,7 @@ function toTradingViewSymbol(ticker: string): string {
     console.warn(`[PriceChart] Unmapped exchange suffix: "${suffix}" for ticker "${ticker}"`)
     return ticker
   }
-  return `${exchange}:${ticker.slice(0, dotIndex)}`
+  return `${exchange}:${ticker.slice(0, dotIndex).replace(/-/g, '_')}`
 }
 
 function TradingViewWidget({ ticker }: { ticker: string }) {
