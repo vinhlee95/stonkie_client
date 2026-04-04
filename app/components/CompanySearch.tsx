@@ -9,13 +9,6 @@ interface SearchResult {
   logo_url?: string
 }
 
-interface FinnhubMatch {
-  description: string
-  displaySymbol: string
-  symbol: string
-  type: string
-}
-
 interface CompanySearchProps {
   ticker: string
   onTickerChange: (ticker: string) => void
@@ -78,25 +71,13 @@ const CompanySearch: React.FC<CompanySearchProps> = ({
 
     setSearchLoading(true)
     try {
-      // TODO: move this to server side
-      const params = new URLSearchParams({
-        q: query,
-        token: process.env.NEXT_PUBLIC_FINNHUB_API_KEY ?? '',
-      })
-      const response = await fetch(`https://finnhub.io/api/v1/search?${params}`)
-      const data = await response.json()
+      const params = new URLSearchParams({ q: query })
+      const response = await fetch(`/api/tickers?${params}`)
+      if (!response.ok) throw new Error(`Search failed: ${response.status}`)
+      const results: SearchResult[] = await response.json()
 
-      if (data.result) {
-        // Filter to only Common Stock type
-        const results = data.result
-          .filter((match: FinnhubMatch) => match.type === 'Common Stock')
-          .map((match: FinnhubMatch) => ({
-            symbol: match.displaySymbol,
-            name: match.description,
-          }))
-        setSearchResults(results)
-        setShowDropdown(results.length > 0)
-      }
+      setSearchResults(results)
+      setShowDropdown(results.length > 0)
     } catch (err) {
       console.error('Failed to fetch symbols:', err)
     } finally {
@@ -166,6 +147,8 @@ const CompanySearch: React.FC<CompanySearchProps> = ({
         e.preventDefault()
         if (selectedIndex >= 0 && selectedIndex < searchResults.length) {
           handleSelectOption(searchResults[selectedIndex])
+        } else if (searchResults.length > 0) {
+          handleSelectOption(searchResults[0])
         }
         break
       case 'Escape':
