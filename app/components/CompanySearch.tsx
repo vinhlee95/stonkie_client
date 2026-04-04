@@ -79,9 +79,11 @@ const CompanySearch: React.FC<CompanySearchProps> = ({
     setSearchLoading(true)
     try {
       // TODO: move this to server side
-      const response = await fetch(
-        `https://finnhub.io/api/v1/search?q=${query}&token=${process.env.NEXT_PUBLIC_FINNHUB_API_KEY}`,
-      )
+      const params = new URLSearchParams({
+        q: query,
+        token: process.env.NEXT_PUBLIC_FINNHUB_API_KEY ?? '',
+      })
+      const response = await fetch(`https://finnhub.io/api/v1/search?${params}`)
       const data = await response.json()
 
       if (data.result) {
