@@ -80,16 +80,14 @@ const CompanySearch: React.FC<CompanySearchProps> = ({
     try {
       // TODO: move this to server side
       const response = await fetch(
-        `https://finnhub.io/api/v1/search?q=${query}&exchange=US&token=${process.env.NEXT_PUBLIC_FINNHUB_API_KEY}`,
+        `https://finnhub.io/api/v1/search?q=${query}&token=${process.env.NEXT_PUBLIC_FINNHUB_API_KEY}`,
       )
       const data = await response.json()
 
       if (data.result) {
         // Filter to only Common Stock type
         const results = data.result
-          .filter(
-            (match: FinnhubMatch) => match.type === 'Common Stock' && !match.symbol.includes('.'), // Exclude non-US exchanges
-          )
+          .filter((match: FinnhubMatch) => match.type === 'Common Stock')
           .map((match: FinnhubMatch) => ({
             symbol: match.symbol,
             name: match.description,
@@ -190,7 +188,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Enter stock ticker or company name (e.g. AAPL or Apple). Only US tickers are supported now."
+              placeholder="Enter stock ticker or company name (e.g. AAPL or Apple)"
               className="w-full px-4 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-xl 
                          bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent

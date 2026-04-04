@@ -3,6 +3,19 @@
 import React, { useEffect, useRef, memo } from 'react'
 import { useDarkMode } from '../../components/hooks/useDarkMode'
 
+const EXCHANGE_MAP: Record<string, string> = {
+  HE: 'OMXHEX',
+}
+
+function toTradingViewSymbol(ticker: string): string {
+  const dotIndex = ticker.lastIndexOf('.')
+  if (dotIndex === -1) return ticker
+  const suffix = ticker.slice(dotIndex + 1)
+  const exchange = EXCHANGE_MAP[suffix]
+  if (!exchange) return ticker
+  return `${exchange}:${ticker.slice(0, dotIndex)}`
+}
+
 function TradingViewWidget({ ticker }: { ticker: string }) {
   const container = useRef<HTMLDivElement>(null)
   const hasCreatedChart = useRef<boolean>(false)
@@ -44,7 +57,7 @@ function TradingViewWidget({ ticker }: { ticker: string }) {
       fontFamily: '-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif',
       valuesTracking: '1',
       changeMode: 'price-and-percent',
-      symbols: [[ticker, `${ticker}|YTD`]],
+      symbols: [[toTradingViewSymbol(ticker), `${toTradingViewSymbol(ticker)}|YTD`]],
       dateRanges: ['12m|1D', '60m|1W', 'ytd|1D', 'all|1M'],
       fontSize: '10',
       headerFontSize: 'medium',
