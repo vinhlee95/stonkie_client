@@ -13,6 +13,7 @@ import {
   processAnnualStatements,
   processQuarterlyStatements,
 } from './chartUtils'
+import { getCurrencySymbol } from '@/utils/formatter'
 
 function getChartDataset(statements: Array<FinancialStatement>): ChartDataOutput {
   if (!statements || statements.length === 0) {
@@ -107,9 +108,11 @@ function getChartDataset(statements: Array<FinancialStatement>): ChartDataOutput
 export default async function GrowthChart({
   ticker: _ticker,
   incomeStatements: annualStatements,
+  currency,
 }: {
   ticker: string
   incomeStatements: AnnualFinancialStatement[]
+  currency: string
 }) {
   const URL = `${process.env.BACKEND_URL}/api/companies/${_ticker.toLowerCase()}/statements?report_type=income_statement&period_type=quarterly`
   const res = await fetch(URL, { next: { revalidate: 15 * 60 } })
@@ -126,6 +129,7 @@ export default async function GrowthChart({
       quaterlyDatasets={quarterlyData.datasets}
       quarterlyLabels={quarterlyData.labels}
       yAxisConfig={{ formatAsCurrency: true, showPercentage: true }}
+      currencySymbol={getCurrencySymbol(currency)}
     />
   )
 }

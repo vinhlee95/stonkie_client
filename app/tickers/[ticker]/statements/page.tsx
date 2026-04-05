@@ -1,7 +1,8 @@
 import { Chart } from '@/app/components/FinancialChart'
 import FinancialPeriodTabWithRouterChange from '@/app/components/FinancialPeriodTabWithRouterChange'
 import { isAnnualStatement, isQuarterlyStatement, type FinancialStatement } from '@/app/types'
-import { formatNumber } from '@/utils/formatter'
+import { formatNumber, getCurrencySymbol } from '@/utils/formatter'
+import { KeyStatsType } from '@/app/tickers/[ticker]/KeyStats'
 import { Metadata } from 'next'
 
 export async function generateMetadata({
@@ -57,8 +58,15 @@ export default async function IncomeStatement({
     ? `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=income_statement&period_type=${period}`
     : `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=income_statement`
 
-  const res = await fetch(URL, { next: { revalidate: 15 * 60 } })
+  const [res, keyStatsRes] = await Promise.all([
+    fetch(URL, { next: { revalidate: 15 * 60 } }),
+    fetch(`${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/key-stats`, {
+      next: { revalidate: 15 * 60 },
+    }),
+  ])
   const statements = (await res.json()) as FinancialStatement[]
+  const keyStats = keyStatsRes.ok ? ((await keyStatsRes.json()).data as KeyStatsType) : null
+  const currencySymbol = getCurrencySymbol(keyStats?.currency ?? 'USD')
 
   if (!statements || statements.length === 0) {
     return (
@@ -135,6 +143,7 @@ export default async function IncomeStatement({
           datasets={datasets}
           height={200}
           marginTop={0}
+          currencySymbol={currencySymbol}
         />
       </div>
     )

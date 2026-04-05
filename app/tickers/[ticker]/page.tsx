@@ -108,22 +108,39 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Suspense fallback={<p>Loading growth chart...</p>}>
           {incomeStatements && incomeStatements.length > 0 && (
-            <GrowthChart incomeStatements={incomeStatements} ticker={ticker} />
+            <GrowthChart
+              incomeStatements={incomeStatements}
+              ticker={ticker}
+              currency={keyStats?.currency ?? 'USD'}
+            />
           )}
         </Suspense>
         <Suspense fallback={<p>Loading EPS chart...</p>}>
           {incomeStatements && incomeStatements.length > 0 && (
-            <EpsChart incomeStatements={incomeStatements} ticker={ticker} />
+            <EpsChart
+              incomeStatements={incomeStatements}
+              ticker={ticker}
+              currency={keyStats?.currency ?? 'USD'}
+            />
           )}
         </Suspense>
         <Suspense fallback={<p>Loading Debt and coverage chart...</p>}>
           {balanceSheet && cashFlow && balanceSheet.length > 0 && cashFlow.length > 0 && (
-            <DebtCoverageChart balanceSheet={balanceSheet} cashFlow={cashFlow} ticker={ticker} />
+            <DebtCoverageChart
+              balanceSheet={balanceSheet}
+              cashFlow={cashFlow}
+              ticker={ticker}
+              currency={keyStats?.currency ?? 'USD'}
+            />
           )}
         </Suspense>
         <Suspense fallback={<p>Loading Debt to Equit chart...</p>}>
           {balanceSheet && balanceSheet.length > 0 && (
-            <DebtEquityChart balanceSheet={balanceSheet} ticker={ticker} />
+            <DebtEquityChart
+              balanceSheet={balanceSheet}
+              ticker={ticker}
+              currency={keyStats?.currency ?? 'USD'}
+            />
           )}
         </Suspense>
       </div>

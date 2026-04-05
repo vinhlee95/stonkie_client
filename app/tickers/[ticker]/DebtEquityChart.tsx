@@ -13,6 +13,7 @@ import {
   processAnnualStatements,
   processQuarterlyStatements,
 } from './chartUtils'
+import { getCurrencySymbol } from '@/utils/formatter'
 
 function getChartDataset(balanceSheets: Array<FinancialStatement>): ChartDataOutput {
   if (!balanceSheets || balanceSheets.length === 0) {
@@ -106,9 +107,11 @@ function getChartDataset(balanceSheets: Array<FinancialStatement>): ChartDataOut
 export default async function DebtEquityChart({
   balanceSheet: annualBalanceSheet,
   ticker,
+  currency,
 }: {
   balanceSheet: AnnualFinancialStatement[]
   ticker: string
+  currency: string
 }) {
   const quarterlyBalanceSheetResponse = await fetch(
     `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=balance_sheet&period_type=quarterly`,
@@ -131,6 +134,7 @@ export default async function DebtEquityChart({
       quaterlyDatasets={quarterlyData.datasets}
       quarterlyLabels={quarterlyData.labels}
       yAxisConfig={{ formatAsCurrency: true, showPercentage: true }}
+      currencySymbol={getCurrencySymbol(currency)}
     />
   )
 }
