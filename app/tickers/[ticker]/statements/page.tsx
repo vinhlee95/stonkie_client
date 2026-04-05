@@ -1,8 +1,12 @@
 import { Chart } from '@/app/components/FinancialChart'
 import FinancialPeriodTabWithRouterChange from '@/app/components/FinancialPeriodTabWithRouterChange'
-import { isAnnualStatement, isQuarterlyStatement, type FinancialStatement } from '@/app/types'
+import {
+  isAnnualStatement,
+  isQuarterlyStatement,
+  type FinancialStatement,
+  type StatementsResponse,
+} from '@/app/types'
 import { formatNumber, getCurrencySymbol } from '@/utils/formatter'
-import { KeyStatsType } from '@/app/tickers/[ticker]/KeyStats'
 import { Metadata } from 'next'
 
 export async function generateMetadata({
@@ -58,15 +62,9 @@ export default async function IncomeStatement({
     ? `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=income_statement&period_type=${period}`
     : `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=income_statement`
 
-  const [res, keyStatsRes] = await Promise.all([
-    fetch(URL, { next: { revalidate: 15 * 60 } }),
-    fetch(`${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/key-stats`, {
-      next: { revalidate: 15 * 60 },
-    }),
-  ])
-  const statements = (await res.json()) as FinancialStatement[]
-  const keyStats = keyStatsRes.ok ? ((await keyStatsRes.json()).data as KeyStatsType) : null
-  const currencySymbol = getCurrencySymbol(keyStats?.currency ?? 'USD')
+  const res = await fetch(URL, { next: { revalidate: 15 * 60 } })
+  const { currency, statements } = (await res.json()) as StatementsResponse
+  const currencySymbol = getCurrencySymbol(currency)
 
   if (!statements || statements.length === 0) {
     return (
@@ -153,7 +151,7 @@ export default async function IncomeStatement({
     <>
       <FinancialPeriodTabWithRouterChange />
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        All numbers are in billions of USD.
+        All numbers are in billions of {currency}.
       </p>
       {renderIncomeStatementChart()}
       <div className="overflow-x-auto">

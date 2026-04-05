@@ -137,31 +137,32 @@ export default async function DebtCoverageChart({
   balanceSheet: annualBalanceSheet,
   cashFlow: annualCashFlow,
   ticker,
-  currency,
 }: {
   balanceSheet: AnnualFinancialStatement[]
   cashFlow: AnnualFinancialStatement[]
   ticker: string
-  currency: string
 }) {
   // Fetch quarterly data
-  const quarterlyBalanceSheetResponse = await fetch(
-    `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=balance_sheet&period_type=quarterly`,
-    {
-      next: { revalidate: 15 * 60 },
-    },
-  )
-  const quarterlyCashFlowResponse = await fetch(
-    `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=cash_flow&period_type=quarterly`,
-    {
-      next: { revalidate: 15 * 60 },
-    },
-  )
+  const [quarterlyBalanceSheetResponse, quarterlyCashFlowResponse] = await Promise.all([
+    fetch(
+      `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=balance_sheet&period_type=quarterly`,
+      { next: { revalidate: 15 * 60 } },
+    ),
+    fetch(
+      `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=cash_flow&period_type=quarterly`,
+      { next: { revalidate: 15 * 60 } },
+    ),
+  ])
 
-  const quarterlyBalanceSheetData =
-    (await quarterlyBalanceSheetResponse.json()) as QuarterlyFinancialStatement[]
-  const quarterlyCashFlowData =
-    (await quarterlyCashFlowResponse.json()) as QuarterlyFinancialStatement[]
+  const { currency, statements: quarterlyBalanceSheetData } =
+    (await quarterlyBalanceSheetResponse.json()) as {
+      currency: string
+      statements: QuarterlyFinancialStatement[]
+    }
+  const { statements: quarterlyCashFlowData } = (await quarterlyCashFlowResponse.json()) as {
+    currency: string
+    statements: QuarterlyFinancialStatement[]
+  }
 
   const annualData = getChartDataset(annualBalanceSheet, annualCashFlow)
   const quarterlyData = getChartDataset(quarterlyBalanceSheetData, quarterlyCashFlowData)
@@ -176,7 +177,7 @@ export default async function DebtCoverageChart({
       quaterlyDatasets={quarterlyData.datasets}
       quarterlyLabels={quarterlyData.labels}
       yAxisConfig={{ formatAsCurrency: true }}
-      currencySymbol={getCurrencySymbol(currency)}
+      currencySymbol={getCurrencySymbol(currency ?? 'USD')}
     />
   )
 }

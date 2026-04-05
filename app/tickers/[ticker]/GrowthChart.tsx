@@ -108,15 +108,16 @@ function getChartDataset(statements: Array<FinancialStatement>): ChartDataOutput
 export default async function GrowthChart({
   ticker: _ticker,
   incomeStatements: annualStatements,
-  currency,
 }: {
   ticker: string
   incomeStatements: AnnualFinancialStatement[]
-  currency: string
 }) {
   const URL = `${process.env.BACKEND_URL}/api/companies/${_ticker.toLowerCase()}/statements?report_type=income_statement&period_type=quarterly`
   const res = await fetch(URL, { next: { revalidate: 15 * 60 } })
-  const quarterlyStatements = (await res.json()) as QuarterlyFinancialStatement[]
+  const { currency, statements: quarterlyStatements } = (await res.json()) as {
+    currency: string
+    statements: QuarterlyFinancialStatement[]
+  }
 
   const annualData = getChartDataset(annualStatements)
   const quarterlyData = getChartDataset(quarterlyStatements)

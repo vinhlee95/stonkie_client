@@ -52,7 +52,7 @@ export default async function globalSetup(_config: FullConfig) {
     // Mock company statements
     if (req.url?.match(/\/api\/companies\/.*\/statements/)) {
       res.writeHead(200)
-      res.end(JSON.stringify([]))
+      res.end(JSON.stringify({ currency: 'USD', statements: [] }))
       return
     }
 

@@ -86,15 +86,16 @@ function getEpsChartDataset(statements: Array<FinancialStatement>): ChartDataOut
 export default async function EpsChart({
   ticker,
   incomeStatements: annualStatements,
-  currency,
 }: {
   ticker: string
   incomeStatements: AnnualFinancialStatement[]
-  currency: string
 }) {
   const URL = `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=income_statement&period_type=quarterly`
   const res = await fetch(URL, { next: { revalidate: 15 * 60 } })
-  const quarterlyStatements = (await res.json()) as QuarterlyFinancialStatement[]
+  const { currency, statements: quarterlyStatements } = (await res.json()) as {
+    currency: string
+    statements: QuarterlyFinancialStatement[]
+  }
 
   const annualData = getEpsChartDataset(annualStatements)
   const quarterlyData = getEpsChartDataset(quarterlyStatements)

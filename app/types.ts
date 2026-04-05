@@ -19,6 +19,17 @@ export type QuarterlyFinancialStatement = {
 
 export type FinancialStatement = AnnualFinancialStatement | QuarterlyFinancialStatement
 
+export type StatementsResponse = {
+  currency: string
+  statements: FinancialStatement[]
+}
+
+/** Aggregate `/statements` (no report_type): full company rows per period. */
+export type CompanyStatementsResponse = {
+  currency: string
+  statements: CompanyFinancialStatement[]
+}
+
 // Type guards
 export function isAnnualStatement(
   statement: FinancialStatement,

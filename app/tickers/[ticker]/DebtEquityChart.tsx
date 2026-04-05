@@ -107,11 +107,9 @@ function getChartDataset(balanceSheets: Array<FinancialStatement>): ChartDataOut
 export default async function DebtEquityChart({
   balanceSheet: annualBalanceSheet,
   ticker,
-  currency,
 }: {
   balanceSheet: AnnualFinancialStatement[]
   ticker: string
-  currency: string
 }) {
   const quarterlyBalanceSheetResponse = await fetch(
     `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=balance_sheet&period_type=quarterly`,
@@ -121,8 +119,11 @@ export default async function DebtEquityChart({
     console.error('Failed to fetch quarterly data')
     return null
   }
-  const quarterlyBalanceSheetData =
-    (await quarterlyBalanceSheetResponse.json()) as QuarterlyFinancialStatement[]
+  const { currency, statements: quarterlyBalanceSheetData } =
+    (await quarterlyBalanceSheetResponse.json()) as {
+      currency: string
+      statements: QuarterlyFinancialStatement[]
+    }
   const annualData = getChartDataset(annualBalanceSheet)
   const quarterlyData = getChartDataset(quarterlyBalanceSheetData)
   if (!annualData.datasets.length && !quarterlyData.datasets.length) return null

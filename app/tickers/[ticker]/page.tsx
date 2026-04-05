@@ -4,7 +4,7 @@ import GrowthChart from './GrowthChart'
 import EpsChart from './EpsChart'
 import DebtCoverageChart from './DebtCoverageChart'
 import DebtEquityChart from './DebtEquityChart'
-import { CompanyFinancialStatement } from '@/app/types'
+import { CompanyFinancialStatement, type CompanyStatementsResponse } from '@/app/types'
 import { Company } from '@/app/CompanyList'
 import PriceChart from './PriceChart'
 import CompanyInfo from './CompanyInfo'
@@ -57,10 +57,12 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
         next: { revalidate: 2 * 60 },
       },
     )
-    statements =
-      statementsResponse.status === 200
-        ? ((await statementsResponse.json()) as CompanyFinancialStatement[])
-        : null
+    if (statementsResponse.status === 200) {
+      const body = (await statementsResponse.json()) as CompanyStatementsResponse
+      statements = body.statements ?? []
+    } else {
+      statements = null
+    }
   } catch (error) {
     console.error(`Failed to fetch financial statements for ticker ${ticker}:`, error)
     // Backend unavailable, statements will be null
@@ -108,39 +110,22 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Suspense fallback={<p>Loading growth chart...</p>}>
           {incomeStatements && incomeStatements.length > 0 && (
-            <GrowthChart
-              incomeStatements={incomeStatements}
-              ticker={ticker}
-              currency={keyStats?.currency ?? 'USD'}
-            />
+            <GrowthChart incomeStatements={incomeStatements} ticker={ticker} />
           )}
         </Suspense>
         <Suspense fallback={<p>Loading EPS chart...</p>}>
           {incomeStatements && incomeStatements.length > 0 && (
-            <EpsChart
-              incomeStatements={incomeStatements}
-              ticker={ticker}
-              currency={keyStats?.currency ?? 'USD'}
-            />
+            <EpsChart incomeStatements={incomeStatements} ticker={ticker} />
           )}
         </Suspense>
         <Suspense fallback={<p>Loading Debt and coverage chart...</p>}>
           {balanceSheet && cashFlow && balanceSheet.length > 0 && cashFlow.length > 0 && (
-            <DebtCoverageChart
-              balanceSheet={balanceSheet}
-              cashFlow={cashFlow}
-              ticker={ticker}
-              currency={keyStats?.currency ?? 'USD'}
-            />
+            <DebtCoverageChart balanceSheet={balanceSheet} cashFlow={cashFlow} ticker={ticker} />
           )}
         </Suspense>
         <Suspense fallback={<p>Loading Debt to Equit chart...</p>}>
           {balanceSheet && balanceSheet.length > 0 && (
-            <DebtEquityChart
-              balanceSheet={balanceSheet}
-              ticker={ticker}
-              currency={keyStats?.currency ?? 'USD'}
-            />
+            <DebtEquityChart balanceSheet={balanceSheet} ticker={ticker} />
           )}
         </Suspense>
       </div>
