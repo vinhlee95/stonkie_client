@@ -20,7 +20,15 @@ type ContentItem = {
   source: string[]
 }
 
-export default function InsightReport({ ticker, slug }: { ticker: string; slug: string }) {
+export default function InsightReport({
+  ticker,
+  slug,
+  currencySymbol = '$',
+}: {
+  ticker: string
+  slug: string
+  currencySymbol?: string
+}) {
   const [contentItems, setContentItems] = useState<ContentItem[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const hasFetchedDetailedReport = useRef(false)
@@ -175,6 +183,7 @@ export default function InsightReport({ ticker, slug }: { ticker: string; slug: 
         yAxisFormatOptions={{
           decimals: 1,
         }}
+        currencySymbol={currencySymbol}
       />
     )
   }

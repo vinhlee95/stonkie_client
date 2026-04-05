@@ -12,6 +12,7 @@ import {
   processAnnualStatements,
   processQuarterlyStatements,
 } from './chartUtils'
+import { getCurrencySymbol } from '@/utils/formatter'
 
 // Helper function similar to getChartDataset in GrowthChart.tsx
 function getEpsChartDataset(statements: Array<FinancialStatement>): ChartDataOutput {
@@ -85,9 +86,11 @@ function getEpsChartDataset(statements: Array<FinancialStatement>): ChartDataOut
 export default async function EpsChart({
   ticker,
   incomeStatements: annualStatements,
+  currency,
 }: {
   ticker: string
   incomeStatements: AnnualFinancialStatement[]
+  currency: string
 }) {
   const URL = `${process.env.BACKEND_URL}/api/companies/${ticker.toLowerCase()}/statements?report_type=income_statement&period_type=quarterly`
   const res = await fetch(URL, { next: { revalidate: 15 * 60 } })
@@ -111,6 +114,7 @@ export default async function EpsChart({
       quaterlyDatasets={quarterlyData.datasets}
       quarterlyLabels={quarterlyData.labels}
       yAxisConfig={{ formatAsCurrency: true }}
+      currencySymbol={getCurrencySymbol(currency)}
     />
   )
 }

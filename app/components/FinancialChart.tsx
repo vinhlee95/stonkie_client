@@ -67,6 +67,7 @@ interface ChartProps {
     prefix?: string
     suffix?: string
   }
+  currencySymbol: string
   children?: React.ReactNode
 }
 
@@ -82,6 +83,7 @@ export const Chart: React.FC<ChartProps> = ({
   yAxisConfig = { formatAsCurrency: true, showPercentage: false },
   yAxisFormatType = 'currency',
   yAxisFormatOptions = { decimals: 1 },
+  currencySymbol,
   children,
 }) => {
   const chartData = {
@@ -103,13 +105,14 @@ export const Chart: React.FC<ChartProps> = ({
       return `${prefix}${value.toFixed(decimals)}${suffix}`
     }
 
+    const sym = currencySymbol
     const absValue = Math.abs(value)
     const formattedValue =
       absValue >= 1e9
-        ? `$${(absValue / 1e9).toFixed(decimals)}B`
+        ? `${sym}${(absValue / 1e9).toFixed(decimals)}B`
         : absValue >= 1e6
-          ? `$${(absValue / 1e6).toFixed(decimals)}M`
-          : `$${absValue}`
+          ? `${sym}${(absValue / 1e6).toFixed(decimals)}M`
+          : `${sym}${absValue}`
 
     return value < 0 ? `-${formattedValue}` : formattedValue
   }
@@ -243,6 +246,7 @@ export default function ChartWithPeriod({
   yAxisConfig = { formatAsCurrency: true, showPercentage: false },
   yAxisFormatType = 'currency',
   yAxisFormatOptions = { decimals: 1 },
+  currencySymbol,
 }: FinancialChartProps) {
   const [timePeriod, setTimePeriod] = React.useState<'Annual' | 'Quarterly'>('Annual')
   const router = useRouter()
@@ -274,6 +278,7 @@ export default function ChartWithPeriod({
       yAxisConfig={yAxisConfig}
       yAxisFormatType={yAxisFormatType}
       yAxisFormatOptions={yAxisFormatOptions}
+      currencySymbol={currencySymbol}
     >
       <ChartTitle title={title} onInsightButtonClick={onInsightButtonClick} />
       <FinancialPeriodTab selectedPeriod={timePeriod} onPeriodChange={setTimePeriod} />
