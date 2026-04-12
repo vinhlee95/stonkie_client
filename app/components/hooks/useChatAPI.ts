@@ -1,5 +1,12 @@
 import { useRef, useState } from 'react'
-import { AnswerGround, AnswerSource, Thread, VisualBlock } from './useChatState'
+import {
+  AnalysisPhase,
+  AnswerGround,
+  AnswerSource,
+  Thread,
+  ThoughtStep,
+  VisualBlock,
+} from './useChatState'
 import { chatService } from '../services/chatService'
 
 type VisualLang = 'html' | 'svg'
@@ -9,6 +16,9 @@ type StreamChunk = {
   body?: unknown
   url?: string
   title?: string
+  phase?: AnalysisPhase
+  step?: number
+  total_steps?: number
 }
 
 const visualMarker = (blockId: string) => `\n\n[[VISUAL_BLOCK:${blockId}]]\n\n`
@@ -62,7 +72,7 @@ export const useChatAPI = (
 
       const decoder = new TextDecoder()
       let accumulatedContent = ''
-      let thoughts: string[] = []
+      let thoughts: ThoughtStep[] = []
       let relatedQuestions: string[] = []
       let grounds: AnswerGround[] = []
       let visualBlocks: VisualBlock[] = []
@@ -203,10 +213,17 @@ export const useChatAPI = (
         }
 
         if (parsedChunk.type === 'thinking_status') {
+          if (!parsedChunk.phase || parsedChunk.step == null) return
           if (!isThinkingRef.current) {
             isThinkingRef.current = true
           }
-          thoughts = [...thoughts, String(parsedChunk.body || '')]
+          const thoughtStep: ThoughtStep = {
+            body: String(parsedChunk.body || ''),
+            phase: parsedChunk.phase,
+            step: parsedChunk.step,
+            totalSteps: parsedChunk.total_steps,
+          }
+          thoughts = [...thoughts, thoughtStep]
           updateThread(threadId, { thoughts })
           return
         }

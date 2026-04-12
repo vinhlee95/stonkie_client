@@ -24,6 +24,15 @@ export interface Attachment {
   url: string
 }
 
+export type AnalysisPhase = 'classify' | 'data_fetch' | 'search' | 'analyze' | 'enrich'
+
+export interface ThoughtStep {
+  body: string
+  phase: AnalysisPhase
+  step: number
+  totalSteps?: number
+}
+
 export interface FaqThread {
   id: string
   question: string
@@ -33,7 +42,7 @@ export interface FaqThread {
 export interface NormalThread {
   id: string
   question: string
-  thoughts: string[]
+  thoughts: ThoughtStep[]
   answer: string | null
   relatedQuestions: string[]
   grounds: AnswerGround[]

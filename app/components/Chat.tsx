@@ -113,10 +113,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
       {isNormalThread(thread) && (
         <div className="mb-4">
           {/* Only show thoughts bubble in the latest thread so that bubble from previous threads do not change */}
-          <ThoughtBubble
-            thought={thread.thoughts[thread.thoughts.length - 1]}
-            isThinking={isThinking && isLastThread}
-          />
+          <ThoughtBubble thoughts={thread.thoughts} isThinking={isThinking && isLastThread} />
         </div>
       )}
       {/* Only show answer for normal threads */}
