@@ -20,7 +20,7 @@ export function processStreamLine(
     body?: unknown
     url?: string
     title?: string
-    phase?: string
+    phase?: AnalysisPhase
     step?: number
     total_steps?: number
   },
@@ -38,11 +38,12 @@ export function processStreamLine(
       next.accumulatedContent += parsed.body as string
       break
     case 'thinking_status': {
+      if (!parsed.phase || parsed.step == null) break
       const thoughtStep: ThoughtStep = {
         body: String(parsed.body || ''),
-        phase: (parsed.phase as AnalysisPhase) || 'analyze',
-        step: parsed.step ?? state.thoughts.length + 1,
-        totalSteps: parsed.total_steps ?? undefined,
+        phase: parsed.phase,
+        step: parsed.step,
+        totalSteps: parsed.total_steps,
       }
       next.thoughts = [...state.thoughts, thoughtStep]
       break

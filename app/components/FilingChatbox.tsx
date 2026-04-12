@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useRef, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
-import { AnalysisPhase, ThoughtStep, useChatState } from './hooks/useChatState'
+import { ThoughtStep, useChatState } from './hooks/useChatState'
 import { useChatAPI } from './hooks/useChatAPI'
 import { FileText } from 'lucide-react'
 import { ChatboxUI } from './Chat'
@@ -124,14 +124,14 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
               const data = JSON.parse(jsonStr)
 
               if (data.type === 'thinking_status') {
+                if (!data.phase || data.step == null) continue
                 const thoughtStep: ThoughtStep = {
                   body: String(data.body || ''),
-                  phase: (data.phase as AnalysisPhase) || 'analyze',
-                  step: data.step ?? thoughts.length + 1,
-                  totalSteps: data.total_steps ?? undefined,
+                  phase: data.phase,
+                  step: data.step,
+                  totalSteps: data.total_steps,
                 }
                 thoughts = [...thoughts, thoughtStep]
-                // Update thoughts
                 updateThread(threadId, { thoughts })
               } else if (data.type === 'answer') {
                 isFetchingAnalysisRef.current = false

@@ -16,7 +16,7 @@ type StreamChunk = {
   body?: unknown
   url?: string
   title?: string
-  phase?: string
+  phase?: AnalysisPhase
   step?: number
   total_steps?: number
 }
@@ -213,14 +213,15 @@ export const useChatAPI = (
         }
 
         if (parsedChunk.type === 'thinking_status') {
+          if (!parsedChunk.phase || parsedChunk.step == null) return
           if (!isThinkingRef.current) {
             isThinkingRef.current = true
           }
           const thoughtStep: ThoughtStep = {
             body: String(parsedChunk.body || ''),
-            phase: (parsedChunk.phase as AnalysisPhase) || 'analyze',
-            step: parsedChunk.step ?? thoughts.length + 1,
-            totalSteps: parsedChunk.total_steps ?? undefined,
+            phase: parsedChunk.phase,
+            step: parsedChunk.step,
+            totalSteps: parsedChunk.total_steps,
           }
           thoughts = [...thoughts, thoughtStep]
           updateThread(threadId, { thoughts })
