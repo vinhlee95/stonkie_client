@@ -1,120 +1,101 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './Collapsible'
-import { ChevronDown, Sparkles } from 'lucide-react'
-import MarkdownContent from './MarkdownContent'
+import {
+  Brain,
+  CheckCircle2,
+  ChevronDown,
+  Database,
+  Globe,
+  ListPlus,
+  Loader2,
+  Sparkles,
+} from 'lucide-react'
+import { AnalysisPhase, ThoughtStep } from './hooks/useChatState'
+
+const phaseIcon: Record<AnalysisPhase, React.ElementType> = {
+  classify: Brain,
+  data_fetch: Database,
+  search: Globe,
+  analyze: Sparkles,
+  enrich: ListPlus,
+}
+
+function StepIcon({ phase, isActive }: { phase: AnalysisPhase; isActive: boolean }) {
+  const Icon = phaseIcon[phase] || Sparkles
+  return (
+    <Icon
+      className={`w-3.5 h-3.5 flex-shrink-0 ${
+        isActive
+          ? 'text-[var(--accent-hover)] dark:text-[var(--accent-hover-dark)]'
+          : 'text-gray-400 dark:text-gray-500'
+      }`}
+    />
+  )
+}
 
 export function ThoughtBubble({
-  thought,
+  thoughts,
   isThinking,
 }: {
-  thought: string | null
+  thoughts: ThoughtStep[]
   isThinking: boolean
 }) {
-  const [currentThought, setCurrentThought] = useState('')
   const [isOpen, setIsOpen] = useState(true)
-  const [completedThoughts, setCompletedThoughts] = useState<string[]>([])
-  const lastThoughtRef = useRef<string | null>(null)
-  const isTypingRef = useRef(false)
 
   useEffect(() => {
     setIsOpen(isThinking)
   }, [isThinking])
 
-  useEffect(() => {
-    if (!thought || thought === lastThoughtRef.current) {
-      return
-    }
+  if (thoughts.length === 0) return null
 
-    // If we're currently typing, wait for it to complete
-    if (isTypingRef.current) {
-      const checkInterval = setInterval(() => {
-        if (!isTypingRef.current) {
-          clearInterval(checkInterval)
-          startTypingThought(thought)
-        }
-      }, 100)
-      return () => clearInterval(checkInterval)
-    }
+  const lastThought = thoughts[thoughts.length - 1]
+  const totalSteps = lastThought.totalSteps
 
-    startTypingThought(thought)
-  }, [thought])
-
-  const startTypingThought = (thought: string) => {
-    isTypingRef.current = true
-    let charIndex = 0
-    setCurrentThought('')
-
-    const typeThought = () => {
-      if (!thought) return
-      if (charIndex < thought.length) {
-        setCurrentThought(thought.slice(0, charIndex + 1))
-        charIndex++
-        setTimeout(typeThought, 10)
-      } else {
-        // When done, add to completedThoughts and update lastThoughtRef
-        setCompletedThoughts((prev) => [...prev, thought])
-        lastThoughtRef.current = thought
-        setCurrentThought('')
-        isTypingRef.current = false
-      }
-    }
-    setTimeout(typeThought, 50)
-  }
+  const headerText = isThinking
+    ? totalSteps
+      ? `Thinking... step ${lastThought.step}/${totalSteps}`
+      : 'Thinking...'
+    : `Thought for ${thoughts.length} step${thoughts.length === 1 ? '' : 's'}`
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-4 rounded-lg">
-      <div className="relative">
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-          <CollapsibleTrigger className="flex items-center gap-2 text-[var(--accent-hover)] dark:text-[var(--accent-hover-dark)] hover:text-[var(--accent-active)] dark:hover:text-[var(--accent-active-dark)] transition-colors">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              <span className="text-sm">{isThinking ? 'AI is thinking...' : 'AI thoughts'}</span>
-              {isThinking && (
-                <div className="flex gap-1">
-                  <div
-                    className="w-1 h-1 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] rounded-full animate-bounce"
-                    style={{ animationDelay: '0ms' }}
-                  ></div>
-                  <div
-                    className="w-1 h-1 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] rounded-full animate-bounce"
-                    style={{ animationDelay: '150ms' }}
-                  />
-                  <div
-                    className="w-1 h-1 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] rounded-full animate-bounce"
-                    style={{ animationDelay: '300ms' }}
-                  ></div>
-                </div>
-              )}
-            </div>
-            <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-          </CollapsibleTrigger>
-
-          {completedThoughts && completedThoughts.length > 0 && (
-            <CollapsibleContent className="mt-3">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                <div className="space-y-2">
-                  {completedThoughts.map((t, index) => (
-                    <div
-                      key={index}
-                      className="text-sm text-gray-600 dark:text-gray-300 opacity-75"
-                    >
-                      <MarkdownContent content={t} smallSize />
-                    </div>
-                  ))}
-                  {currentThought && (
-                    <div className="text-sm text-[var(--accent-hover)] dark:text-[var(--accent-hover-dark)] flex items-center gap-2">
-                      <MarkdownContent content={currentThought} smallSize />
-                      <span className="w-2 h-4 bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)] animate-pulse"></span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CollapsibleContent>
+    <div className="text-sm">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors cursor-pointer">
+          {isThinking ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent-hover)] dark:text-[var(--accent-hover-dark)]" />
+          ) : (
+            <CheckCircle2 className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
           )}
-        </Collapsible>
-      </div>
+          <span>{headerText}</span>
+          <ChevronDown
+            className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          />
+        </CollapsibleTrigger>
+
+        <CollapsibleContent className="mt-2 ml-[7px] border-l border-gray-200 dark:border-gray-700 pl-3">
+          <div className="space-y-1">
+            {thoughts.map((thought, index) => {
+              const isLast = index === thoughts.length - 1
+              const isActive = isLast && isThinking
+              return (
+                <div
+                  key={index}
+                  className={`flex items-start gap-2 py-0.5 text-xs transition-opacity duration-300 ${
+                    isActive
+                      ? 'text-[var(--accent-hover)] dark:text-[var(--accent-hover-dark)]'
+                      : 'text-gray-400 dark:text-gray-500'
+                  }`}
+                >
+                  <StepIcon phase={thought.phase} isActive={isActive} />
+                  <span>{thought.body}</span>
+                </div>
+              )
+            })}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   )
 }

@@ -3,9 +3,11 @@
  * Returns updates to apply to the accumulated state.
  */
 
+import { AnalysisPhase, ThoughtStep } from '../hooks/useChatState'
+
 export interface StreamState {
   accumulatedContent: string
-  thoughts: string[]
+  thoughts: ThoughtStep[]
   relatedQuestions: string[]
   conversationId: string | null
   modelName: string | undefined
@@ -13,7 +15,15 @@ export interface StreamState {
 }
 
 export function processStreamLine(
-  parsed: { type: string; body?: unknown; url?: string; title?: string },
+  parsed: {
+    type: string
+    body?: unknown
+    url?: string
+    title?: string
+    phase?: string
+    step?: number
+    total_steps?: number
+  },
   state: StreamState,
 ): StreamState {
   const next = { ...state }
@@ -27,16 +37,24 @@ export function processStreamLine(
     case 'answer':
       next.accumulatedContent += parsed.body as string
       break
-    case 'thinking_status':
-      next.thoughts = [...state.thoughts, parsed.body as string]
+    case 'thinking_status': {
+      const thoughtStep: ThoughtStep = {
+        body: String(parsed.body || ''),
+        phase: (parsed.phase as AnalysisPhase) || 'analyze',
+        step: parsed.step ?? state.thoughts.length + 1,
+        totalSteps: parsed.total_steps ?? undefined,
+      }
+      next.thoughts = [...state.thoughts, thoughtStep]
       break
+    }
     case 'related_question':
       next.relatedQuestions = [...state.relatedQuestions, parsed.body as string]
       break
     case 'sources': {
       if (Array.isArray(parsed.body)) {
         const links = parsed.body
-          .map((s: { name: string; url?: string }) => (s.url ? `[${s.name}](${s.url})` : s.name))
+          .filter((s: { name: string; url?: string }) => Boolean(s.url))
+          .map((s: { name: string; url?: string }) => `[${s.name}](${s.url})`)
           .join(' ')
         if (links) {
           next.accumulatedContent += links + '\n'

@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useRef, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
-import { useChatState } from './hooks/useChatState'
+import { AnalysisPhase, ThoughtStep, useChatState } from './hooks/useChatState'
 import { useChatAPI } from './hooks/useChatAPI'
 import { FileText } from 'lucide-react'
 import { ChatboxUI } from './Chat'
@@ -90,7 +90,7 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
-      let thoughts: string[] = []
+      let thoughts: ThoughtStep[] = []
       const relatedQuestions: string[] = []
 
       while (true) {
@@ -124,7 +124,13 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
               const data = JSON.parse(jsonStr)
 
               if (data.type === 'thinking_status') {
-                thoughts = [...thoughts, data.body]
+                const thoughtStep: ThoughtStep = {
+                  body: String(data.body || ''),
+                  phase: (data.phase as AnalysisPhase) || 'analyze',
+                  step: data.step ?? thoughts.length + 1,
+                  totalSteps: data.total_steps ?? undefined,
+                }
+                thoughts = [...thoughts, thoughtStep]
                 // Update thoughts
                 updateThread(threadId, { thoughts })
               } else if (data.type === 'answer') {

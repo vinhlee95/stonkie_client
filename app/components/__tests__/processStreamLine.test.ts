@@ -2,13 +2,12 @@ import { describe, it, expect } from 'vitest'
 import { processStreamLine, StreamState } from '../utils/processStreamLine'
 
 const SAMPLE_STREAM = `{"type": "conversation", "body": {"conversationId": "0cfacf9d-b869-4aa4-a8cf-44c6c139d418"}}
-{"type": "thinking_status", "body": "Just a moment..."}
-{"type": "thinking_status", "body": "Using Google Search to get up-to-date information. This might take a bit longer, but it will help you get a better answer."}
-{"type": "thinking_status", "body": "Analyzing question to determine required data..."}
-{"type": "thinking_status", "body": "Identifying relevant financial periods..."}
-{"type": "thinking_status", "body": "Retrieving quarterly financial data for analysis..."}
+{"type": "thinking_status", "body": "Classifying your question...", "phase": "classify", "step": 1}
+{"type": "thinking_status", "body": "Searching the web for up-to-date data...", "phase": "search", "step": 2}
+{"type": "thinking_status", "body": "Determining which financial statements to pull...", "phase": "classify", "step": 3, "total_steps": 6}
+{"type": "thinking_status", "body": "Pulling NVDA quarterly reports...", "phase": "data_fetch", "step": 4, "total_steps": 6}
 {"type": "attachment_url", "title": "Quarterly 10Q report for the quarter ending on 7/31/2025", "body": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000209/nvda-20250727.htm"}
-{"type": "thinking_status", "body": "Analyzing data and preparing insights..."}
+{"type": "thinking_status", "body": "Generating analysis...", "phase": "analyze", "step": 5, "total_steps": 6}
 {"type": "answer", "body": "N"}
 {"type": "answer", "body": "VIDIA's latest quarterly report showcases continued robust financial performance, primarily driven by exceptional"}
 {"type": "answer", "body": " growth in its Data Center segment. The company achieved record revenues and demonstrated substantial year"}
@@ -55,7 +54,19 @@ describe('processStreamLine', () => {
     expect(state.conversationId).toBe('0cfacf9d-b869-4aa4-a8cf-44c6c139d418')
     expect(state.modelName).toBe('google/gemini-2.5-flash-lite:nitro')
     expect(state.relatedQuestions).toHaveLength(3)
-    expect(state.thoughts).toHaveLength(6)
+    expect(state.thoughts).toHaveLength(5)
+    expect(state.thoughts[0]).toEqual({
+      body: 'Classifying your question...',
+      phase: 'classify',
+      step: 1,
+      totalSteps: undefined,
+    })
+    expect(state.thoughts[4]).toEqual({
+      body: 'Generating analysis...',
+      phase: 'analyze',
+      step: 5,
+      totalSteps: 6,
+    })
     expect(state.attachment).toEqual({
       title: 'Quarterly 10Q report for the quarter ending on 7/31/2025',
       url: 'https://www.sec.gov/Archives/edgar/data/1045810/000104581025000209/nvda-20250727.htm',
