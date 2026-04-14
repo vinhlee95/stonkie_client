@@ -127,7 +127,10 @@ export default function MostViewedCompanies({ companies }: { companies: Company[
           })
           .filter((x): x is { key: string; top: number; ratio: number } => x !== null)
 
-        if (candidates.length === 0) return
+        if (candidates.length === 0) {
+          setActiveKey(ALL_SECTORS_KEY)
+          return
+        }
 
         candidates.sort((a, b) => {
           const da = Math.abs(a.top - 88)
