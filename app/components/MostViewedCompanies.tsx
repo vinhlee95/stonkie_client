@@ -62,6 +62,7 @@ export default function MostViewedCompanies({ companies }: { companies: Company[
   const sectionElementsRef = useRef<Record<string, HTMLElement | null>>({})
   const ignoreScrollSpyRef = useRef(false)
   const scrollSpyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const visibleSectionsRef = useRef<Set<string>>(new Set())
 
   const groups = useMemo(() => groupCompaniesBySector(companies), [companies])
 
@@ -116,27 +117,39 @@ export default function MostViewedCompanies({ companies }: { companies: Company[
       (entries) => {
         if (ignoreScrollSpyRef.current) return
 
-        const candidates = entries
-          .filter((e) => e.isIntersecting && e.target instanceof HTMLElement)
-          .map((e) => {
-            const el = e.target as HTMLElement
-            const key = el.dataset.sectorKey
-            if (!key) return null
-            const top = e.boundingClientRect.top
-            return { key, top, ratio: e.intersectionRatio }
-          })
-          .filter((x): x is { key: string; top: number; ratio: number } => x !== null)
+        // Update the set of currently visible sections
+        for (const e of entries) {
+          const key = (e.target as HTMLElement).dataset?.sectorKey
+          if (!key) continue
+          if (e.isIntersecting) {
+            visibleSectionsRef.current.add(key)
+          } else {
+            visibleSectionsRef.current.delete(key)
+          }
+        }
 
-        if (candidates.length === 0) {
+        if (visibleSectionsRef.current.size === 0) {
           setActiveKey(ALL_SECTORS_KEY)
           return
         }
+
+        // Pick the visible section closest to the sticky nav
+        const candidates = [...visibleSectionsRef.current]
+          .map((key) => {
+            const el = sectionElementsRef.current[key]
+            if (!el) return null
+            const top = el.getBoundingClientRect().top
+            return { key, top }
+          })
+          .filter((x): x is { key: string; top: number } => x !== null)
+
+        if (candidates.length === 0) return
 
         candidates.sort((a, b) => {
           const da = Math.abs(a.top - 88)
           const db = Math.abs(b.top - 88)
           if (da !== db) return da - db
-          return b.ratio - a.ratio
+          return 0
         })
 
         setActiveKey(candidates[0]!.key)
