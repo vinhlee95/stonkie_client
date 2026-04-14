@@ -46,3 +46,16 @@ const localStorageMock = {
   key: vi.fn(),
 }
 global.localStorage = localStorageMock as Storage
+
+// jsdom has no IntersectionObserver (used by MostViewedCompanies scroll-spy)
+class IntersectionObserverMock implements IntersectionObserver {
+  root: Element | Document | null = null
+  rootMargin = ''
+  thresholds: ReadonlyArray<number> = []
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+  takeRecords = vi.fn((): IntersectionObserverEntry[] => [])
+  constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
+}
+global.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver
