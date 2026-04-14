@@ -1,9 +1,10 @@
 'use client'
 
-import CompanyList, { Company } from '@/app/CompanyList'
+import { Company } from '@/app/CompanyList'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ScrollToTopButton from './ScrollToTopButton'
 import SectorFilter, { SectorNavItem } from './SectorFilter'
+import SectorSection from './SectorSection'
 
 /** Sentinel for "scroll to top / all sectors" */
 export const ALL_SECTORS_KEY = 'all'
@@ -193,7 +194,7 @@ export default function MostViewedCompanies({ companies }: { companies: Company[
             >
               {group.label}
             </h2>
-            <CompanyList companies={group.companies} />
+            <SectorSection companies={group.companies} />
           </section>
         ))}
       </div>
