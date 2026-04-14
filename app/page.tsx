@@ -46,7 +46,6 @@ export default async function Page() {
         <MarketChart />
       </div>
       <FavouritesList />
-      <h1 className="text-2xl font-bold mb-6">Most Viewed Companies</h1>
       {data && <MostViewedCompanies companies={data} />}
       <h1 className="text-2xl font-bold mb-6 mt-8">ETFs</h1>
       {etfData && etfData.length > 0 && <MostViewedETFs etfs={etfData} />}
