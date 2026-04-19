@@ -26,7 +26,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   const { data: popularCompanies } = useQuery<Company[]>({
     queryKey: ['companies', 'popular'],
     queryFn: async () => {
-      const res = await fetch('/api/companies/popular')
+      const res = await fetch('/api/companies')
       if (!res.ok) return []
       return res.json()
     },

@@ -21,7 +21,7 @@ describe('SpotlightSearch', () => {
     vi.clearAllMocks()
     Element.prototype.scrollIntoView = vi.fn()
     global.fetch = vi.fn().mockImplementation((url: string) => {
-      if (url.includes('/api/companies/popular')) {
+      if (url.includes('/api/companies')) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(mockCompanies),
