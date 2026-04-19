@@ -52,6 +52,14 @@ function TradingViewWidget() {
               s: 'OMXHEX:OMXH25',
               d: 'OMX Helsinki 25',
             },
+            {
+              s: 'INDEX:NKY',
+              d: 'Nikkei 225',
+            },
+            {
+              s: 'FOREXCOM:EU50',
+              d: 'Euro Stoxx 50',
+            },
           ],
           originalTitle: 'Indices',
         },
