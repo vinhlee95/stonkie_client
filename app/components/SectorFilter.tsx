@@ -12,6 +12,7 @@ export interface SectorFilterProps {
 
 export default function SectorFilter({ items, activeKey, onNavigate }: SectorFilterProps) {
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const setButtonRef = useCallback(
     (key: string) => (el: HTMLButtonElement | null) => {
@@ -21,10 +22,19 @@ export default function SectorFilter({ items, activeKey, onNavigate }: SectorFil
   )
 
   useEffect(() => {
+    const container = scrollContainerRef.current
     const el = buttonRefs.current[activeKey]
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
-    }
+    if (!container || !el) return
+
+    const containerRect = container.getBoundingClientRect()
+    const elementRect = el.getBoundingClientRect()
+    const isLeftClipped = elementRect.left < containerRect.left
+    const isRightClipped = elementRect.right > containerRect.right
+
+    if (!isLeftClipped && !isRightClipped) return
+
+    const targetLeft = Math.max(0, el.offsetLeft - (container.clientWidth - el.offsetWidth) / 2)
+    container.scrollTo({ left: targetLeft, behavior: 'smooth' })
   }, [activeKey])
 
   return (
@@ -33,7 +43,10 @@ export default function SectorFilter({ items, activeKey, onNavigate }: SectorFil
       role="navigation"
       aria-label="Sector sections"
     >
-      <div className="flex gap-2 overflow-x-auto sm:flex-wrap pb-1 sm:pb-0">
+      <div
+        ref={scrollContainerRef}
+        className="flex gap-2 overflow-x-auto sm:flex-wrap pb-1 sm:pb-0"
+      >
         {items.map((item) => {
           const selected = activeKey === item.key
           return (
