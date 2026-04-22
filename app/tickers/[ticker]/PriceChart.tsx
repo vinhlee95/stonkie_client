@@ -5,7 +5,12 @@ import { useDarkMode } from '../../components/hooks/useDarkMode'
 
 const EXCHANGE_MAP: Record<string, string> = {
   HE: 'OMXHEX',
+  VN: 'HOSE',
 }
+
+// Exchanges whose chart data TradingView's free embed widget gates
+// ("This symbol is only available on TradingView"). We link out instead.
+const RESTRICTED_EXCHANGES = new Set(['HOSE'])
 
 function toTradingViewSymbol(ticker: string): string {
   const dotIndex = ticker.lastIndexOf('.')
@@ -19,12 +24,42 @@ function toTradingViewSymbol(ticker: string): string {
   return `${exchange}:${ticker.slice(0, dotIndex).replace(/-/g, '_')}`
 }
 
+function isRestricted(tvSymbol: string): boolean {
+  const colon = tvSymbol.indexOf(':')
+  if (colon === -1) return false
+  return RESTRICTED_EXCHANGES.has(tvSymbol.slice(0, colon))
+}
+
+function TradingViewLinkOut({ ticker, tvSymbol }: { ticker: string; tvSymbol: string }) {
+  const href = `https://www.tradingview.com/symbols/${tvSymbol.replace(':', '-')}/`
+  return (
+    <div className="mb-6 px-4 py-3 rounded-md bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex flex-wrap items-center gap-x-2 gap-y-1">
+      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        Live chart for {ticker} is not available here.
+      </p>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+      >
+        View chart on TradingView →
+      </a>
+    </div>
+  )
+}
+
 function TradingViewWidget({ ticker }: { ticker: string }) {
   const container = useRef<HTMLDivElement>(null)
   const hasCreatedChart = useRef<boolean>(false)
   const isDarkMode = useDarkMode()
 
+  const tvSymbol = toTradingViewSymbol(ticker)
+  const restricted = isRestricted(tvSymbol)
+
   useEffect(() => {
+    if (restricted) return
+
     // Clear existing chart if theme changes
     if (container.current && hasCreatedChart.current) {
       container.current.innerHTML = ''
@@ -35,12 +70,11 @@ function TradingViewWidget({ ticker }: { ticker: string }) {
       return
     }
 
-    const tvSymbol = toTradingViewSymbol(ticker)
     const widgetOptions = {
       lineWidth: 2,
       lineType: 0,
       chartType: 'area',
-      fontColor: isDarkMode ? 'rgb(106, 109, 120)' : 'rgb(106, 109, 120)',
+      fontColor: 'rgb(106, 109, 120)',
       gridLineColor: isDarkMode ? 'rgba(242, 242, 242, 0.06)' : 'rgba(46, 46, 46, 0.06)',
       volumeUpColor: 'rgba(34, 171, 148, 0.5)',
       volumeDownColor: 'rgba(247, 82, 95, 0.5)',
@@ -85,6 +119,10 @@ function TradingViewWidget({ ticker }: { ticker: string }) {
       hasCreatedChart.current = true
     }
   }, [isDarkMode, ticker])
+
+  if (restricted) {
+    return <TradingViewLinkOut ticker={ticker} tvSymbol={tvSymbol} />
+  }
 
   return (
     <div className="h-[250px] mb-6">
