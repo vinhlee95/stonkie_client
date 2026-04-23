@@ -7,6 +7,8 @@ const mockCompany = {
   name: 'Apple Inc.',
   logo_url: '',
   sector: 'Technology',
+  country: '',
+  exchange: '',
 }
 
 describe('FavouriteButton', () => {

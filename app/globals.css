@@ -9,6 +9,8 @@
   --accent-active: #044e39;
   --accent-active-dark: #42a287;
   --accent-hover-dark: #10b981;
+  --accent-light: #eaf4f0;
+  --accent-light-dark: rgba(40, 105, 86, 0.15);
   --accent-danger: #9c2d2d;
   --button-background: #e5e8e7;
   --button-background-dark: #414443;
@@ -40,6 +42,7 @@
     --card-background: #2d2b2b;
     --button-background: #414443;
     --secondary-button-background: #414443;
+    --accent-light: rgba(40, 105, 86, 0.15);
   }
 }
 
@@ -165,6 +168,17 @@ body.safari-scroll-lock .modal-content {
   backface-visibility: hidden;
   transform: translate3d(0, 0, 0);
   -webkit-transform: translate3d(0, 0, 0);
+}
+
+@keyframes market-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Animation for update prompt */

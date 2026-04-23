@@ -2,6 +2,13 @@
 
 import { Company } from '@/app/CompanyList'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import ETFList, { ETFListItem } from './ETFList'
+import MarketFilter, {
+  ALL_MARKETS_KEY,
+  ETF_MARKET_KEY,
+  getMarketDef,
+  matchesMarket,
+} from './MarketFilter'
 import ScrollToTopButton from './ScrollToTopButton'
 import SectorFilter, { SectorNavItem } from './SectorFilter'
 import SectorSection from './SectorSection'
@@ -58,14 +65,30 @@ export function groupCompaniesBySector(companies: Company[]): SectorGroup[] {
 
 const SCROLL_SPY_ROOT_MARGIN = '-88px 0px -50% 0px'
 
-export default function MostViewedCompanies({ companies }: { companies: Company[] }) {
+export default function MostViewedCompanies({
+  companies,
+  etfs = [],
+}: {
+  companies: Company[]
+  etfs?: ETFListItem[]
+}) {
   const topRef = useRef<HTMLDivElement>(null)
   const sectionElementsRef = useRef<Record<string, HTMLElement | null>>({})
   const ignoreScrollSpyRef = useRef(false)
   const scrollSpyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const visibleSectionsRef = useRef<Set<string>>(new Set())
 
-  const groups = useMemo(() => groupCompaniesBySector(companies), [companies])
+  const [market, setMarket] = useState<string>(ALL_MARKETS_KEY)
+
+  const marketPool = useMemo(
+    () =>
+      market === ALL_MARKETS_KEY
+        ? companies
+        : companies.filter((c) => matchesMarket(market, c.country)),
+    [companies, market],
+  )
+
+  const groups = useMemo(() => groupCompaniesBySector(marketPool), [marketPool])
 
   const navItems: SectorNavItem[] = useMemo(
     () => [
@@ -76,6 +99,15 @@ export default function MostViewedCompanies({ companies }: { companies: Company[
   )
 
   const [activeKey, setActiveKey] = useState<string>(ALL_SECTORS_KEY)
+
+  const handleMarket = useCallback((key: string) => {
+    setMarket(key)
+    setActiveKey(ALL_SECTORS_KEY)
+  }, [])
+
+  const isEtfMarket = market === ETF_MARKET_KEY
+  const activeMarketDef =
+    market === ALL_MARKETS_KEY || isEtfMarket ? undefined : getMarketDef(market)
 
   const setSectionRef = useCallback((key: string) => {
     return (el: HTMLElement | null) => {
@@ -172,32 +204,99 @@ export default function MostViewedCompanies({ companies }: { companies: Company[
 
   return (
     <div ref={topRef} id="most-viewed-companies-top" className="scroll-mt-0">
-      <h1 className="text-2xl font-bold mb-6">Most Viewed Companies</h1>
+      <div className="sticky top-0 z-20 -mx-4 px-4 sm:mx-0 sm:px-0 mb-6 pt-3 pb-2 bg-[var(--background)] border-b border-gray-200/80 dark:border-gray-700/80">
+        <MarketFilter
+          companies={companies}
+          activeMarket={market}
+          onSelect={handleMarket}
+          etfCount={etfs.length}
+        />
+        {!isEtfMarket && (
+          <SectorFilter
+            items={navItems}
+            activeKey={activeKey}
+            onNavigate={navigateToSector}
+            embedded
+          />
+        )}
+      </div>
 
-      <SectorFilter items={navItems} activeKey={activeKey} onNavigate={navigateToSector} />
+      {activeMarketDef && (
+        <div
+          className="flex items-center justify-between px-4 py-2 mb-4 rounded-md"
+          style={{
+            backgroundColor: 'var(--accent-light)',
+            borderBottom: '1px solid rgba(40,105,86,0.1)',
+          }}
+        >
+          <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]">
+            <span>Showing</span>
+            <span className="inline-flex items-center gap-1 bg-white/60 dark:bg-white/10 rounded-full px-2 py-0.5">
+              <span className="text-[13px] leading-none">{activeMarketDef.flag}</span>
+              <span>{activeMarketDef.label}</span>
+            </span>
+            <span>· {marketPool.length} tickers</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleMarket(ALL_MARKETS_KEY)}
+            className="text-[12px] font-medium underline decoration-dotted cursor-pointer text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]"
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
+
+      {activeMarketDef && (
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <span className="text-[22px] leading-none">{activeMarketDef.flag}</span>
+            <div className="flex flex-col">
+              <span className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight">
+                {activeMarketDef.fullName}
+              </span>
+              {activeMarketDef.exchange && (
+                <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                  {activeMarketDef.exchange}
+                </span>
+              )}
+            </div>
+          </div>
+          <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 bg-black/[0.06] dark:bg-white/10 rounded-full px-2.5 py-1">
+            {marketPool.length} tickers
+          </span>
+        </div>
+      )}
 
       <ScrollToTopButton onScrollToTop={() => navigateToSector(ALL_SECTORS_KEY)} />
 
-      <div className="space-y-10">
-        {groups.map((group) => (
-          <section
-            key={group.key}
-            id={sectorDomId(group.key)}
-            ref={setSectionRef(group.key)}
-            data-sector-key={group.key}
-            className="scroll-mt-24"
-            aria-labelledby={`heading-${sectorDomId(group.key)}`}
-          >
-            <h2
-              id={`heading-${sectorDomId(group.key)}`}
-              className="text-lg font-semibold text-gray-800 dark:text-white mb-4"
+      {isEtfMarket ? (
+        <div key={market} className="animate-[market-fade-in_200ms_ease-out_both]">
+          <ETFList etfs={etfs} />
+        </div>
+      ) : (
+        <div key={market} className="space-y-10">
+          {groups.map((group, groupIndex) => (
+            <section
+              key={group.key}
+              id={sectorDomId(group.key)}
+              ref={setSectionRef(group.key)}
+              data-sector-key={group.key}
+              className="scroll-mt-24 animate-[market-fade-in_200ms_ease-out_both]"
+              aria-labelledby={`heading-${sectorDomId(group.key)}`}
+              style={{ animationDelay: `${Math.min(groupIndex * 25, 150)}ms` }}
             >
-              {group.label}
-            </h2>
-            <SectorSection companies={group.companies} />
-          </section>
-        ))}
-      </div>
+              <h2
+                id={`heading-${sectorDomId(group.key)}`}
+                className="text-lg font-semibold text-gray-800 dark:text-white mb-4"
+              >
+                {group.label}
+              </h2>
+              <SectorSection companies={group.companies} />
+            </section>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

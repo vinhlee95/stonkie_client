@@ -2,7 +2,6 @@ import { Company } from './CompanyList'
 import MarketChart from './MarketChart'
 import FavouritesList from './components/FavouritesList'
 import MostViewedCompanies from './components/MostViewedCompanies'
-import MostViewedETFs from './components/MostViewedETFs'
 import { ETFListItem } from './components/ETFList'
 
 const BACKEND_URL = process.env.BACKEND_URL
@@ -39,14 +38,11 @@ export default async function Page() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Market Overview</h1>
       <div className="h-[500px] mb-6">
         <MarketChart />
       </div>
       <FavouritesList />
-      {data && <MostViewedCompanies companies={data} />}
-      <h1 className="text-2xl font-bold mb-6 mt-8">ETFs</h1>
-      {etfData && etfData.length > 0 && <MostViewedETFs etfs={etfData} />}
+      {data && <MostViewedCompanies companies={data} etfs={etfData} />}
     </div>
   )
 }

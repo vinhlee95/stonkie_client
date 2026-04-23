@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type SectorNavItem = { key: string; label: string }
 
@@ -8,11 +8,20 @@ export interface SectorFilterProps {
   items: SectorNavItem[]
   activeKey: string
   onNavigate: (key: string) => void
+  /** When true, omits the sticky/background wrapper — caller provides its own sticky container. */
+  embedded?: boolean
 }
 
-export default function SectorFilter({ items, activeKey, onNavigate }: SectorFilterProps) {
+export default function SectorFilter({
+  items,
+  activeKey,
+  onNavigate,
+  embedded = false,
+}: SectorFilterProps) {
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
 
   const setButtonRef = useCallback(
     (key: string) => (el: HTMLButtonElement | null) => {
@@ -20,6 +29,16 @@ export default function SectorFilter({ items, activeKey, onNavigate }: SectorFil
     },
     [],
   )
+
+  const recomputeIndicator = useCallback(() => {
+    const el = buttonRefs.current[activeKey]
+    if (!el) return
+    setIndicatorStyle({ left: el.offsetLeft, width: el.offsetWidth })
+  }, [activeKey])
+
+  useEffect(() => {
+    recomputeIndicator()
+  }, [recomputeIndicator, items])
 
   useEffect(() => {
     const container = scrollContainerRef.current
@@ -39,40 +58,48 @@ export default function SectorFilter({ items, activeKey, onNavigate }: SectorFil
 
   return (
     <div
-      className="sticky top-0 z-20 -mx-4 px-4 sm:mx-0 sm:px-0 mb-6 border-b border-gray-200/80 dark:border-gray-700/80 bg-[var(--background)] py-3"
+      className={
+        embedded
+          ? 'pb-1'
+          : 'sticky top-0 z-20 -mx-4 px-4 sm:mx-0 sm:px-0 mb-6 border-b border-gray-200/80 dark:border-gray-700/80 bg-[var(--background)] py-3'
+      }
       role="navigation"
       aria-label="Sector sections"
     >
       <div
         ref={scrollContainerRef}
-        className="flex gap-2 overflow-x-auto sm:flex-wrap pb-1 sm:pb-0"
+        className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
-        {items.map((item) => {
-          const selected = activeKey === item.key
-          return (
-            <button
-              key={item.key}
-              ref={setButtonRef(item.key)}
-              type="button"
-              onClick={() => onNavigate(item.key)}
-              style={
-                selected
-                  ? {
-                      backgroundColor: 'var(--accent-active)',
-                      color: 'white',
-                    }
-                  : undefined
-              }
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer ${
-                selected
-                  ? 'dark:bg-[var(--accent-active-dark)]'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-              }`}
-            >
-              {item.label}
-            </button>
-          )
-        })}
+        <div
+          ref={trackRef}
+          className="relative inline-flex bg-gray-100/50 dark:bg-gray-800/30 backdrop-blur-sm rounded-full p-1 gap-0.5"
+        >
+          <div
+            className="absolute top-1 bottom-1 rounded-full bg-white dark:bg-gray-700 shadow-[0_2px_8px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4),0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none"
+            style={{
+              left: `${indicatorStyle.left}px`,
+              width: `${indicatorStyle.width}px`,
+            }}
+          />
+          {items.map((item) => {
+            const selected = activeKey === item.key
+            return (
+              <button
+                key={item.key}
+                ref={setButtonRef(item.key)}
+                type="button"
+                onClick={() => onNavigate(item.key)}
+                className={`relative px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap z-10 cursor-pointer ${
+                  selected
+                    ? 'text-gray-900 dark:text-white'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                {item.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

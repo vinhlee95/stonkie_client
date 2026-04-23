@@ -9,9 +9,30 @@ vi.mock('next/navigation', () => ({
 }))
 
 const mockCompanies = [
-  { ticker: 'AAPL', name: 'Apple Inc.', logo_url: '/apple.png', sector: 'Technology' },
-  { ticker: 'MSFT', name: 'Microsoft Corp', logo_url: '/msft.png', sector: 'Technology' },
-  { ticker: 'GOOGL', name: 'Alphabet Inc.', logo_url: '/goog.png', sector: 'Technology' },
+  {
+    ticker: 'AAPL',
+    name: 'Apple Inc.',
+    logo_url: '/apple.png',
+    sector: 'Technology',
+    country: '',
+    exchange: '',
+  },
+  {
+    ticker: 'MSFT',
+    name: 'Microsoft Corp',
+    logo_url: '/msft.png',
+    sector: 'Technology',
+    country: '',
+    exchange: '',
+  },
+  {
+    ticker: 'GOOGL',
+    name: 'Alphabet Inc.',
+    logo_url: '/goog.png',
+    sector: 'Technology',
+    country: '',
+    exchange: '',
+  },
 ]
 
 describe('SpotlightSearch', () => {

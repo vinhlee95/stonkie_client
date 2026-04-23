@@ -19,6 +19,8 @@ async function LogoAndTickerBlock({ ticker }: { ticker: string }) {
         name: keyStats.name,
         logo_url: keyStats.logo_url || '',
         sector: '',
+        country: keyStats.country || '',
+        exchange: keyStats.exchange || '',
       }
     : null
 

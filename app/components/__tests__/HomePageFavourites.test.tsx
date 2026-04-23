@@ -10,12 +10,16 @@ const mockCompanies: Company[] = [
     ticker: 'AAPL',
     logo_url: 'https://example.com/aapl.png',
     sector: 'Technology',
+    country: '',
+    exchange: '',
   },
   {
     name: 'Microsoft Corporation',
     ticker: 'MSFT',
     logo_url: 'https://example.com/msft.png',
     sector: 'Technology',
+    country: '',
+    exchange: '',
   },
 ]
 

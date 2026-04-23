@@ -8,6 +8,8 @@ export interface Company {
   ticker: string
   logo_url: string
   sector: string
+  country: string
+  exchange: string
 }
 
 export default function CompanyList({
@@ -58,7 +60,14 @@ export default function CompanyList({
                       : company.name}
                   </span>
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">{company.ticker}</p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {company.ticker}
+                  {company.exchange && (
+                    <span className="ml-1.5 text-[10px] font-semibold bg-black/[0.06] dark:bg-white/10 rounded px-1 py-0.5 text-gray-500 dark:text-gray-400 tracking-wide">
+                      {company.exchange}
+                    </span>
+                  )}
+                </p>
               </div>
             </Link>
             <div className="w-16 border-l border-gray-200 dark:border-gray-700 flex items-center justify-center">
