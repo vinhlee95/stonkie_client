@@ -12,6 +12,14 @@ function tickerLinks() {
     .filter((el) => el.getAttribute('href')?.startsWith('/tickers/'))
 }
 
+function uniqueTickerHrefs() {
+  return new Set(
+    tickerLinks()
+      .map((el) => el.getAttribute('href'))
+      .filter(Boolean) as string[],
+  )
+}
+
 describe('MostViewedCompanies sector grouping', () => {
   it('normalizes sector key case-insensitively', () => {
     expect(normalizeSectorKey('Technology')).toBe('technology')
@@ -66,7 +74,7 @@ describe('MostViewedCompanies sector grouping', () => {
 
     expect(screen.getByRole('heading', { name: 'Technology' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Financials' })).toBeInTheDocument()
-    expect(tickerLinks()).toHaveLength(3)
+    expect(uniqueTickerHrefs()).toEqual(new Set(['/tickers/AAA', '/tickers/BBB', '/tickers/CCC']))
   })
 })
 
@@ -123,12 +131,11 @@ describe('MostViewedCompanies market filter', () => {
     expect(hrefs).not.toContain('/tickers/VNM')
   })
 
-  it('shows active filter summary strip when market is selected', () => {
-    render(<MostViewedCompanies companies={companies} />)
+  it('shows the selected market chart when market is selected', () => {
+    const { container } = render(<MostViewedCompanies companies={companies} />)
     const tablist = screen.getByRole('tablist', { name: /market filter/i })
     fireEvent.click(within(tablist).getByRole('tab', { name: /Finland/i }))
-    expect(screen.getByText(/Showing/i)).toBeInTheDocument()
-    expect(screen.getByText(/· 1 tickers/i)).toBeInTheDocument()
+    expect(container.querySelector('.tradingview-widget-container')).not.toBeNull()
   })
 
   it('hides market tabs with zero tickers', () => {

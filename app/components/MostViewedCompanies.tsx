@@ -1,8 +1,10 @@
 'use client'
 
 import { Company } from '@/app/CompanyList'
+import MarketChart from '@/app/MarketChart'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ETFList, { ETFListItem } from './ETFList'
+import IndexSummaryStrip from './IndexSummaryStrip'
 import MarketFilter, {
   ALL_MARKETS_KEY,
   ETF_MARKET_KEY,
@@ -204,7 +206,7 @@ export default function MostViewedCompanies({
 
   return (
     <div ref={topRef} id="most-viewed-companies-top" className="scroll-mt-0">
-      <div className="sticky top-0 z-20 -mx-4 px-4 sm:mx-0 sm:px-0 mb-6 pt-3 pb-2 bg-[var(--background)] border-b border-gray-200/80 dark:border-gray-700/80">
+      <div className="sticky top-0 z-20 -mx-4 px-4 sm:mx-0 sm:px-0 mb-4 pt-1 pb-2 bg-[var(--background)] border-b border-gray-200/80 dark:border-gray-700/80">
         <MarketFilter
           companies={companies}
           activeMarket={market}
@@ -221,50 +223,15 @@ export default function MostViewedCompanies({
         )}
       </div>
 
-      {activeMarketDef && (
-        <div
-          className="flex items-center justify-between px-4 py-2 mb-4 rounded-md"
-          style={{
-            backgroundColor: 'var(--accent-light)',
-            borderBottom: '1px solid rgba(40,105,86,0.1)',
-          }}
-        >
-          <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]">
-            <span>Showing</span>
-            <span className="inline-flex items-center gap-1 bg-white/60 dark:bg-white/10 rounded-full px-2 py-0.5">
-              <span className="text-[13px] leading-none">{activeMarketDef.flag}</span>
-              <span>{activeMarketDef.label}</span>
-            </span>
-            <span>· {marketPool.length} tickers</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => handleMarket(ALL_MARKETS_KEY)}
-            className="text-[12px] font-medium underline decoration-dotted cursor-pointer text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]"
-          >
-            Clear filters
-          </button>
+      {market === ALL_MARKETS_KEY && (
+        <div className="mb-4">
+          <IndexSummaryStrip />
         </div>
       )}
 
-      {activeMarketDef && (
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
-            <span className="text-[22px] leading-none">{activeMarketDef.flag}</span>
-            <div className="flex flex-col">
-              <span className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight">
-                {activeMarketDef.fullName}
-              </span>
-              {activeMarketDef.exchange && (
-                <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                  {activeMarketDef.exchange}
-                </span>
-              )}
-            </div>
-          </div>
-          <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 bg-black/[0.06] dark:bg-white/10 rounded-full px-2.5 py-1">
-            {marketPool.length} tickers
-          </span>
+      {activeMarketDef && (market === 'USA' || market === 'Finland') && (
+        <div className="mb-4">
+          <MarketChart market={market} height={market === 'USA' ? 300 : 240} />
         </div>
       )}
 

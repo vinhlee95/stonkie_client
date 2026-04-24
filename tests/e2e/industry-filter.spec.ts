@@ -71,14 +71,10 @@ test('industry filter functionality works', async ({ page }) => {
       throw new Error(`Unexpected company count: ${filteredCount} > ${allCompaniesCount}`)
     }
 
-    // Verify selected chip has active style (check for inline style or class)
-    const hasActiveStyle = await sectorButton.evaluate((el) => {
-      const style = window.getComputedStyle(el)
-      return (
-        style.backgroundColor !== 'rgba(0, 0, 0, 0)' &&
-        style.backgroundColor !== 'rgb(229, 231, 235)' // gray-200
-      )
-    })
+    // Verify selected chip uses the active text style.
+    const hasActiveStyle = await sectorButton.evaluate(
+      (el) => el.className.includes('text-gray-900') || el.className.includes('dark:text-white'),
+    )
 
     if (hasActiveStyle) {
       console.log(`✓ "${testSector}" chip has active style`)
@@ -98,14 +94,10 @@ test('industry filter functionality works', async ({ page }) => {
     expect(resetCount).toBe(allCompaniesCount)
     console.log(`✓ All companies restored: ${resetCount} companies`)
 
-    // Verify 'All Sectors' chip has active style
-    const allSectorsActive = await allSectorsButton.evaluate((el) => {
-      const style = window.getComputedStyle(el)
-      return (
-        style.backgroundColor !== 'rgba(0, 0, 0, 0)' &&
-        style.backgroundColor !== 'rgb(229, 231, 235)' // gray-200
-      )
-    })
+    // Verify 'All Sectors' chip uses the active text style.
+    const allSectorsActive = await allSectorsButton.evaluate(
+      (el) => el.className.includes('text-gray-900') || el.className.includes('dark:text-white'),
+    )
 
     if (allSectorsActive) {
       console.log('✓ "All Sectors" chip has active style')

@@ -10,10 +10,10 @@ test('homepage loads successfully', async ({ page }) => {
   // Wait for page to be fully loaded (networkidle equivalent)
   await page.waitForLoadState('networkidle')
 
-  // Verify critical UI element exists (h1 with "Market Overview")
-  const heading = page.locator('h1').first()
-  await expect(heading).toBeVisible()
-  await expect(heading).toContainText('Market Overview')
+  // Verify critical homepage controls render.
+  await expect(page.getByRole('tablist', { name: /market filter/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'All Sectors' })).toBeVisible()
+  await expect(page.locator('a[href^="/tickers/"]:visible').first()).toBeVisible()
 
   // Take screenshot for verification
   await page.screenshot({ path: 'test-results/smoke-test.png', fullPage: true })

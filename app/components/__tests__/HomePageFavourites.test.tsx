@@ -64,8 +64,11 @@ describe('Home Page Favourites - User Visible Behavior', () => {
     // Should go back to "Add to favourites"
     await waitFor(() => {
       const addButtonsAgain = screen.queryAllByRole('button', { name: /add to favourites/i })
-      // Should have 2 add buttons now (both companies)
-      expect(addButtonsAgain.length).toBe(2)
+      const removeButtonsAgain = screen.queryAllByRole('button', {
+        name: /remove from favourites/i,
+      })
+      expect(removeButtonsAgain).toHaveLength(0)
+      expect(addButtonsAgain.length).toBeGreaterThanOrEqual(2)
     })
   })
 

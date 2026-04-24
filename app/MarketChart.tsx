@@ -3,22 +3,46 @@
 import React, { useEffect, useRef, memo } from 'react'
 import { useDarkMode } from './components/hooks/useDarkMode'
 
+type MarketSymbol = { s: string; d: string }
+
+const MARKET_CONFIG: Record<string, { symbols: MarketSymbol[] }> = {
+  USA: {
+    symbols: [
+      { s: 'FOREXCOM:SPXUSD', d: 'S&P 500' },
+      { s: 'FOREXCOM:NSXUSD', d: 'Nasdaq 100' },
+    ],
+  },
+  Finland: {
+    symbols: [{ s: 'OMXHEX:OMXH25', d: 'OMX Helsinki 25' }],
+  },
+}
+
+interface MarketChartProps {
+  market: string
+  height?: number
+}
+
 // https://www.tradingview.com/widget-docs/widgets/watchlists/market-overview/
-function TradingViewWidget() {
+function TradingViewWidget({ market, height = 180 }: MarketChartProps) {
   const container = useRef<HTMLDivElement>(null)
-  const hasCreatedChart = useRef<boolean>(false)
+  const hasCreatedChart = useRef(false)
   const isDarkMode = useDarkMode()
 
+  const config = MARKET_CONFIG[market]
+
   useEffect(() => {
-    // Clear existing chart if theme changes
+    if (!config || !container.current) return
+
+    // Mirror the original homepage widget lifecycle so TradingView controls
+    // the full chart + selector layout inside the allotted area.
     if (container.current && hasCreatedChart.current) {
       container.current.innerHTML = ''
       hasCreatedChart.current = false
     }
 
-    if (hasCreatedChart.current) {
-      return
-    }
+    if (hasCreatedChart.current) return
+
+    container.current.innerHTML = '<div class="tradingview-widget-container__widget"></div>'
 
     const widgetOptions = {
       colorTheme: isDarkMode ? 'dark' : 'light',
@@ -39,28 +63,7 @@ function TradingViewWidget() {
       tabs: [
         {
           title: 'Indices',
-          symbols: [
-            {
-              s: 'FOREXCOM:SPXUSD',
-              d: 'S&P 500 Index',
-            },
-            {
-              s: 'FOREXCOM:NSXUSD',
-              d: 'Nasdaq 100 Index',
-            },
-            {
-              s: 'OMXHEX:OMXH25',
-              d: 'OMX Helsinki 25',
-            },
-            {
-              s: 'INDEX:NKY',
-              d: 'Nikkei 225',
-            },
-            {
-              s: 'FOREXCOM:EU50',
-              d: 'Euro Stoxx 50',
-            },
-          ],
+          symbols: config.symbols,
           originalTitle: 'Indices',
         },
       ],
@@ -77,15 +80,19 @@ function TradingViewWidget() {
     script.async = true
     script.textContent = JSON.stringify(widgetOptions)
 
-    if (container.current) {
-      container.current.appendChild(script)
-      hasCreatedChart.current = true
-    }
-  }, [isDarkMode])
+    container.current.appendChild(script)
+    hasCreatedChart.current = true
+  }, [isDarkMode, config])
+
+  if (!config) return null
+
+  const widgetHeight = Math.max(height, config.symbols.length > 1 ? 300 : 240)
 
   return (
-    <div className="tradingview-widget-container" ref={container}>
-      <div className="tradingview-widget-container__widget"></div>
+    <div style={{ height: `${widgetHeight}px` }}>
+      <div className="tradingview-widget-container h-full" ref={container}>
+        <div className="tradingview-widget-container__widget h-full"></div>
+      </div>
     </div>
   )
 }

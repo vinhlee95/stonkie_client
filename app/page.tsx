@@ -1,5 +1,4 @@
 import { Company } from './CompanyList'
-import MarketChart from './MarketChart'
 import FavouritesList from './components/FavouritesList'
 import MostViewedCompanies from './components/MostViewedCompanies'
 import { ETFListItem } from './components/ETFList'
@@ -37,10 +36,7 @@ export default async function Page() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="h-[500px] mb-6">
-        <MarketChart />
-      </div>
+    <div className="container mx-auto px-4 pt-2 pb-6">
       <FavouritesList />
       {data && <MostViewedCompanies companies={data} etfs={etfData} />}
     </div>
