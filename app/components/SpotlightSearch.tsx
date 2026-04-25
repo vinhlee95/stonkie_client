@@ -1,9 +1,8 @@
 'use client'
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
 import { SearchOutlined } from '@mui/icons-material'
-import { Company } from '../CompanyList'
+import { usePopularCompanies } from './hooks/usePopularCompanies'
 
 interface SearchResult {
   symbol: string
@@ -23,16 +22,7 @@ const SpotlightSearch: React.FC<SpotlightSearchProps> = ({ onClose }) => {
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [isVisible, setIsVisible] = useState(false)
 
-  const { data: popularCompanies } = useQuery<Company[]>({
-    queryKey: ['companies', 'popular'],
-    queryFn: async () => {
-      const res = await fetch('/api/companies')
-      if (!res.ok) return []
-      return res.json()
-    },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  })
+  const { data: popularCompanies } = usePopularCompanies()
 
   const inputRef = useRef<HTMLInputElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)

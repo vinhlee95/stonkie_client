@@ -6,11 +6,15 @@ import Chat from './Chat'
 import { ChatProvider } from './Chat'
 import SpotlightSearch from './SpotlightSearch'
 import { useScrollLock } from './hooks/useScrollLock'
+import { usePopularCompanies } from './hooks/usePopularCompanies'
 
 const BottomNavigation = () => {
   const [isChatVisible, setIsChatVisible] = useState(false)
   const [isSearchVisible, setIsSearchVisible] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
+
+  // Prefetch popular companies on mount so search is instant when opened
+  usePopularCompanies()
 
   useScrollLock({ isLocked: isChatVisible || isSearchVisible, isDesktop })
 
