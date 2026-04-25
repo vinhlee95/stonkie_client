@@ -1,6 +1,60 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Link } from 'lucide-react'
+import { useState } from 'react'
+
+function InlineSourceLink({ href, children }: { href?: string; children?: React.ReactNode }) {
+  const [visible, setVisible] = useState(false)
+  const [align, setAlign] = useState<'left' | 'right'>('left')
+
+  const updateAlignment = (target: EventTarget & HTMLSpanElement) => {
+    const rect = target.getBoundingClientRect()
+    const estimatedTooltipWidth = 320
+    const viewportPadding = 12
+    const spaceOnRight = window.innerWidth - rect.left
+    setAlign(spaceOnRight < estimatedTooltipWidth + viewportPadding ? 'right' : 'left')
+  }
+
+  return (
+    <span
+      className="relative inline-flex align-middle mx-0.5"
+      onMouseEnter={(e) => {
+        updateAlignment(e.currentTarget)
+        setVisible(true)
+      }}
+      onMouseLeave={() => {
+        setVisible(false)
+      }}
+      onFocus={(e) => {
+        updateAlignment(e.currentTarget)
+        setVisible(true)
+      }}
+      onBlur={() => {
+        setVisible(false)
+      }}
+    >
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-[var(--accent-active)] dark:border-[var(--accent-active-dark)] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)] hover:bg-[var(--accent-active)] hover:text-white dark:hover:bg-[var(--accent-active-dark)] dark:hover:text-white transition-all cursor-pointer"
+      >
+        <Link className="w-3 h-3" />
+      </a>
+      {visible && (
+        <span
+          role="tooltip"
+          className="absolute top-1/2 -translate-y-1/2 z-[100] px-2.5 py-1.5 text-xs leading-tight rounded-md shadow-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 max-w-60 w-max transition-opacity"
+          style={
+            align === 'right' ? { right: 'calc(100% + 0.5rem)' } : { left: 'calc(100% + 0.5rem)' }
+          }
+        >
+          {children}
+        </span>
+      )}
+    </span>
+  )
+}
 
 export default function MarkdownContent({
   content,
@@ -57,21 +111,7 @@ export default function MarkdownContent({
               {children}
             </td>
           ),
-          a: ({ href, children }) => (
-            <span className="relative inline-flex align-middle mx-0.5 group/link">
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-[var(--accent-active)] dark:border-[var(--accent-active-dark)] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)] hover:bg-[var(--accent-active)] hover:text-white dark:hover:bg-[var(--accent-active-dark)] dark:hover:text-white transition-all cursor-pointer"
-              >
-                <Link className="w-3 h-3" />
-              </a>
-              <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 z-[100] px-2.5 py-1.5 text-xs leading-tight rounded-md shadow-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 max-w-60 w-max opacity-0 pointer-events-none group-hover/link:opacity-100 transition-opacity">
-                {children}
-              </span>
-            </span>
-          ),
+          a: ({ href, children }) => <InlineSourceLink href={href}>{children}</InlineSourceLink>,
         }}
       >
         {content}

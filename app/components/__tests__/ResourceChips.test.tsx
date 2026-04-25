@@ -1,4 +1,4 @@
-import { render, screen } from '@/tests/test-utils'
+import { fireEvent, render, screen } from '@/tests/test-utils'
 import ResourceChips from '../ResourceChips'
 
 describe('ResourceChips', () => {
@@ -26,5 +26,17 @@ describe('ResourceChips', () => {
   it('renders empty when no resources provided', () => {
     const { container } = render(<ResourceChips resources={[]} />)
     expect(container.querySelector('a')).not.toBeInTheDocument()
+  })
+
+  it('shows one tooltip with source details on hover', () => {
+    render(<ResourceChips resources={mockResources} />)
+
+    const chip = screen.getByRole('link', { name: 'Resource 1' })
+    fireEvent.mouseEnter(chip.parentElement as HTMLElement)
+
+    const tooltip = screen.getByRole('tooltip')
+    expect(tooltip).toBeInTheDocument()
+    expect(tooltip).toHaveTextContent('Resource 1')
+    expect(tooltip).toHaveTextContent('https://example.com/1')
   })
 })
