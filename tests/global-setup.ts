@@ -97,6 +97,30 @@ export default async function globalSetup(_config: FullConfig) {
       return
     }
 
+    // Mock market recap endpoint
+    if (req.url?.match(/\/api\/markets\/(US|FI|VN)\/recaps\?cadence=weekly&limit=1/)) {
+      const market = req.url.split('/')[3] ?? 'US'
+      res.writeHead(200)
+      res.end(
+        JSON.stringify({
+          market,
+          cadence: 'weekly',
+          latest_created_at: '2026-04-25T13:18:03.721444Z',
+          items: [
+            {
+              period_start: '2026-04-20',
+              period_end: '2026-04-24',
+              created_at: '2026-04-25T13:18:03.721444Z',
+              summary: `${market} weekly market recap`,
+              bullets: [{ text: `${market} bullet`, citations: [] }],
+              sources: [],
+            },
+          ],
+        }),
+      )
+      return
+    }
+
     // Mock FAQ endpoint
     if (req.url?.match(/\/api\/company\/faq/)) {
       res.writeHead(200)

@@ -5,12 +5,14 @@ import MarketChart from '@/app/MarketChart'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ETFList, { ETFListItem } from './ETFList'
 import IndexSummaryStrip from './IndexSummaryStrip'
+import MarketRecapCard from './MarketRecapCard'
 import MarketFilter, {
   ALL_MARKETS_KEY,
   ETF_MARKET_KEY,
   getMarketDef,
   matchesMarket,
 } from './MarketFilter'
+import { FrontendMarketRecapKey, MarketRecapMap } from '@/lib/api/marketRecap'
 import ScrollToTopButton from './ScrollToTopButton'
 import SectorFilter, { SectorNavItem } from './SectorFilter'
 import SectorSection from './SectorSection'
@@ -70,9 +72,11 @@ const SCROLL_SPY_ROOT_MARGIN = '-88px 0px -50% 0px'
 export default function MostViewedCompanies({
   companies,
   etfs = [],
+  marketRecaps = {},
 }: {
   companies: Company[]
   etfs?: ETFListItem[]
+  marketRecaps?: MarketRecapMap
 }) {
   const topRef = useRef<HTMLDivElement>(null)
   const sectionElementsRef = useRef<Record<string, HTMLElement | null>>({})
@@ -110,6 +114,11 @@ export default function MostViewedCompanies({
   const isEtfMarket = market === ETF_MARKET_KEY
   const activeMarketDef =
     market === ALL_MARKETS_KEY || isEtfMarket ? undefined : getMarketDef(market)
+  const activeRecap = useMemo(() => {
+    if (!activeMarketDef) return null
+    const marketKey = activeMarketDef.key as FrontendMarketRecapKey
+    return marketRecaps[marketKey] ?? null
+  }, [activeMarketDef, marketRecaps])
 
   const setSectionRef = useCallback((key: string) => {
     return (el: HTMLElement | null) => {
@@ -232,6 +241,11 @@ export default function MostViewedCompanies({
       {activeMarketDef && (market === 'USA' || market === 'Finland') && (
         <div className="mb-4">
           <MarketChart market={market} height={market === 'USA' ? 300 : 240} />
+        </div>
+      )}
+      {activeMarketDef && activeRecap && (
+        <div className="mb-4">
+          <MarketRecapCard recap={activeRecap} />
         </div>
       )}
 
