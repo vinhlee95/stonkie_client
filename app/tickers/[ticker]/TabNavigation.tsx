@@ -3,9 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState, useMemo } from 'react'
+import { useFAQQuery } from '@/app/components/hooks/useFAQQuery'
 
 export default function TabNavigation({ ticker }: { ticker: string }) {
   const pathname = usePathname()
+
+  // Prefetch FAQs so the chat modal opens with a warm cache
+  useFAQQuery(ticker)
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 })
   const tabRefs = useRef<(HTMLAnchorElement | null)[]>([])
 
