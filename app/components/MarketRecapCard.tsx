@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Sparkles } from 'lucide-react'
+import { Clock3, Sparkles } from 'lucide-react'
 import { MarketRecapItem } from '@/lib/api/marketRecap'
 
 interface MarketRecapCardProps {
@@ -56,11 +56,24 @@ function sourceLabel(source: { publisher: string; url: string }): string {
   }
 }
 
+function formatRecapCreatedAt(createdAt: string): string {
+  const date = new Date(createdAt)
+  if (Number.isNaN(date.getTime())) return createdAt
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date)
+}
+
 export default function MarketRecapCard({ recap }: MarketRecapCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [hoveredCitationKey, setHoveredCitationKey] = useState<string | null>(null)
   const [hoveredTooltipAlign, setHoveredTooltipAlign] = useState<'left' | 'right'>('left')
   const teaser = useMemo(() => recap.summary.trim(), [recap.summary])
+  const formattedCreatedAt = useMemo(
+    () => formatRecapCreatedAt(recap.created_at),
+    [recap.created_at],
+  )
   const sourceById = useMemo(() => {
     return new Map(recap.sources.map((source) => [source.id, source]))
   }, [recap.sources])
@@ -78,15 +91,24 @@ export default function MarketRecapCard({ recap }: MarketRecapCardProps) {
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--accent-light)] dark:bg-[var(--accent-light-dark)] px-2.5 py-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[var(--accent-light)] dark:bg-[var(--accent-light-dark)] px-2.5 py-1">
+                <span
+                  aria-hidden="true"
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent-active)]/15 dark:bg-[var(--accent-active-dark)]/20 text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]"
+                >
+                  <Sparkles size={12} strokeWidth={2} />
+                </span>
+                <span className="text-xs font-extrabold uppercase tracking-[0.11em] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]">
+                  Market Recap
+                </span>
+              </div>
               <span
-                aria-hidden="true"
-                className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent-active)]/15 dark:bg-[var(--accent-active-dark)]/20 text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]"
+                aria-label={`Recap created ${formattedCreatedAt}`}
+                className="inline-flex items-center gap-1 rounded-full border border-[rgba(40,105,86,0.25)] dark:border-[rgba(156,214,194,0.35)] px-2 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300"
               >
-                <Sparkles size={12} strokeWidth={2} />
-              </span>
-              <span className="text-xs font-extrabold uppercase tracking-[0.11em] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]">
-                Market Recap
+                <Clock3 aria-hidden="true" size={11} strokeWidth={2.25} />
+                <span>{formattedCreatedAt}</span>
               </span>
             </div>
             <p

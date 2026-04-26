@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest'
 import MarketRecapCard from '../MarketRecapCard'
 import { MarketRecapItem } from '@/lib/api/marketRecap'
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 const recap: MarketRecapItem = {
   period_start: '2026-04-20',
   period_end: '2026-04-24',
@@ -34,6 +38,25 @@ const recap: MarketRecapItem = {
 }
 
 describe('MarketRecapCard', () => {
+  it('renders recap created_at timestamp', () => {
+    render(<MarketRecapCard recap={recap} />)
+
+    const expectedLocalizedCreatedAt = new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(new Date(recap.created_at))
+
+    expect(screen.queryByText(/Created at:/i)).not.toBeInTheDocument()
+    expect(
+      screen.getByText(new RegExp(escapeRegExp(expectedLocalizedCreatedAt), 'i')),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByLabelText(
+        new RegExp(`Recap created\\s*${escapeRegExp(expectedLocalizedCreatedAt)}`, 'i'),
+      ),
+    ).toBeInTheDocument()
+  })
+
   it('renders collapsed by default with summary visible', () => {
     render(<MarketRecapCard recap={recap} />)
 
