@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { Sparkles } from 'lucide-react'
 import { MarketRecapItem } from '@/lib/api/marketRecap'
 
 interface MarketRecapCardProps {
@@ -77,10 +78,22 @@ export default function MarketRecapCard({ recap }: MarketRecapCardProps) {
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <div className="text-[10px] font-bold uppercase tracking-[0.07em] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]">
-              Market Recap
+            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--accent-light)] dark:bg-[var(--accent-light-dark)] px-2.5 py-1">
+              <span
+                aria-hidden="true"
+                className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--accent-active)]/15 dark:bg-[var(--accent-active-dark)]/20 text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]"
+              >
+                <Sparkles size={12} strokeWidth={2} />
+              </span>
+              <span className="text-xs font-extrabold uppercase tracking-[0.11em] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]">
+                Market Recap
+              </span>
             </div>
-            <p className="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-200 line-clamp-2">
+            <p
+              className={`mt-1.5 text-base md:text-lg leading-6 md:leading-7 text-gray-700 dark:text-gray-200 ${
+                expanded ? '' : 'line-clamp-3'
+              }`}
+            >
               {teaser}
             </p>
           </div>
@@ -109,7 +122,7 @@ export default function MarketRecapCard({ recap }: MarketRecapCardProps) {
             {recap.bullets.map((bullet, bulletIndex) => (
               <div key={`${bullet.text}-${bulletIndex}`} className="flex items-start gap-2.5 pb-2">
                 <span className={`mt-1.5 h-1.5 w-1.5 rounded-full ${bulletColor(bulletIndex)}`} />
-                <div className="text-sm leading-6 text-gray-700 dark:text-gray-200">
+                <div className="text-base md:text-lg leading-6 md:leading-7 text-gray-700 dark:text-gray-200">
                   <span>{bullet.text}</span>
                   {bullet.citations.map((citation, citationIndex) => {
                     const source = sourceById.get(citation.source_id)
@@ -208,7 +221,7 @@ export default function MarketRecapCard({ recap }: MarketRecapCardProps) {
 
           <button
             type="button"
-            className="mt-2 w-full rounded-xl bg-[var(--accent-active)] dark:bg-[var(--accent-active-dark)] text-white dark:text-black px-3 py-2.5 text-sm font-semibold flex items-center gap-2 cursor-default"
+            className="mt-2 w-full rounded-xl bg-[var(--accent-active)] dark:bg-[var(--accent-active-dark)] text-white dark:text-black px-3 py-2.5 text-base md:text-lg font-semibold flex items-center gap-2 cursor-default"
             aria-label="Ask about this market"
           >
             <span aria-hidden="true">

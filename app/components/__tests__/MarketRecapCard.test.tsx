@@ -53,6 +53,16 @@ describe('MarketRecapCard', () => {
     expect(screen.getByRole('button', { name: /ask about this market/i })).toBeInTheDocument()
   })
 
+  it('clamps summary only when collapsed', () => {
+    render(<MarketRecapCard recap={recap} />)
+
+    const summary = screen.getByText(/S&P 500 closed slightly higher/i)
+    expect(summary).toHaveClass('line-clamp-3')
+
+    fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
+    expect(summary).not.toHaveClass('line-clamp-3')
+  })
+
   it('renders citation chips using publisher/site name', () => {
     render(<MarketRecapCard recap={recap} />)
 
