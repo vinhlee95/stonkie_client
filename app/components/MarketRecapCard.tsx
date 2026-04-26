@@ -9,7 +9,7 @@ interface MarketRecapCardProps {
 }
 
 function bulletColor(index: number): string {
-  const palette = ['bg-blue-500', 'bg-amber-500', 'bg-red-500', 'bg-emerald-600']
+  const palette = ['bg-blue-600', 'bg-amber-600', 'bg-rose-600', 'bg-emerald-700']
   return palette[index % palette.length]!
 }
 
@@ -121,7 +121,11 @@ export default function MarketRecapCard({ recap }: MarketRecapCardProps) {
           <div className="space-y-2">
             {recap.bullets.map((bullet, bulletIndex) => (
               <div key={`${bullet.text}-${bulletIndex}`} className="flex items-start gap-2.5 pb-2">
-                <span className={`mt-1.5 h-1.5 w-1.5 rounded-full ${bulletColor(bulletIndex)}`} />
+                <span
+                  className={`mt-2 h-2 w-2 shrink-0 rounded-full ring-1 ring-white/70 dark:ring-black/25 ${bulletColor(
+                    bulletIndex,
+                  )}`}
+                />
                 <div className="text-base md:text-lg leading-6 md:leading-7 text-gray-700 dark:text-gray-200">
                   <span>{bullet.text}</span>
                   {bullet.citations.map((citation, citationIndex) => {
