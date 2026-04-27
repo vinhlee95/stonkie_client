@@ -7,7 +7,7 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-const recap: MarketRecapItem = {
+const weeklyRecap: MarketRecapItem = {
   period_start: '2026-04-20',
   period_end: '2026-04-24',
   created_at: '2026-04-25T13:18:03.721444Z',
@@ -37,14 +37,32 @@ const recap: MarketRecapItem = {
   ],
 }
 
+const dailyRecap: MarketRecapItem = {
+  period_start: '2026-04-24',
+  period_end: '2026-04-24',
+  created_at: '2026-04-25T01:30:00.000000Z',
+  summary: 'Stocks finished the Friday session marginally higher on tech strength.',
+  bullets: [{ text: 'Nvidia popped 2.4% on AI demand chatter', citations: [{ source_id: 'd1' }] }],
+  sources: [
+    {
+      id: 'd1',
+      url: 'https://example.com/daily-1',
+      title: 'Daily source',
+      publisher: 'Bloomberg',
+      published_at: '2026-04-24T20:00:00Z',
+      fetched_at: '2026-04-24T21:00:00Z',
+    },
+  ],
+}
+
 describe('MarketRecapCard', () => {
   it('renders recap created_at timestamp', () => {
-    render(<MarketRecapCard recap={recap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
 
     const expectedLocalizedCreatedAt = new Intl.DateTimeFormat(undefined, {
       dateStyle: 'medium',
       timeStyle: 'short',
-    }).format(new Date(recap.created_at))
+    }).format(new Date(weeklyRecap.created_at))
 
     expect(screen.queryByText(/Created at:/i)).not.toBeInTheDocument()
     expect(
@@ -58,7 +76,7 @@ describe('MarketRecapCard', () => {
   })
 
   it('renders collapsed by default with summary visible', () => {
-    render(<MarketRecapCard recap={recap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
 
     expect(screen.getByText('Market Recap')).toBeInTheDocument()
     expect(screen.getByText(/S&P 500 closed slightly higher/i)).toBeInTheDocument()
@@ -66,7 +84,7 @@ describe('MarketRecapCard', () => {
   })
 
   it('shows bullets and CTA after expanding', () => {
-    render(<MarketRecapCard recap={recap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
 
     const toggle = screen.getByRole('button', { name: /market recap/i })
     fireEvent.click(toggle)
@@ -77,7 +95,7 @@ describe('MarketRecapCard', () => {
   })
 
   it('clamps summary only when collapsed', () => {
-    render(<MarketRecapCard recap={recap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
 
     const summary = screen.getByText(/S&P 500 closed slightly higher/i)
     expect(summary).toHaveClass('line-clamp-3')
@@ -87,7 +105,7 @@ describe('MarketRecapCard', () => {
   })
 
   it('renders citation chips using publisher/site name', () => {
-    render(<MarketRecapCard recap={recap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
 
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
 
@@ -104,10 +122,10 @@ describe('MarketRecapCard', () => {
 
   it('normalizes hostname fallback into clean brand-like labels', () => {
     const recapWithoutPublisher: MarketRecapItem = {
-      ...recap,
+      ...weeklyRecap,
       sources: [
         {
-          ...recap.sources[0],
+          ...weeklyRecap.sources[0],
           publisher: '',
           url: 'https://www.reuters.com/world/example-story',
         },
@@ -115,7 +133,7 @@ describe('MarketRecapCard', () => {
       bullets: [{ text: 'Fallback source example', citations: [{ source_id: 's1' }] }],
     }
 
-    render(<MarketRecapCard recap={recapWithoutPublisher} />)
+    render(<MarketRecapCard daily={null} weekly={recapWithoutPublisher} />)
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
 
     expect(screen.getByRole('link', { name: /^reuters$/i })).toBeInTheDocument()
@@ -124,17 +142,17 @@ describe('MarketRecapCard', () => {
 
   it('normalizes publisher value when publisher itself is a website', () => {
     const recapWithWebsitePublisher: MarketRecapItem = {
-      ...recap,
+      ...weeklyRecap,
       sources: [
         {
-          ...recap.sources[0],
+          ...weeklyRecap.sources[0],
           publisher: 'www.reuters.com',
         },
       ],
       bullets: [{ text: 'Publisher website example', citations: [{ source_id: 's1' }] }],
     }
 
-    render(<MarketRecapCard recap={recapWithWebsitePublisher} />)
+    render(<MarketRecapCard daily={null} weekly={recapWithWebsitePublisher} />)
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
 
     expect(screen.getByRole('link', { name: /^reuters$/i })).toBeInTheDocument()
@@ -142,7 +160,7 @@ describe('MarketRecapCard', () => {
   })
 
   it('shows source detail popup on chip hover', () => {
-    render(<MarketRecapCard recap={recap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
 
     const sourceChip = screen.getByRole('link', { name: /reuters/i })
@@ -160,19 +178,138 @@ describe('MarketRecapCard', () => {
 
   it('shows only one tooltip when same source appears across multiple bullets', () => {
     const recapWithDuplicateSource: MarketRecapItem = {
-      ...recap,
+      ...weeklyRecap,
       bullets: [
         { text: 'Bullet A', citations: [{ source_id: 's1' }] },
         { text: 'Bullet B', citations: [{ source_id: 's1' }] },
       ],
     }
 
-    render(<MarketRecapCard recap={recapWithDuplicateSource} />)
+    render(<MarketRecapCard daily={null} weekly={recapWithDuplicateSource} />)
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
 
     const reutersLinks = screen.getAllByRole('link', { name: /reuters/i })
     fireEvent.mouseEnter(reutersLinks[0]!)
 
     expect(screen.getAllByRole('tooltip')).toHaveLength(1)
+  })
+
+  describe('cadence toggle', () => {
+    it('renders daily content by default when both cadences are provided', () => {
+      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} />)
+
+      expect(screen.getByText(/Stocks finished the Friday session/i)).toBeInTheDocument()
+      expect(screen.queryByText(/S&P 500 closed slightly higher/i)).not.toBeInTheDocument()
+    })
+
+    it('renders Daily and Weekly pill toggles when both cadences are provided', () => {
+      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} />)
+
+      expect(screen.getByRole('button', { name: /^daily$/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /^weekly$/i })).toBeInTheDocument()
+    })
+
+    it('switches displayed summary when Weekly pill is clicked', () => {
+      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} />)
+
+      fireEvent.click(screen.getByRole('button', { name: /^weekly$/i }))
+
+      expect(screen.getByText(/S&P 500 closed slightly higher/i)).toBeInTheDocument()
+      expect(screen.queryByText(/Stocks finished the Friday session/i)).not.toBeInTheDocument()
+    })
+
+    it('does not expand the card when toggling cadence', () => {
+      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} />)
+
+      fireEvent.click(screen.getByRole('button', { name: /^weekly$/i }))
+
+      // Bullet text from expanded body should not be present.
+      expect(screen.queryByText(/Tech sector led gains/i)).not.toBeInTheDocument()
+    })
+
+    it('hides the pill toggle when only weekly is provided', () => {
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+
+      expect(screen.queryByRole('button', { name: /^daily$/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /^weekly$/i })).not.toBeInTheDocument()
+    })
+
+    it('hides the pill toggle when only daily is provided', () => {
+      render(<MarketRecapCard daily={dailyRecap} weekly={null} />)
+
+      expect(screen.queryByRole('button', { name: /^daily$/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /^weekly$/i })).not.toBeInTheDocument()
+      expect(screen.getByText(/Stocks finished the Friday session/i)).toBeInTheDocument()
+    })
+  })
+
+  describe('period pill', () => {
+    it('renders a single date for a daily recap (period_start === period_end)', () => {
+      render(<MarketRecapCard daily={dailyRecap} weekly={null} />)
+
+      const expected = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+        new Date('2026-04-24T00:00:00Z'),
+      )
+      expect(
+        screen.getByLabelText(new RegExp(`Recap period\\s*${escapeRegExp(expected)}`, 'i')),
+      ).toBeInTheDocument()
+    })
+
+    it('renders a date range for a weekly recap', () => {
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+
+      const start = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+        new Date('2026-04-20T00:00:00Z'),
+      )
+      const end = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+        new Date('2026-04-24T00:00:00Z'),
+      )
+      const label = screen.getByLabelText(/Recap period/i)
+      expect(label.textContent ?? '').toContain(start)
+      expect(label.textContent ?? '').toContain(end)
+    })
+
+    it('renders both period and created_at chips at the same time', () => {
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+
+      expect(screen.getByLabelText(/Recap period/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Recap created/i)).toBeInTheDocument()
+    })
+
+    it('places the created_at chip after the summary text in DOM order', () => {
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+
+      const summary = screen.getByText(/S&P 500 closed slightly higher/i)
+      const createdAtChip = screen.getByLabelText(/Recap created/i)
+
+      const order = summary.compareDocumentPosition(createdAtChip)
+      expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('prefixes the created_at chip with "Curated on:"', () => {
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+
+      const chip = screen.getByLabelText(/Recap created/i)
+      expect(chip.textContent ?? '').toMatch(/Curated on:/i)
+    })
+
+    it('updates the period chip when the cadence is toggled', () => {
+      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} />)
+
+      const dailyExpected = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+        new Date('2026-04-24T00:00:00Z'),
+      )
+      expect(
+        screen.getByLabelText(new RegExp(`Recap period\\s*${escapeRegExp(dailyExpected)}`, 'i')),
+      ).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: /^weekly$/i }))
+
+      const weeklyLabel = screen.getByLabelText(/Recap period/i)
+      const start = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+        new Date('2026-04-20T00:00:00Z'),
+      )
+      expect(weeklyLabel.textContent ?? '').toContain(start)
+    })
   })
 })

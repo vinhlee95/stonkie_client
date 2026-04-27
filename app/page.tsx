@@ -4,7 +4,7 @@ import MostViewedCompanies from './components/MostViewedCompanies'
 import { ETFListItem } from './components/ETFList'
 import {
   FrontendMarketRecapKey,
-  getLatestWeeklyRecapForFrontendMarket,
+  getLatestRecapPairForFrontendMarket,
   MarketRecapMap,
 } from '@/lib/api/marketRecap'
 
@@ -43,13 +43,13 @@ export default async function Page() {
   const recapMarkets: FrontendMarketRecapKey[] = ['USA', 'Finland', 'Vietnam']
   const recapEntries = await Promise.all(
     recapMarkets.map(async (marketKey) => {
-      const recap = await getLatestWeeklyRecapForFrontendMarket(marketKey)
-      return [marketKey, recap] as const
+      const pair = await getLatestRecapPairForFrontendMarket(marketKey)
+      return [marketKey, pair] as const
     }),
   )
-  const marketRecaps: MarketRecapMap = recapEntries.reduce<MarketRecapMap>((acc, [key, item]) => {
-    if (item) {
-      acc[key] = item
+  const marketRecaps: MarketRecapMap = recapEntries.reduce<MarketRecapMap>((acc, [key, pair]) => {
+    if (pair.daily || pair.weekly) {
+      acc[key] = pair
     }
     return acc
   }, {})

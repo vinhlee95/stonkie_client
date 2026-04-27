@@ -114,7 +114,7 @@ export default function MostViewedCompanies({
   const isEtfMarket = market === ETF_MARKET_KEY
   const activeMarketDef =
     market === ALL_MARKETS_KEY || isEtfMarket ? undefined : getMarketDef(market)
-  const activeRecap = useMemo(() => {
+  const activeRecapPair = useMemo(() => {
     if (!activeMarketDef) return null
     const marketKey = activeMarketDef.key as FrontendMarketRecapKey
     return marketRecaps[marketKey] ?? null
@@ -243,9 +243,9 @@ export default function MostViewedCompanies({
           <MarketChart market={market} height={market === 'USA' ? 300 : 240} />
         </div>
       )}
-      {activeMarketDef && activeRecap && (
+      {activeMarketDef && activeRecapPair && (activeRecapPair.daily || activeRecapPair.weekly) && (
         <div className="mb-4">
-          <MarketRecapCard recap={activeRecap} />
+          <MarketRecapCard daily={activeRecapPair.daily} weekly={activeRecapPair.weekly} />
         </div>
       )}
 

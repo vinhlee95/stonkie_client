@@ -116,28 +116,37 @@ describe('MostViewedCompanies market filter', () => {
   ]
   const marketRecaps: MarketRecapMap = {
     USA: {
-      period_start: '2026-04-20',
-      period_end: '2026-04-24',
-      created_at: '2026-04-25T13:18:03.721444Z',
-      summary: 'US weekly market recap',
-      bullets: [{ text: 'US bullet', citations: [] }],
-      sources: [],
+      daily: null,
+      weekly: {
+        period_start: '2026-04-20',
+        period_end: '2026-04-24',
+        created_at: '2026-04-25T13:18:03.721444Z',
+        summary: 'US weekly market recap',
+        bullets: [{ text: 'US bullet', citations: [] }],
+        sources: [],
+      },
     },
     Finland: {
-      period_start: '2026-04-20',
-      period_end: '2026-04-24',
-      created_at: '2026-04-25T13:18:03.721444Z',
-      summary: 'Finland weekly market recap',
-      bullets: [{ text: 'FI bullet', citations: [] }],
-      sources: [],
+      daily: null,
+      weekly: {
+        period_start: '2026-04-20',
+        period_end: '2026-04-24',
+        created_at: '2026-04-25T13:18:03.721444Z',
+        summary: 'Finland weekly market recap',
+        bullets: [{ text: 'FI bullet', citations: [] }],
+        sources: [],
+      },
     },
     Vietnam: {
-      period_start: '2026-04-20',
-      period_end: '2026-04-24',
-      created_at: '2026-04-25T13:18:03.721444Z',
-      summary: 'Vietnam weekly market recap',
-      bullets: [{ text: 'VN bullet', citations: [] }],
-      sources: [],
+      daily: null,
+      weekly: {
+        period_start: '2026-04-20',
+        period_end: '2026-04-24',
+        created_at: '2026-04-25T13:18:03.721444Z',
+        summary: 'Vietnam weekly market recap',
+        bullets: [{ text: 'VN bullet', citations: [] }],
+        sources: [],
+      },
     },
   }
 

@@ -41,7 +41,12 @@ export const FRONTEND_TO_BACKEND_MARKET = {
 
 export type FrontendMarketRecapKey = keyof typeof FRONTEND_TO_BACKEND_MARKET
 
-export type MarketRecapMap = Partial<Record<FrontendMarketRecapKey, MarketRecapItem>>
+export type MarketRecapPair = {
+  daily: MarketRecapItem | null
+  weekly: MarketRecapItem | null
+}
+
+export type MarketRecapMap = Partial<Record<FrontendMarketRecapKey, MarketRecapPair>>
 
 type GetMarketRecapsArgs = {
   market: string
@@ -78,20 +83,27 @@ export async function getMarketRecaps({
   return (await response.json()) as MarketRecapResponse
 }
 
-export async function getLatestWeeklyRecapForFrontendMarket(
-  frontendMarket: FrontendMarketRecapKey,
+async function fetchLatestForCadence(
+  backendMarket: string,
+  cadence: 'daily' | 'weekly',
 ): Promise<MarketRecapItem | null> {
-  const backendMarket = toBackendMarketCode(frontendMarket)
-  if (!backendMarket) return null
-
   try {
-    const recapResponse = await getMarketRecaps({
-      market: backendMarket,
-      cadence: 'weekly',
-      limit: 1,
-    })
-    return recapResponse.items[0] ?? null
+    const response = await getMarketRecaps({ market: backendMarket, cadence, limit: 1 })
+    return response.items[0] ?? null
   } catch {
     return null
   }
+}
+
+export async function getLatestRecapPairForFrontendMarket(
+  frontendMarket: FrontendMarketRecapKey,
+): Promise<MarketRecapPair> {
+  const backendMarket = toBackendMarketCode(frontendMarket)
+  if (!backendMarket) return { daily: null, weekly: null }
+
+  const [daily, weekly] = await Promise.all([
+    fetchLatestForCadence(backendMarket, 'daily'),
+    fetchLatestForCadence(backendMarket, 'weekly'),
+  ])
+  return { daily, weekly }
 }

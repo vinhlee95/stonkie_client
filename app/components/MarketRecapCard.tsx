@@ -1,11 +1,14 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { Clock3, Sparkles } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { CalendarDays, Clock3, Sparkles } from 'lucide-react'
 import { MarketRecapItem } from '@/lib/api/marketRecap'
 
+type Cadence = 'daily' | 'weekly'
+
 interface MarketRecapCardProps {
-  recap: MarketRecapItem
+  daily: MarketRecapItem | null
+  weekly: MarketRecapItem | null
 }
 
 function bulletColor(index: number): string {
@@ -65,18 +68,48 @@ function formatRecapCreatedAt(createdAt: string): string {
   }).format(date)
 }
 
-export default function MarketRecapCard({ recap }: MarketRecapCardProps) {
+function formatRecapPeriod(periodStart: string, periodEnd: string): string {
+  const fmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
+  const start = new Date(`${periodStart}T00:00:00Z`)
+  const end = new Date(`${periodEnd}T00:00:00Z`)
+  if (Number.isNaN(start.getTime())) return periodStart
+  if (periodStart === periodEnd || Number.isNaN(end.getTime())) return fmt.format(start)
+  return `${fmt.format(start)} – ${fmt.format(end)}`
+}
+
+export default function MarketRecapCard({ daily, weekly }: MarketRecapCardProps) {
+  const initialCadence: Cadence = daily ? 'daily' : 'weekly'
+  const [cadence, setCadence] = useState<Cadence>(initialCadence)
   const [expanded, setExpanded] = useState(false)
   const [hoveredCitationKey, setHoveredCitationKey] = useState<string | null>(null)
   const [hoveredTooltipAlign, setHoveredTooltipAlign] = useState<'left' | 'right'>('left')
-  const teaser = useMemo(() => recap.summary.trim(), [recap.summary])
+
+  const recap = cadence === 'daily' ? (daily ?? weekly) : (weekly ?? daily)
+  const showCadenceToggle = Boolean(daily && weekly)
+
+  const cadenceTabRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const [cadenceIndicator, setCadenceIndicator] = useState({ left: 0, width: 0 })
+  useEffect(() => {
+    if (!showCadenceToggle) return
+    const activeIndex = cadence === 'daily' ? 0 : 1
+    const el = cadenceTabRefs.current[activeIndex]
+    if (el) setCadenceIndicator({ left: el.offsetLeft, width: el.offsetWidth })
+  }, [cadence, showCadenceToggle])
+
+  const teaser = useMemo(() => recap?.summary.trim() ?? '', [recap])
   const formattedCreatedAt = useMemo(
-    () => formatRecapCreatedAt(recap.created_at),
-    [recap.created_at],
+    () => (recap ? formatRecapCreatedAt(recap.created_at) : ''),
+    [recap],
+  )
+  const formattedPeriod = useMemo(
+    () => (recap ? formatRecapPeriod(recap.period_start, recap.period_end) : ''),
+    [recap],
   )
   const sourceById = useMemo(() => {
-    return new Map(recap.sources.map((source) => [source.id, source]))
-  }, [recap.sources])
+    return new Map((recap?.sources ?? []).map((source) => [source.id, source]))
+  }, [recap])
+
+  if (!recap) return null
 
   return (
     <section
@@ -103,12 +136,60 @@ export default function MarketRecapCard({ recap }: MarketRecapCardProps) {
                   Market Recap
                 </span>
               </div>
+              {showCadenceToggle && (
+                <div
+                  role="group"
+                  aria-label="Recap cadence"
+                  className="relative inline-flex items-center bg-gray-100/80 dark:bg-gray-800/40 backdrop-blur-sm rounded-full p-1 gap-1"
+                >
+                  <div
+                    aria-hidden="true"
+                    className="absolute top-1 bottom-1 rounded-full bg-white dark:bg-gray-700 shadow-[0_2px_8px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4),0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] pointer-events-none"
+                    style={{
+                      left: `${cadenceIndicator.left}px`,
+                      width: `${cadenceIndicator.width}px`,
+                    }}
+                  />
+                  {(['daily', 'weekly'] as const).map((value, index) => {
+                    const active = cadence === value
+                    return (
+                      <span
+                        key={value}
+                        ref={(el) => {
+                          cadenceTabRefs.current[index] = el
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={active}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          setCadence(value)
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            setCadence(value)
+                          }
+                        }}
+                        className={`relative z-10 px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-300 cursor-pointer select-none whitespace-nowrap ${
+                          active
+                            ? 'text-gray-900 dark:text-white'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                        }`}
+                      >
+                        {value === 'daily' ? 'Daily' : 'Weekly'}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
               <span
-                aria-label={`Recap created ${formattedCreatedAt}`}
-                className="inline-flex items-center gap-1 rounded-full border border-[rgba(40,105,86,0.25)] dark:border-[rgba(156,214,194,0.35)] px-2 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300"
+                aria-label={`Recap period ${formattedPeriod}`}
+                className="inline-flex items-center gap-1 rounded-full border border-[rgba(40,105,86,0.25)] dark:border-[rgba(156,214,194,0.35)] px-2 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300 w-fit"
               >
-                <Clock3 aria-hidden="true" size={11} strokeWidth={2.25} />
-                <span>{formattedCreatedAt}</span>
+                <CalendarDays aria-hidden="true" size={11} strokeWidth={2.25} />
+                <span>{formattedPeriod}</span>
               </span>
             </div>
             <p
@@ -118,6 +199,13 @@ export default function MarketRecapCard({ recap }: MarketRecapCardProps) {
             >
               {teaser}
             </p>
+            <span
+              aria-label={`Recap created ${formattedCreatedAt}`}
+              className="mt-2 inline-flex w-fit items-center gap-1 rounded-full border border-[rgba(40,105,86,0.25)] dark:border-[rgba(156,214,194,0.35)] px-2 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300"
+            >
+              <Clock3 aria-hidden="true" size={11} strokeWidth={2.25} />
+              <span>Curated on: {formattedCreatedAt}</span>
+            </span>
           </div>
           <span
             aria-hidden="true"
