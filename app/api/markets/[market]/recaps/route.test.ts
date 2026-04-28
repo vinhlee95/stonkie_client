@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import { GET, MARKETS_RECAPS_ROUTE_CACHE_CONTROL } from './route'
+import { GET } from './route'
+import { MARKETS_RECAPS_ROUTE_CACHE_CONTROL } from './cache'
 
 function getReq(path: string) {
   return new NextRequest(`http://localhost${path}`)
