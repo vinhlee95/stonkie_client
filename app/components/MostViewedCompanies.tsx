@@ -5,14 +5,14 @@ import MarketChart from '@/app/MarketChart'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ETFList, { ETFListItem } from './ETFList'
 import IndexSummaryStrip from './IndexSummaryStrip'
-import MarketRecapCard from './MarketRecapCard'
+import MarketRecapIsland from './MarketRecapIsland'
 import MarketFilter, {
   ALL_MARKETS_KEY,
   ETF_MARKET_KEY,
   getMarketDef,
   matchesMarket,
 } from './MarketFilter'
-import { FrontendMarketRecapKey, MarketRecapMap } from '@/lib/api/marketRecap'
+import { FRONTEND_TO_BACKEND_MARKET, FrontendMarketRecapKey } from '@/lib/api/marketRecap'
 import ScrollToTopButton from './ScrollToTopButton'
 import SectorFilter, { SectorNavItem } from './SectorFilter'
 import SectorSection from './SectorSection'
@@ -72,11 +72,9 @@ const SCROLL_SPY_ROOT_MARGIN = '-88px 0px -50% 0px'
 export default function MostViewedCompanies({
   companies,
   etfs = [],
-  marketRecaps = {},
 }: {
   companies: Company[]
   etfs?: ETFListItem[]
-  marketRecaps?: MarketRecapMap
 }) {
   const topRef = useRef<HTMLDivElement>(null)
   const sectionElementsRef = useRef<Record<string, HTMLElement | null>>({})
@@ -114,11 +112,12 @@ export default function MostViewedCompanies({
   const isEtfMarket = market === ETF_MARKET_KEY
   const activeMarketDef =
     market === ALL_MARKETS_KEY || isEtfMarket ? undefined : getMarketDef(market)
-  const activeRecapPair = useMemo(() => {
+  const recapIslandMarketKey = useMemo((): FrontendMarketRecapKey | null => {
     if (!activeMarketDef) return null
-    const marketKey = activeMarketDef.key as FrontendMarketRecapKey
-    return marketRecaps[marketKey] ?? null
-  }, [activeMarketDef, marketRecaps])
+    const k = activeMarketDef.key
+    if (k in FRONTEND_TO_BACKEND_MARKET) return k as FrontendMarketRecapKey
+    return null
+  }, [activeMarketDef])
 
   const setSectionRef = useCallback((key: string) => {
     return (el: HTMLElement | null) => {
@@ -243,9 +242,9 @@ export default function MostViewedCompanies({
           <MarketChart market={market} height={market === 'USA' ? 300 : 240} />
         </div>
       )}
-      {activeMarketDef && activeRecapPair && (activeRecapPair.daily || activeRecapPair.weekly) && (
+      {recapIslandMarketKey && (
         <div className="mb-4">
-          <MarketRecapCard daily={activeRecapPair.daily} weekly={activeRecapPair.weekly} />
+          <MarketRecapIsland marketKey={recapIslandMarketKey} />
         </div>
       )}
 

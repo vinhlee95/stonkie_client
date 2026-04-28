@@ -1,11 +1,10 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import MostViewedCompanies, {
   groupCompaniesBySector,
   normalizeSectorKey,
 } from '../MostViewedCompanies'
 import { Company } from '@/app/CompanyList'
-import { MarketRecapMap } from '@/lib/api/marketRecap'
 
 function tickerLinks() {
   return screen
@@ -80,6 +79,25 @@ describe('MostViewedCompanies sector grouping', () => {
 })
 
 describe('MostViewedCompanies market filter', () => {
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const u = String(input)
+      if (u.includes('/api/markets/') && u.includes('/recaps')) {
+        return new Response(JSON.stringify({ daily: null, weekly: null }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response('', { status: 404 })
+    })
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+  })
+
   const companies: Company[] = [
     {
       name: 'Apple',
@@ -114,42 +132,6 @@ describe('MostViewedCompanies market filter', () => {
       exchange: 'NASDAQ',
     },
   ]
-  const marketRecaps: MarketRecapMap = {
-    USA: {
-      daily: null,
-      weekly: {
-        period_start: '2026-04-20',
-        period_end: '2026-04-24',
-        created_at: '2026-04-25T13:18:03.721444Z',
-        summary: 'US weekly market recap',
-        bullets: [{ text: 'US bullet', citations: [] }],
-        sources: [],
-      },
-    },
-    Finland: {
-      daily: null,
-      weekly: {
-        period_start: '2026-04-20',
-        period_end: '2026-04-24',
-        created_at: '2026-04-25T13:18:03.721444Z',
-        summary: 'Finland weekly market recap',
-        bullets: [{ text: 'FI bullet', citations: [] }],
-        sources: [],
-      },
-    },
-    Vietnam: {
-      daily: null,
-      weekly: {
-        period_start: '2026-04-20',
-        period_end: '2026-04-24',
-        created_at: '2026-04-25T13:18:03.721444Z',
-        summary: 'Vietnam weekly market recap',
-        bullets: [{ text: 'VN bullet', citations: [] }],
-        sources: [],
-      },
-    },
-  }
-
   it('filters the list by selected market', () => {
     render(<MostViewedCompanies companies={companies} />)
 
@@ -192,22 +174,77 @@ describe('MostViewedCompanies market filter', () => {
     expect(within(tablist).getByRole('tab', { name: /US/i })).toBeInTheDocument()
   })
 
-  it('shows recap only for country tabs with recap data', () => {
-    render(<MostViewedCompanies companies={companies} marketRecaps={marketRecaps} />)
+  it('shows recap only for country tabs with recap data', async () => {
+    const weeklyUs = {
+      period_start: '2026-04-20',
+      period_end: '2026-04-24',
+      created_at: '2026-04-25T13:18:03.721444Z',
+      summary: 'US weekly market recap',
+      bullets: [{ text: 'US bullet', citations: [] }],
+      sources: [],
+    }
+    vi.mocked(globalThis.fetch).mockImplementation(async (input: RequestInfo | URL) => {
+      const u = String(input)
+      if (u.includes('/api/markets/US/recaps')) {
+        return new Response(JSON.stringify({ daily: null, weekly: weeklyUs }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      if (u.includes('/api/markets/') && u.includes('/recaps')) {
+        return new Response(JSON.stringify({ daily: null, weekly: null }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response('', { status: 404 })
+    })
+
+    render(<MostViewedCompanies companies={companies} />)
 
     expect(screen.queryByText(/US weekly market recap/i)).not.toBeInTheDocument()
 
     const tablist = screen.getByRole('tablist', { name: /market filter/i })
     fireEvent.click(within(tablist).getByRole('tab', { name: /US/i }))
-    expect(screen.getByText(/US weekly market recap/i)).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(screen.getByText(/US weekly market recap/i)).toBeInTheDocument()
+    })
   })
 
-  it('renders vietnam recap without requiring a chart', () => {
-    render(<MostViewedCompanies companies={companies} marketRecaps={marketRecaps} />)
+  it('renders vietnam recap without requiring a chart', async () => {
+    const weeklyVn = {
+      period_start: '2026-04-20',
+      period_end: '2026-04-24',
+      created_at: '2026-04-25T13:18:03.721444Z',
+      summary: 'Vietnam weekly market recap',
+      bullets: [{ text: 'VN bullet', citations: [] }],
+      sources: [],
+    }
+    vi.mocked(globalThis.fetch).mockImplementation(async (input: RequestInfo | URL) => {
+      const u = String(input)
+      if (u.includes('/api/markets/VN/recaps')) {
+        return new Response(JSON.stringify({ daily: null, weekly: weeklyVn }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      if (u.includes('/api/markets/') && u.includes('/recaps')) {
+        return new Response(JSON.stringify({ daily: null, weekly: null }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response('', { status: 404 })
+    })
+
+    render(<MostViewedCompanies companies={companies} />)
 
     const tablist = screen.getByRole('tablist', { name: /market filter/i })
     fireEvent.click(within(tablist).getByRole('tab', { name: /Vietnam/i }))
 
-    expect(screen.getByText(/Vietnam weekly market recap/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(/Vietnam weekly market recap/i)).toBeInTheDocument()
+    })
   })
 })

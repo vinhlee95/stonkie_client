@@ -2,12 +2,6 @@ import { Company } from './CompanyList'
 import FavouritesList from './components/FavouritesList'
 import MostViewedCompanies from './components/MostViewedCompanies'
 import { ETFListItem } from './components/ETFList'
-import {
-  FrontendMarketRecapKey,
-  getLatestRecapPairForFrontendMarket,
-  MarketRecapMap,
-} from '@/lib/api/marketRecap'
-
 const BACKEND_URL = process.env.BACKEND_URL
 
 // Remove React Query and use Next.js server component data fetching
@@ -40,24 +34,10 @@ export default async function Page() {
     console.error('Failed to fetch ETFs:', error)
   }
 
-  const recapMarkets: FrontendMarketRecapKey[] = ['USA', 'Finland', 'Vietnam']
-  const recapEntries = await Promise.all(
-    recapMarkets.map(async (marketKey) => {
-      const pair = await getLatestRecapPairForFrontendMarket(marketKey)
-      return [marketKey, pair] as const
-    }),
-  )
-  const marketRecaps: MarketRecapMap = recapEntries.reduce<MarketRecapMap>((acc, [key, pair]) => {
-    if (pair.daily || pair.weekly) {
-      acc[key] = pair
-    }
-    return acc
-  }, {})
-
   return (
     <div className="container mx-auto px-4 pt-2 pb-6">
       <FavouritesList />
-      {data && <MostViewedCompanies companies={data} etfs={etfData} marketRecaps={marketRecaps} />}
+      {data && <MostViewedCompanies companies={data} etfs={etfData} />}
     </div>
   )
 }
