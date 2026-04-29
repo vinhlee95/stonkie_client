@@ -192,3 +192,50 @@ body.safari-scroll-lock .modal-content {
     opacity: 1;
   }
 }
+
+/* Market recap fetch placeholder — visible motion on near-matching card bg */
+@keyframes market-recap-shimmer-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+.market-recap-placeholder-shimmer-bar {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(4, 78, 57, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  .market-recap-placeholder-shimmer-bar {
+    background-color: rgba(156, 214, 194, 0.12);
+  }
+}
+
+.market-recap-placeholder-shimmer-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: market-recap-shimmer-slide 1.35s ease-in-out infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .market-recap-placeholder-shimmer-bar::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .market-recap-placeholder-shimmer-bar::before {
+    animation: none;
+    opacity: 0.35;
+    transform: translateX(0);
+    width: 100%;
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
