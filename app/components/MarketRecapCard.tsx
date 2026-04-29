@@ -332,35 +332,6 @@ export default function MarketRecapCard({ daily, weekly }: MarketRecapCardProps)
               </div>
             ))}
           </div>
-
-          <button
-            type="button"
-            className="mt-2 w-full rounded-xl bg-[var(--accent-active)] dark:bg-[var(--accent-active-dark)] text-white dark:text-black px-3 py-2.5 text-base md:text-lg font-semibold flex items-center gap-2 cursor-default"
-            aria-label="Ask about this market"
-          >
-            <span aria-hidden="true">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path
-                  d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <span className="flex-1 text-left">Ask about this market</span>
-            <span aria-hidden="true">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <line x1="5" y1="12" x2="19" y2="12" strokeWidth="2.5" strokeLinecap="round" />
-                <polyline
-                  points="12 5 19 12 12 19"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-          </button>
         </div>
       )}
     </section>

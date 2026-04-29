@@ -83,7 +83,7 @@ describe('MarketRecapCard', () => {
     expect(screen.queryByText(/Tech sector led gains/i)).not.toBeInTheDocument()
   })
 
-  it('shows bullets and CTA after expanding', () => {
+  it('shows bullets after expanding without ask-market chat CTA', () => {
     render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
 
     const toggle = screen.getByRole('button', { name: /market recap/i })
@@ -91,7 +91,7 @@ describe('MarketRecapCard', () => {
 
     expect(screen.getByText(/Tech sector led gains/i)).toBeInTheDocument()
     expect(screen.getByText(/Fed held rates steady/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /ask about this market/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /ask about this market/i })).not.toBeInTheDocument()
   })
 
   it('clamps summary only when collapsed', () => {
