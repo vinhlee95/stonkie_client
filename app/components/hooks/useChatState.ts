@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { SourceMetadata } from '../utils/sourceMetadata'
 
 export interface AnswerGround {
   body: string
   url: string
 }
 
-export interface AnswerSource {
-  name: string
-  url?: string
+export interface AnswerSource extends SourceMetadata {
+  sourceId?: string
   paragraphIndices?: number[]
+  isTrusted?: boolean
 }
 
 export interface VisualBlock {

@@ -11,6 +11,7 @@ import { ThoughtBubble } from './ThoughtBubble'
 import { Plus } from 'lucide-react'
 import AnswerContent from './AnswerContent'
 import ResourceChips from './ResourceChips'
+import ChatSourceChips from './ChatSourceChips'
 
 // Compose the context type from useChatState and useChatAPI return types
 type ChatStateType = ReturnType<typeof useChatState>
@@ -86,7 +87,7 @@ interface ThreadViewProps {
   isThinking: boolean
 }
 
-const ThreadView: React.FC<ThreadViewProps> = ({
+export const ThreadView: React.FC<ThreadViewProps> = ({
   thread,
   onFAQClick,
   isLastThread,
@@ -128,7 +129,7 @@ const ThreadView: React.FC<ThreadViewProps> = ({
             <FileSearch className="w-5 h-5" />
             <div className="font-semibold">Sources</div>
           </div>
-          <ResourceChips resources={thread.sources.map((s) => ({ url: s.url, label: s.name }))} />
+          <ChatSourceChips sources={thread.sources} />
         </>
       )}
 

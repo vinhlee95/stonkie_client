@@ -15,14 +15,14 @@ const SAMPLE_STREAM = `{"type": "conversation", "body": {"conversationId": "0cfa
 {"type": "answer", "body": " of **$39.3 billion** for the fourth quarter ended January 26, 2025, marking a significant **78% increase"}
 {"type": "answer", "body": "** year-over-year. This growth is largely attributable to the overwhelming demand for its AI accelerators, particularly the Blackwell platform, and strong performance in its Data Center segment, which saw revenue surge to **$35.6 billion**, up"}
 {"type": "answer", "body": " **93%** from the prior year. This indicates NVIDIA's continued dominance in powering the AI revolution.\\n"}
-{"type": "sources", "body": [{"name": "NVIDIA Announces Financial Results for Fourth Quarter and Fiscal 2025", "url": "https://nvidianews.nvidia.com/_gallery/download_pdf/67bf85d73d633281c6875f57/"}]}
+{"type": "sources", "body": [{"source_id": "s1", "url": "https://nvidianews.nvidia.com/_gallery/download_pdf/67bf85d73d633281c6875f57/", "title": "", "publisher": "NVIDIA", "published_at": "2025-02-26T12:00:00Z", "is_trusted": true}]}
 {"type": "answer", "body": "\\n\\n**Exceptional Profitability**\\n\\nThe company also"}
 {"type": "answer", "body": " demonstrated strong profitability, with GAAP earnings per diluted share reaching **$0.89** for the fourth quarter, an **82% increase** compared to the previous year. Similarly, non-GAAP earnings per diluted share saw a **71% rise** to **$0.89**. This expansion in earnings"}
 {"type": "answer", "body": ", outpacing revenue growth in percentage terms for some metrics, highlights NVIDIA's operational efficiency and strong pricing power within the high-demand AI hardware market.\\n"}
 {"type": "answer", "body": "\\n\\n**Strong Fiscal Year Performance**\\n\\nFor the full fiscal year 2025"}
 {"type": "answer", "body": ", NVIDIA achieved record revenue of **$130.5 billion**, a substantial **114% increase** from fiscal year 2024. GAAP earnings per diluted share more than doubled, rising **147%** to **$2.94**. This sustained, high-level growth across the entire"}
 {"type": "answer", "body": " year underscores the company's strategic position and consistent execution in capitalizing on the global acceleration of AI adoption across industries.\\n"}
-{"type": "sources", "body": [{"name": "0001045810-25-000230", "url": "https://investor.nvidia.com/files/doc_financials/2026/q3/13e6981b-95ed-4aac-a602-ebc5865d0590.pdf"}, {"name": "0001045810-25-000230", "url": "https://s201.q4cdn.com/141608511/files/doc_financials/2026/q3/13e6981b-95ed-4aac-a602-ebc5865d0590.pdf"}]}
+{"type": "sources", "body": [{"source_id": "s2", "url": "https://investor.nvidia.com/files/doc_financials/2026/q3/13e6981b-95ed-4aac-a602-ebc5865d0590.pdf", "title": "0001045810-25-000230", "publisher": "NVIDIA IR", "published_at": null, "is_trusted": true}, {"source_id": "s3", "url": "https://s201.q4cdn.com/141608511/files/doc_financials/2026/q3/13e6981b-95ed-4aac-a602-ebc5865d0590.pdf", "title": "0001045810-25-000230", "publisher": "Q4 CDN", "published_at": null, "is_trusted": true}]}
 {"type": "model_used", "body": "google/gemini-2.5-flash-lite:nitro"}
 {"type": "related_question", "body": "What specific products or segments are driving the revenue growth?"}
 {"type": "related_question", "body": "How does their revenue growth compare to industry peers like AMD?"}
@@ -73,54 +73,22 @@ describe('processStreamLine', () => {
     })
   })
 
-  it('injects first source as inline markdown link after first paragraph', () => {
+  it('does not inject v2 sources into accumulated answer content', () => {
     const state = replayStream(lines)
-    // After "AI revolution.\n" the first source should be injected as a markdown link
-    expect(state.accumulatedContent).toContain(
-      'AI revolution.\n[NVIDIA Announces Financial Results for Fourth Quarter and Fiscal 2025](https://nvidianews.nvidia.com/_gallery/download_pdf/67bf85d73d633281c6875f57/)',
-    )
-  })
-
-  it('injects second sources as inline markdown links after last paragraph', () => {
-    const state = replayStream(lines)
-    // After "across industries.\n" the two sources should be injected
-    expect(state.accumulatedContent).toContain(
-      'across industries.\n[0001045810-25-000230](https://investor.nvidia.com/files/doc_financials/2026/q3/13e6981b-95ed-4aac-a602-ebc5865d0590.pdf) [0001045810-25-000230](https://s201.q4cdn.com/141608511/files/doc_financials/2026/q3/13e6981b-95ed-4aac-a602-ebc5865d0590.pdf)',
-    )
-  })
-
-  it('does not place sources at the very end of content', () => {
-    const state = replayStream(lines)
-    // Sources should be followed by more answer text (or a newline), not be the last thing
-    // The second sources block IS the last answer content, so it ends with a newline
-    expect(state.accumulatedContent.trimEnd()).not.toMatch(/\]\)$/)
+    expect(state.accumulatedContent).not.toContain('nvidianews.nvidia.com')
+    expect(state.accumulatedContent).not.toContain('investor.nvidia.com')
+    expect(state.accumulatedContent).not.toContain('Q4 CDN')
   })
 
   it('answer text between sources is preserved', () => {
     const state = replayStream(lines)
-    // The "Exceptional Profitability" section should appear between the two source blocks
     expect(state.accumulatedContent).toContain('**Exceptional Profitability**')
-    // And it comes after the first source link
-    const firstSourceIdx = state.accumulatedContent.indexOf('nvidianews.nvidia.com')
     const profitIdx = state.accumulatedContent.indexOf('Exceptional Profitability')
-    expect(profitIdx).toBeGreaterThan(firstSourceIdx)
+    const firstSectionIdx = state.accumulatedContent.indexOf('AI revolution.')
+    expect(profitIdx).toBeGreaterThan(firstSectionIdx)
   })
 
-  it('each source becomes a valid markdown link', () => {
-    const state = replayStream(lines)
-    // Check that markdown link syntax is correct: [name](url)
-    const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g
-    const matches = [...state.accumulatedContent.matchAll(linkPattern)]
-    // 3 total source links: 1 from first sources event, 2 from second
-    expect(matches).toHaveLength(3)
-    expect(matches[0][1]).toBe(
-      'NVIDIA Announces Financial Results for Fourth Quarter and Fiscal 2025',
-    )
-    expect(matches[1][1]).toBe('0001045810-25-000230')
-    expect(matches[2][1]).toBe('0001045810-25-000230')
-  })
-
-  it('sources without url are filtered out', () => {
+  it('sources events without answer deltas leave content untouched', () => {
     let state: StreamState = {
       accumulatedContent: 'some text\n',
       thoughts: [],
@@ -132,12 +100,14 @@ describe('processStreamLine', () => {
     state = processStreamLine(
       {
         type: 'sources',
-        body: [{ name: 'Has URL', url: 'https://example.com' }, { name: 'No URL' }],
+        body: [
+          { source_id: 's1', publisher: 'Reuters', url: 'https://example.com' },
+          { source_id: 's2', title: 'No URL' },
+        ],
       },
       state,
     )
-    expect(state.accumulatedContent).toContain('[Has URL](https://example.com)')
-    expect(state.accumulatedContent).not.toContain('No URL')
+    expect(state.accumulatedContent).toBe('some text\n')
   })
 
   it('sources with empty body array does not modify content', () => {

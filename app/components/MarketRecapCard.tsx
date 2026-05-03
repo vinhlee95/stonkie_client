@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarDays, Clock3, Sparkles } from 'lucide-react'
 import { MarketRecapItem } from '@/lib/api/marketRecap'
+import SourceChip from './SourceChip'
 
 type Cadence = 'daily' | 'weekly'
 
@@ -14,49 +15,6 @@ interface MarketRecapCardProps {
 function bulletColor(index: number): string {
   const palette = ['bg-blue-600', 'bg-amber-600', 'bg-rose-600', 'bg-emerald-700']
   return palette[index % palette.length]!
-}
-
-function normalizeSourceSiteLabel(raw: string): string {
-  const knownBrands: Record<string, string> = {
-    'reuters.com': 'Reuters',
-    'marketwatch.com': 'MarketWatch',
-    'cnbc.com': 'CNBC',
-    'bloomberg.com': 'Bloomberg',
-    'wsj.com': 'WSJ',
-    'ft.com': 'FT',
-  }
-
-  let normalized = raw.trim()
-  if (!normalized) return 'Source'
-
-  if (!normalized.includes('://') && normalized.includes('.')) {
-    normalized = `https://${normalized}`
-  }
-
-  try {
-    const host = new URL(normalized).hostname.replace(/^www\./, '').toLowerCase()
-    if (knownBrands[host]) return knownBrands[host]
-    const [root] = host.split('.')
-    if (!root) return 'Source'
-    return root.charAt(0).toUpperCase() + root.slice(1)
-  } catch {
-    const lowercase = normalized.toLowerCase()
-    for (const [domain, brand] of Object.entries(knownBrands)) {
-      if (lowercase.includes(domain)) return brand
-    }
-    return normalized
-  }
-}
-
-function sourceLabel(source: { publisher: string; url: string }): string {
-  const publisher = source.publisher?.trim()
-  if (publisher) return normalizeSourceSiteLabel(publisher)
-
-  try {
-    return normalizeSourceSiteLabel(source.url)
-  } catch {
-    return 'Source'
-  }
 }
 
 function formatRecapCreatedAt(createdAt: string): string {
@@ -81,8 +39,6 @@ export default function MarketRecapCard({ daily, weekly }: MarketRecapCardProps)
   const initialCadence: Cadence = daily ? 'daily' : 'weekly'
   const [cadence, setCadence] = useState<Cadence>(initialCadence)
   const [expanded, setExpanded] = useState(false)
-  const [hoveredCitationKey, setHoveredCitationKey] = useState<string | null>(null)
-  const [hoveredTooltipAlign, setHoveredTooltipAlign] = useState<'left' | 'right'>('left')
 
   const recap = cadence === 'daily' ? (daily ?? weekly) : (weekly ?? daily)
   const showCadenceToggle = Boolean(daily && weekly)
@@ -244,87 +200,15 @@ export default function MarketRecapCard({ daily, weekly }: MarketRecapCardProps)
                     const citationKey = `${bulletIndex}-${citation.source_id}-${citationIndex}`
 
                     return (
-                      <span
-                        key={citationKey}
-                        className="relative ml-1.5 inline-flex"
-                        onMouseEnter={(event) => {
-                          const rect = event.currentTarget.getBoundingClientRect()
-                          const estimatedTooltipWidth = 320
-                          const viewportPadding = 16
-                          const spaceOnRight = window.innerWidth - rect.left
-
-                          setHoveredTooltipAlign(
-                            spaceOnRight < estimatedTooltipWidth + viewportPadding
-                              ? 'right'
-                              : 'left',
-                          )
-                          setHoveredCitationKey(citationKey)
-                        }}
-                        onMouseLeave={() =>
-                          setHoveredCitationKey((current) =>
-                            current === citationKey ? null : current,
-                          )
-                        }
-                        onFocus={(event) => {
-                          const rect = event.currentTarget.getBoundingClientRect()
-                          const estimatedTooltipWidth = 320
-                          const viewportPadding = 16
-                          const spaceOnRight = window.innerWidth - rect.left
-
-                          setHoveredTooltipAlign(
-                            spaceOnRight < estimatedTooltipWidth + viewportPadding
-                              ? 'right'
-                              : 'left',
-                          )
-                          setHoveredCitationKey(citationKey)
-                        }}
-                        onBlur={() =>
-                          setHoveredCitationKey((current) =>
-                            current === citationKey ? null : current,
-                          )
-                        }
-                      >
-                        <a
-                          href={source.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="
-                            inline-flex items-center
-                            py-0.5 px-2 text-xs font-medium rounded-full transition-all
-                            bg-[var(--button-background)] dark:bg-[var(--button-background-dark)]
-                            text-gray-700 dark:text-gray-200 hover:bg-[var(--accent-hover)] dark:hover:bg-[var(--accent-hover-dark)]
-                            border border-[var(--accent-active)] dark:border-[var(--accent-active-dark)]
-                          "
-                        >
-                          {sourceLabel(source)}
-                        </a>
-
-                        {hoveredCitationKey === citationKey && (
-                          <div
-                            role="tooltip"
-                            className="
-                              absolute top-[calc(100%+8px)] z-30 w-80 max-w-[calc(100vw-2rem)]
-                              rounded-lg border border-gray-200 dark:border-gray-700
-                              bg-white dark:bg-gray-900 shadow-lg p-3
-                            "
-                            style={hoveredTooltipAlign === 'right' ? { right: 0 } : { left: 0 }}
-                          >
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                              <span className="font-semibold">Website:</span> {sourceLabel(source)}
-                            </p>
-                            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                              <span className="font-semibold">Title:</span> {source.title}
-                            </p>
-                            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                              <span className="font-semibold">Publisher:</span>{' '}
-                              {source.publisher?.trim() || sourceLabel(source)}
-                            </p>
-                            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                              <span className="font-semibold">Published at:</span>{' '}
-                              {source.published_at}
-                            </p>
-                          </div>
-                        )}
+                      <span key={citationKey} className="ml-1.5 inline-flex">
+                        <SourceChip
+                          source={{
+                            url: source.url,
+                            title: source.title,
+                            publisher: source.publisher,
+                            publishedAt: source.published_at,
+                          }}
+                        />
                       </span>
                     )
                   })}

@@ -51,18 +51,8 @@ export function processStreamLine(
     case 'related_question':
       next.relatedQuestions = [...state.relatedQuestions, parsed.body as string]
       break
-    case 'sources': {
-      if (Array.isArray(parsed.body)) {
-        const links = parsed.body
-          .filter((s: { name: string; url?: string }) => Boolean(s.url))
-          .map((s: { name: string; url?: string }) => `[${s.name}](${s.url})`)
-          .join(' ')
-        if (links) {
-          next.accumulatedContent += links + '\n'
-        }
-      }
+    case 'sources':
       break
-    }
     case 'model_used':
       next.modelName = parsed.body as string
       break

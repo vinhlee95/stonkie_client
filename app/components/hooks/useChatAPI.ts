@@ -21,6 +21,15 @@ type StreamChunk = {
   total_steps?: number
 }
 
+type V2SourceChunk = {
+  source_id?: string
+  url?: string
+  title?: string
+  publisher?: string
+  published_at?: string | null
+  is_trusted?: boolean
+}
+
 const visualMarker = (blockId: string) => `\n\n[[VISUAL_BLOCK:${blockId}]]\n\n`
 
 export const useChatAPI = (
@@ -245,17 +254,18 @@ export const useChatAPI = (
 
         if (parsedChunk.type === 'sources') {
           if (Array.isArray(parsedChunk.body)) {
-            const links = parsedChunk.body
-              .map((s: { name: string; url?: string }) =>
-                s.url ? `[${s.name}](${s.url})` : s.name,
-              )
-              .join(' ')
-            if (links) {
-              // Trim trailing newlines so links render inline with paragraph
-              const trimmed = accumulatedContent.replace(/\n+$/, '')
-              accumulatedContent = trimmed + ' ' + links + '\n\n'
-              updateThread(threadId, { answer: accumulatedContent })
-            }
+            const sources: AnswerSource[] = parsedChunk.body.map((source) => {
+              const item = source as V2SourceChunk
+              return {
+                sourceId: item.source_id,
+                url: item.url,
+                title: item.title,
+                publisher: item.publisher,
+                publishedAt: item.published_at,
+                isTrusted: item.is_trusted,
+              }
+            })
+            updateThread(threadId, { sources })
           }
           return
         }
@@ -265,7 +275,7 @@ export const useChatAPI = (
             sources?: { name: string; url?: string; paragraph_indices?: number[] }[]
           }
           const groupedSources: AnswerSource[] = (body.sources || []).map((s) => ({
-            name: s.name,
+            title: s.name,
             url: s.url,
             paragraphIndices: s.paragraph_indices,
           }))

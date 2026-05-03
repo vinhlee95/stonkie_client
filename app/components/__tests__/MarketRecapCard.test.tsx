@@ -167,7 +167,6 @@ describe('MarketRecapCard', () => {
     fireEvent.mouseEnter(sourceChip)
 
     const tooltip = screen.getByRole('tooltip')
-    expect(within(tooltip).getByText(/Website:/i)).toBeInTheDocument()
     expect(within(tooltip).getByText(/Title:/i)).toBeInTheDocument()
     expect(within(tooltip).getByText(/Publisher:/i)).toBeInTheDocument()
     expect(within(tooltip).getByText(/Published at:/i)).toBeInTheDocument()

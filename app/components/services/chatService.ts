@@ -10,7 +10,7 @@ export const chatService = {
     conversationId: string | null = null,
     signal?: AbortSignal,
   ) {
-    const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/analyze`, {
+    const response = await fetch(`${BACKEND_URL}/api/v2/companies/${ticker}/analyze`, {
       method: 'POST',
       credentials: 'include', // Required for cross-origin cookie support
       headers: {
