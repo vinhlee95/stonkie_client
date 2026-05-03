@@ -48,7 +48,15 @@ export function ThoughtBubble({
     setIsOpen(isThinking)
   }, [isThinking])
 
-  if (thoughts.length === 0) return null
+  if (thoughts.length === 0) {
+    if (!isThinking) return null
+    return (
+      <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-sm">
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent-hover)] dark:text-[var(--accent-hover-dark)]" />
+        <span>Thinking...</span>
+      </div>
+    )
+  }
 
   const lastThought = thoughts[thoughts.length - 1]
   const totalSteps = lastThought.totalSteps
