@@ -295,6 +295,17 @@ export const useChatAPI = (
               url: String(parsedChunk.body || ''),
             },
           })
+          return
+        }
+
+        if (parsedChunk.type === 'error') {
+          isThinkingRef.current = false
+          updateThread(threadId, {
+            answer: String(parsedChunk.body || 'An error occurred.'),
+            thoughts: [],
+          })
+          setIsLoading(false)
+          return
         }
       }
 
