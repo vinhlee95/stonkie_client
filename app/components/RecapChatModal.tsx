@@ -1,12 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { ChatboxUI } from './Chat'
 import { useChatState } from './hooks/useChatState'
-import { useChatAPI, type AnalyzeFn } from './hooks/useChatAPI'
+import { useRecapChatAPI } from './hooks/useRecapChatAPI'
 import { useScrollLock } from './hooks/useScrollLock'
-import { chatService } from './services/chatService'
 import type { MarketRecapItem } from '@/lib/api/marketRecap'
 
 interface RecapChatModalProps {
@@ -98,8 +97,8 @@ export default function RecapChatModal({
   const questionsSeededRef = useRef<string | null>(null)
 
   useEffect(() => {
-    const questions = recap.questions
-    if (!questions || questions.length === 0) return
+    const questions = recap.questions ?? []
+    if (questions.length === 0) return
     if (questionsSeededRef.current === recapId) return
 
     const threadId = `recap-questions-${recapId}`
@@ -116,26 +115,12 @@ export default function RecapChatModal({
     questionsSeededRef.current = recapId
   }, [recap.questions, recapId, updateThread, threads])
 
-  const analyzeFn: AnalyzeFn = useCallback(
-    (question, _useUrlContext, deepAnalysis, preferredModel, conversationId, signal) =>
-      chatService.analyzeRecapQuestion(
-        recapId,
-        question,
-        conversationId,
-        deepAnalysis,
-        preferredModel,
-        signal,
-      ),
-    [recapId],
-  )
-
-  const { handleSubmit, isLoading, isThinking, cancelRequest } = useChatAPI(
-    undefined,
+  const { handleSubmit, isLoading, isThinking, cancelRequest } = useRecapChatAPI(
+    recapId,
     updateThread,
     conversationId,
     setConversationId,
     recordActivity,
-    analyzeFn,
   )
 
   const handleFAQClick = async (question: string) => {

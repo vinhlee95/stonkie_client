@@ -36,6 +36,7 @@ const weeklyRecap: MarketRecapItem = {
       fetched_at: '2026-04-25T12:10:00Z',
     },
   ],
+  questions: [],
 }
 
 const dailyRecap: MarketRecapItem = {
@@ -55,6 +56,7 @@ const dailyRecap: MarketRecapItem = {
       fetched_at: '2026-04-24T21:00:00Z',
     },
   ],
+  questions: [],
 }
 
 describe('MarketRecapCard', () => {

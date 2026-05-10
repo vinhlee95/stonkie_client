@@ -32,8 +32,8 @@ type V2SourceChunk = {
 
 const visualMarker = (blockId: string) => `\n\n[[VISUAL_BLOCK:${blockId}]]\n\n`
 
-export const useChatAPI = (
-  ticker: string | undefined,
+export const useRecapChatAPI = (
+  recapId: string,
   updateThread: (threadId: string, updates: Partial<Thread>) => void,
   conversationId: string | null = null,
   setConversationId: (id: string | null) => void = () => {},
@@ -55,26 +55,23 @@ export const useChatAPI = (
   const handleSubmit = async (
     question: string,
     threadId: string,
-    useUrlContext: boolean = false,
+    _useUrlContext: boolean = false,
     deepAnalysis: boolean = false,
     preferredModel: string = 'fastest',
   ) => {
-    // Create new AbortController for this request
     abortControllerRef.current = new AbortController()
     const signal = abortControllerRef.current.signal
 
     setIsLoading(true)
     isThinkingRef.current = true
-    // Record activity when a question is asked
     recordActivity()
     try {
-      const reader = await chatService.analyzeQuestion(
+      const reader = await chatService.analyzeRecapQuestion(
+        recapId,
         question,
-        ticker,
-        useUrlContext,
+        conversationId,
         deepAnalysis,
         preferredModel,
-        conversationId,
         signal,
       )
       if (!reader) throw new Error('Failed to get reader')
@@ -120,12 +117,10 @@ export const useChatAPI = (
 
       const handleParsedChunk = (parsedChunk: StreamChunk) => {
         if (parsedChunk.type === 'conversation') {
-          // Handle conversation event - store conversationId
           const body = (parsedChunk.body || {}) as { conversationId?: string }
           const newConversationId = body.conversationId || null
           if (newConversationId) {
             setConversationId(newConversationId)
-            // Record activity when conversation is established
             recordActivity()
           }
           return
@@ -315,7 +310,6 @@ export const useChatAPI = (
 
         buffer += decoder.decode(value, { stream: true })
         const lines = buffer.split('\n')
-        // Keep the last element as it may be incomplete
         buffer = lines.pop() || ''
 
         for (const line of lines) {
@@ -330,7 +324,6 @@ export const useChatAPI = (
         }
       }
 
-      // Process any remaining buffer
       if (buffer.trim()) {
         try {
           const parsedChunk = JSON.parse(buffer.trim()) as StreamChunk

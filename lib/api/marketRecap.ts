@@ -25,7 +25,7 @@ export type MarketRecapItem = {
   summary: string
   bullets: RecapBullet[]
   sources: RecapSource[]
-  questions?: string[]
+  questions: string[]
 }
 
 export type MarketRecapResponse = {
