@@ -32,12 +32,22 @@ type V2SourceChunk = {
 
 const visualMarker = (blockId: string) => `\n\n[[VISUAL_BLOCK:${blockId}]]\n\n`
 
+export type AnalyzeFn = (
+  question: string,
+  useUrlContext: boolean,
+  deepAnalysis: boolean,
+  preferredModel: string,
+  conversationId: string | null,
+  signal: AbortSignal,
+) => Promise<ReadableStreamDefaultReader<Uint8Array> | undefined>
+
 export const useChatAPI = (
   ticker: string | undefined,
   updateThread: (threadId: string, updates: Partial<Thread>) => void,
   conversationId: string | null = null,
   setConversationId: (id: string | null) => void = () => {},
   recordActivity: () => void = () => {},
+  analyzeFn?: AnalyzeFn,
 ) => {
   const [isLoading, setIsLoading] = useState(false)
   const isThinkingRef = useRef(false)
@@ -68,15 +78,24 @@ export const useChatAPI = (
     // Record activity when a question is asked
     recordActivity()
     try {
-      const reader = await chatService.analyzeQuestion(
-        question,
-        ticker,
-        useUrlContext,
-        deepAnalysis,
-        preferredModel,
-        conversationId,
-        signal,
-      )
+      const reader = analyzeFn
+        ? await analyzeFn(
+            question,
+            useUrlContext,
+            deepAnalysis,
+            preferredModel,
+            conversationId,
+            signal,
+          )
+        : await chatService.analyzeQuestion(
+            question,
+            ticker,
+            useUrlContext,
+            deepAnalysis,
+            preferredModel,
+            conversationId,
+            signal,
+          )
       if (!reader) throw new Error('Failed to get reader')
 
       const decoder = new TextDecoder()

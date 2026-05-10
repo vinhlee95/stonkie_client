@@ -18,12 +18,14 @@ export type RecapSource = {
 }
 
 export type MarketRecapItem = {
+  id: number
   period_start: string
   period_end: string
   created_at: string
   summary: string
   bullets: RecapBullet[]
   sources: RecapSource[]
+  questions?: string[]
 }
 
 export type MarketRecapResponse = {
