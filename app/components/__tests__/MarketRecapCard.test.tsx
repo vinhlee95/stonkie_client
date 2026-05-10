@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import MarketRecapCard from '../MarketRecapCard'
 import { MarketRecapItem } from '@/lib/api/marketRecap'
 
@@ -8,6 +8,7 @@ function escapeRegExp(value: string): string {
 }
 
 const weeklyRecap: MarketRecapItem = {
+  id: 1,
   period_start: '2026-04-20',
   period_end: '2026-04-24',
   created_at: '2026-04-25T13:18:03.721444Z',
@@ -35,9 +36,11 @@ const weeklyRecap: MarketRecapItem = {
       fetched_at: '2026-04-25T12:10:00Z',
     },
   ],
+  questions: [],
 }
 
 const dailyRecap: MarketRecapItem = {
+  id: 2,
   period_start: '2026-04-24',
   period_end: '2026-04-24',
   created_at: '2026-04-25T01:30:00.000000Z',
@@ -53,6 +56,7 @@ const dailyRecap: MarketRecapItem = {
       fetched_at: '2026-04-24T21:00:00Z',
     },
   ],
+  questions: [],
 }
 
 describe('MarketRecapCard', () => {
@@ -309,6 +313,36 @@ describe('MarketRecapCard', () => {
         new Date('2026-04-20T00:00:00Z'),
       )
       expect(weeklyLabel.textContent ?? '').toContain(start)
+    })
+  })
+
+  describe('Dig deeper button', () => {
+    it('is hidden when collapsed or onDigDeeper is not provided', () => {
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+      expect(screen.queryByRole('button', { name: /dig deeper/i })).not.toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
+      expect(screen.queryByRole('button', { name: /dig deeper/i })).not.toBeInTheDocument()
+    })
+
+    it('appears in expanded state when onDigDeeper is provided', () => {
+      const handler = vi.fn()
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={handler} />)
+
+      expect(screen.queryByRole('button', { name: /dig deeper/i })).not.toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
+      const digBtn = screen.getByRole('button', { name: /dig deeper/i })
+      expect(digBtn).toBeInTheDocument()
+    })
+
+    it('fires onDigDeeper on click', () => {
+      const handler = vi.fn()
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={handler} />)
+
+      fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
+      fireEvent.click(screen.getByRole('button', { name: /dig deeper/i }))
+      expect(handler).toHaveBeenCalledTimes(1)
     })
   })
 })

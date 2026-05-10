@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import MarketRecapCard from './MarketRecapCard'
 import MarketRecapCardPlaceholder from './MarketRecapCardPlaceholder'
+import RecapChatModal from './RecapChatModal'
 import MarketRecapUnavailable, {
   type MarketRecapUnavailablePeriod,
   type MarketRecapUnavailableVariant,
@@ -25,6 +26,7 @@ function MarketRecapIslandInner({ marketKey, unavailablePeriod, onRetryRequest }
   const [pair, setPair] = useState<MarketRecapPair | null>(null)
   const [pending, setPending] = useState(true)
   const [unavailable, setUnavailable] = useState<Unavailable>(null)
+  const [chatOpen, setChatOpen] = useState(false)
 
   useEffect(() => {
     const backendMarket = toBackendMarketCode(marketKey)
@@ -82,7 +84,26 @@ function MarketRecapIslandInner({ marketKey, unavailablePeriod, onRetryRequest }
     )
   }
   if (!pair?.daily && !pair?.weekly) return null
-  return <MarketRecapCard daily={pair.daily} weekly={pair.weekly} />
+  const activeRecap = pair.daily ?? pair.weekly
+  const activeCadence = pair.daily ? 'daily' : 'weekly'
+  return (
+    <>
+      <MarketRecapCard
+        daily={pair.daily}
+        weekly={pair.weekly}
+        onDigDeeper={() => setChatOpen(true)}
+      />
+      {activeRecap && (
+        <RecapChatModal
+          open={chatOpen}
+          onClose={() => setChatOpen(false)}
+          recap={activeRecap}
+          market={marketKey}
+          cadence={activeCadence}
+        />
+      )}
+    </>
+  )
 }
 
 export default function MarketRecapIsland({

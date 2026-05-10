@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CalendarDays, Clock3, Sparkles } from 'lucide-react'
+import { ArrowRight, CalendarDays, Clock3, Sparkles } from 'lucide-react'
 import { MarketRecapItem } from '@/lib/api/marketRecap'
 import SourceChip from './SourceChip'
 
@@ -10,6 +10,7 @@ type Cadence = 'daily' | 'weekly'
 interface MarketRecapCardProps {
   daily: MarketRecapItem | null
   weekly: MarketRecapItem | null
+  onDigDeeper?: () => void
 }
 
 function bulletColor(index: number): string {
@@ -35,7 +36,7 @@ function formatRecapPeriod(periodStart: string, periodEnd: string): string {
   return `${fmt.format(start)} – ${fmt.format(end)}`
 }
 
-export default function MarketRecapCard({ daily, weekly }: MarketRecapCardProps) {
+export default function MarketRecapCard({ daily, weekly, onDigDeeper }: MarketRecapCardProps) {
   const initialCadence: Cadence = daily ? 'daily' : 'weekly'
   const [cadence, setCadence] = useState<Cadence>(initialCadence)
   const [expanded, setExpanded] = useState(false)
@@ -216,6 +217,23 @@ export default function MarketRecapCard({ daily, weekly }: MarketRecapCardProps)
               </div>
             ))}
           </div>
+
+          {onDigDeeper && (
+            <div className="mt-4 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDigDeeper()
+                }}
+                className="pulse-ring inline-flex items-center gap-2 rounded-full bg-[var(--accent-active)] dark:bg-[var(--accent-active-dark)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--accent-hover)] dark:hover:bg-[var(--accent-hover-dark)] cursor-pointer"
+              >
+                <Sparkles size={15} strokeWidth={2.4} />
+                Dig deeper
+                <ArrowRight size={14} strokeWidth={2.5} />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </section>

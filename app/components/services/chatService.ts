@@ -42,6 +42,37 @@ export const chatService = {
     return response.body?.getReader()
   },
 
+  async analyzeRecapQuestion(
+    recapId: string,
+    question: string,
+    conversationId: string | null = null,
+    deepAnalysis: boolean = false,
+    preferredModel: string = 'fastest',
+    signal?: AbortSignal,
+  ) {
+    const response = await fetch(
+      `${BACKEND_URL}/api/recaps/${encodeURIComponent(recapId)}/analyze`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question,
+          conversationId,
+          deepAnalysis,
+          preferredModel,
+        }),
+        signal,
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to get analysis')
+    }
+
+    return response.body?.getReader()
+  },
+
   async fetchDetailedReport(ticker: string | undefined, slug: string) {
     const response = await fetch(`${BACKEND_URL}/api/companies/${ticker}/reports/${slug}`)
     return response.body?.getReader()
