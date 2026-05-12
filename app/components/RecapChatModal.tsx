@@ -43,14 +43,9 @@ function RecapContextCard({
         <Sparkles size={13} strokeWidth={2.4} />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)]">
-            Digging deeper into
-          </span>
-          <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-200">
-            {market} {cadenceLabel} Recap · {period}
-          </span>
-        </div>
+        <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-200">
+          {market} {cadenceLabel} Recap · {period}
+        </span>
         <p className="mt-0.5 text-base leading-6 text-gray-700 dark:text-gray-200">
           {recap.summary}
         </p>
