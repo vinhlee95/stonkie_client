@@ -1,24 +1,33 @@
 'use client'
+
 import { useFavourites } from './hooks/useFavourites'
-import CompanyList, { Company } from '@/app/CompanyList'
-import ETFList, { ETFListItem } from '@/app/components/ETFList'
+import { Company } from '@/app/CompanyList'
+import { ETFListItem } from '@/app/components/ETFList'
+import FavouriteCard from './FavouriteCard'
 
 function FavouritesSkeleton() {
   return (
-    <div className="mb-6">
-      <div className="h-8 w-56 bg-gray-200 dark:bg-gray-700 rounded mb-6 animate-pulse" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map((i) => (
+    <div className="mb-4">
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700" />
+        <div className="h-6 w-28 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        <div className="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+      </div>
+      <div className="hidden md:grid grid-cols-2 md:grid-cols-3 gap-3.5">
+        {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="bg-gray-100 dark:bg-gray-800 rounded-xl p-4 flex items-center animate-pulse"
-          >
-            <div className="w-12 h-12 mr-4 bg-gray-200 dark:bg-gray-700 rounded-full" />
-            <div className="flex-1">
-              <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded mb-2 w-3/4" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-            </div>
-          </div>
+            className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 animate-pulse h-20"
+          />
+        ))}
+      </div>
+      <div className="md:hidden flex gap-3 overflow-hidden">
+        {[1, 2].map((i) => (
+          <div
+            key={i}
+            className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 animate-pulse shrink-0"
+            style={{ width: 260, height: 80 }}
+          />
         ))}
       </div>
     </div>
@@ -26,30 +35,54 @@ function FavouritesSkeleton() {
 }
 
 export default function FavouritesList() {
-  const { favourites: companyFavourites, isInitialized: isCompanyInitialized } =
+  const { favourites: companies, isInitialized: cInit } =
     useFavourites<Company>('stonkie_favourites')
-  const { favourites: etfFavourites, isInitialized: isETFInitialized } =
+  const { favourites: etfs, isInitialized: eInit } =
     useFavourites<ETFListItem>('stonkie_favourites_etf')
 
-  // Show skeleton while loading to prevent layout shift
-  if (!isCompanyInitialized || !isETFInitialized) {
-    return <FavouritesSkeleton />
-  }
+  if (!cInit || !eInit) return <FavouritesSkeleton />
+  if (companies.length === 0 && etfs.length === 0) return null
 
-  // Hide completely if no favourites
-  if (companyFavourites.length === 0 && etfFavourites.length === 0) {
-    return null
-  }
+  const items = [...companies, ...etfs]
 
   return (
-    <div className="mb-6">
-      <h1 className="text-2xl font-bold mb-6">Favourite Tickers</h1>
-      {companyFavourites.length > 0 && <CompanyList companies={companyFavourites} />}
-      {etfFavourites.length > 0 && (
-        <div className={companyFavourites.length > 0 ? 'mt-4' : ''}>
-          <ETFList etfs={etfFavourites} />
+    <section className="mb-4">
+      {/* Section header */}
+      <div className="flex items-baseline gap-3 mb-4">
+        <div className="flex items-center gap-2.5">
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{
+              background: 'var(--tab-active)',
+              boxShadow: '0 0 0 4px rgba(40,105,86,0.16)',
+            }}
+          />
+          <h2 className="text-xl font-bold tracking-tight m-0">Favourites</h2>
         </div>
-      )}
-    </div>
+        <span
+          className="font-mono text-xs font-semibold px-2 py-0.5 rounded-full"
+          style={{
+            color: 'var(--tab-active)',
+            background: 'var(--accent-active-soft, rgba(40,105,86,0.08))',
+          }}
+        >
+          {items.length} tracked
+        </span>
+      </div>
+
+      {/* Desktop: grid */}
+      <div className="hidden md:grid grid-cols-2 md:grid-cols-3 gap-3.5">
+        {items.map((it) => (
+          <FavouriteCard key={it.ticker} item={it} variant="grid" />
+        ))}
+      </div>
+
+      {/* Mobile: horizontal scroll-snap rail */}
+      <div className="md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-2 px-2 pb-1">
+        {items.map((it) => (
+          <FavouriteCard key={it.ticker} item={it} variant="rail" />
+        ))}
+      </div>
+    </section>
   )
 }

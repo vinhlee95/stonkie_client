@@ -13,6 +13,7 @@ import MarketFilter, {
   matchesMarket,
 } from './MarketFilter'
 import { FRONTEND_TO_BACKEND_MARKET, FrontendMarketRecapKey } from '@/lib/api/marketRecap'
+import FavouritesList from './FavouritesList'
 import ScrollToTopButton from './ScrollToTopButton'
 import SectorFilter, { SectorNavItem } from './SectorFilter'
 import SectorSection from './SectorSection'
@@ -230,6 +231,8 @@ export default function MostViewedCompanies({
           />
         )}
       </div>
+
+      <FavouritesList />
 
       {market === ALL_MARKETS_KEY && (
         <div className="mb-4">

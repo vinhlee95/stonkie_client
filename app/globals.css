@@ -12,6 +12,10 @@
   --accent-light: #eaf4f0;
   --accent-light-dark: rgba(40, 105, 86, 0.15);
   --accent-danger: #9c2d2d;
+  --accent-down: rgb(170, 60, 60);
+  --accent-down-soft: rgba(170, 60, 60, 0.08);
+  --accent-active-soft: rgba(40, 105, 86, 0.08);
+  --accent-active-border: rgba(40, 105, 86, 0.18);
   --button-background: #e5e8e7;
   --button-background-dark: #414443;
   --button-hover: #cdd1d0;
@@ -308,4 +312,13 @@ body.safari-scroll-lock .modal-content {
   .recap-chat-sheet-anim {
     animation: none;
   }
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

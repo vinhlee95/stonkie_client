@@ -1,5 +1,4 @@
 import { Company } from './CompanyList'
-import FavouritesList from './components/FavouritesList'
 import MostViewedCompanies from './components/MostViewedCompanies'
 import { ETFListItem } from './components/ETFList'
 const BACKEND_URL = process.env.BACKEND_URL
@@ -36,7 +35,6 @@ export default async function Page() {
 
   return (
     <div className="container mx-auto px-4 pt-2 pb-6">
-      <FavouritesList />
       {data && <MostViewedCompanies companies={data} etfs={etfData} />}
     </div>
   )
