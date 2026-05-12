@@ -151,7 +151,7 @@ export default function MarketRecapCard({ daily, weekly, onDigDeeper }: MarketRe
             </div>
             <p
               className={`mt-1.5 text-base md:text-lg leading-6 md:leading-7 text-gray-700 dark:text-gray-200 ${
-                expanded ? '' : 'line-clamp-3'
+                expanded ? '' : 'line-clamp-6 md:line-clamp-none'
               }`}
             >
               {teaser}

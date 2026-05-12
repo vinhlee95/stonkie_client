@@ -102,10 +102,10 @@ describe('MarketRecapCard', () => {
     render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
 
     const summary = screen.getByText(/S&P 500 closed slightly higher/i)
-    expect(summary).toHaveClass('line-clamp-3')
+    expect(summary).toHaveClass('line-clamp-6')
 
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
-    expect(summary).not.toHaveClass('line-clamp-3')
+    expect(summary).not.toHaveClass('line-clamp-6')
   })
 
   it('renders citation chips using publisher/site name', () => {
