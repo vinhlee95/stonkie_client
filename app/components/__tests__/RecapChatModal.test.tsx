@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import RecapChatModal from '../RecapChatModal'
 import { MarketRecapItem } from '@/lib/api/marketRecap'
@@ -62,6 +62,47 @@ describe('RecapChatModal', () => {
     expect(screen.getByText('Dig deeper into this recap')).toBeInTheDocument()
     expect(screen.getByText(/How will reduced Fed rate cut/i)).toBeInTheDocument()
     expect(screen.getByText(/What caused HubSpot/i)).toBeInTheDocument()
+  })
+
+  it('questions persist when recap changes (e.g. cadence toggle)', async () => {
+    vi.useFakeTimers()
+
+    const weeklyRecap: MarketRecapItem = {
+      id: 200,
+      period_start: '2026-05-04',
+      period_end: '2026-05-08',
+      created_at: '2026-05-09T07:00:00Z',
+      summary: 'Weekly summary text.',
+      bullets: [],
+      sources: [],
+      questions: ['What drove the weekly rally?', 'Is the trend sustainable?'],
+    }
+
+    // Start with daily recap
+    const { rerender } = render(
+      <RecapChatModal open={true} onClose={vi.fn()} recap={recap} market="USA" cadence="daily" />,
+    )
+    expect(screen.getByText(/How will reduced Fed rate cut/i)).toBeInTheDocument()
+
+    // Switch to weekly recap (simulates toggling cadence then reopening)
+    rerender(
+      <RecapChatModal
+        open={true}
+        onClose={vi.fn()}
+        recap={weeklyRecap}
+        market="USA"
+        cadence="weekly"
+      />,
+    )
+
+    // Flush the setTimeout in useChatState that clears threads on scope change
+    await act(async () => {
+      vi.runAllTimers()
+    })
+
+    expect(screen.getByText(/What drove the weekly rally/i)).toBeInTheDocument()
+    expect(screen.getByText(/Is the trend sustainable/i)).toBeInTheDocument()
+    vi.useRealTimers()
   })
 
   it('calls onClose when close button is clicked', () => {

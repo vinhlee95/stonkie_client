@@ -10,7 +10,7 @@ type Cadence = 'daily' | 'weekly'
 interface MarketRecapCardProps {
   daily: MarketRecapItem | null
   weekly: MarketRecapItem | null
-  onDigDeeper?: () => void
+  onDigDeeper: (cadence: 'daily' | 'weekly') => void
 }
 
 function bulletColor(index: number): string {
@@ -218,22 +218,20 @@ export default function MarketRecapCard({ daily, weekly, onDigDeeper }: MarketRe
             ))}
           </div>
 
-          {onDigDeeper && (
-            <div className="mt-4 flex items-center justify-end">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDigDeeper()
-                }}
-                className="pulse-ring inline-flex items-center gap-2 rounded-full bg-[var(--accent-active)] dark:bg-[var(--accent-active-dark)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--accent-hover)] dark:hover:bg-[var(--accent-hover-dark)] cursor-pointer"
-              >
-                <Sparkles size={15} strokeWidth={2.4} />
-                Dig deeper
-                <ArrowRight size={14} strokeWidth={2.5} />
-              </button>
-            </div>
-          )}
+          <div className="mt-4 flex items-center justify-end">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDigDeeper(cadence)
+              }}
+              className="pulse-ring inline-flex items-center gap-2 rounded-full bg-[var(--accent-active)] dark:bg-[var(--accent-active-dark)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--accent-hover)] dark:hover:bg-[var(--accent-hover-dark)] cursor-pointer"
+            >
+              <Sparkles size={15} strokeWidth={2.4} />
+              Dig deeper
+              <ArrowRight size={14} strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
       )}
     </section>

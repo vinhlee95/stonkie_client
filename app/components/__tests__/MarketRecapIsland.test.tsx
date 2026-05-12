@@ -1,9 +1,13 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest'
 import MarketRecapIsland from '../MarketRecapIsland'
 
 describe('MarketRecapIsland', () => {
   const originalFetch = globalThis.fetch
+
+  beforeAll(() => {
+    Element.prototype.scrollIntoView = vi.fn()
+  })
 
   beforeEach(() => {
     globalThis.fetch = vi.fn()
@@ -217,5 +221,96 @@ describe('MarketRecapIsland', () => {
     })
 
     expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+  })
+
+  describe('Dig deeper respects cadence toggle', () => {
+    const dailyRecap = {
+      id: 10,
+      period_start: '2026-04-24',
+      period_end: '2026-04-24',
+      created_at: '2026-04-25T01:30:00.000000Z',
+      summary: 'Daily recap: stocks rose on tech strength',
+      bullets: [],
+      sources: [],
+      questions: ['What drove tech gains today?', 'Will momentum continue tomorrow?'],
+    }
+
+    const weeklyRecap = {
+      id: 11,
+      period_start: '2026-04-20',
+      period_end: '2026-04-24',
+      created_at: '2026-04-25T13:00:00.000Z',
+      summary: 'Weekly recap: S&P 500 gained over the week',
+      bullets: [],
+      sources: [],
+      questions: ['What sectors led the weekly rally?', 'How did bonds react?'],
+    }
+
+    function mockBothCadences() {
+      vi.mocked(globalThis.fetch).mockResolvedValue(
+        new Response(JSON.stringify({ daily: dailyRecap, weekly: weeklyRecap }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+    }
+
+    it('opens modal with weekly recap when user toggles to Weekly before clicking Dig deeper', async () => {
+      mockBothCadences()
+      render(<MarketRecapIsland marketKey="USA" />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/Daily recap: stocks rose on tech strength/i)).toBeInTheDocument()
+      })
+
+      // Toggle to weekly
+      fireEvent.click(screen.getByRole('button', { name: /^weekly$/i }))
+      expect(screen.getByText(/Weekly recap: S&P 500 gained over the week/i)).toBeInTheDocument()
+
+      // Expand card and click Dig deeper
+      const section = screen.getByRole('region', { name: /market recap/i })
+      fireEvent.click(within(section).getByRole('button', { name: /market recap/i }))
+      fireEvent.click(within(section).getByRole('button', { name: /dig deeper/i }))
+
+      // Modal should show weekly context, not daily
+      await waitFor(() => {
+        expect(screen.getByText(/Digging deeper into/i)).toBeInTheDocument()
+      })
+      expect(screen.getByText(/USA Weekly Recap/i)).toBeInTheDocument()
+      expect(screen.queryByText(/USA Daily Recap/i)).not.toBeInTheDocument()
+
+      // Weekly questions should render, not daily ones
+      await waitFor(() => {
+        expect(screen.getByText(/What sectors led the weekly rally/i)).toBeInTheDocument()
+      })
+      expect(screen.getByText(/How did bonds react/i)).toBeInTheDocument()
+      expect(screen.queryByText(/What drove tech gains today/i)).not.toBeInTheDocument()
+    })
+
+    it('opens modal with daily recap by default when both cadences exist', async () => {
+      mockBothCadences()
+      render(<MarketRecapIsland marketKey="USA" />)
+
+      await waitFor(() => {
+        expect(screen.getByText(/Daily recap: stocks rose on tech strength/i)).toBeInTheDocument()
+      })
+
+      // Expand card and click Dig deeper (daily is default)
+      const section = screen.getByRole('region', { name: /market recap/i })
+      fireEvent.click(within(section).getByRole('button', { name: /market recap/i }))
+      fireEvent.click(within(section).getByRole('button', { name: /dig deeper/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText(/Digging deeper into/i)).toBeInTheDocument()
+      })
+      expect(screen.getByText(/USA Daily Recap/i)).toBeInTheDocument()
+      expect(screen.queryByText(/USA Weekly Recap/i)).not.toBeInTheDocument()
+
+      // Daily questions should render
+      await waitFor(() => {
+        expect(screen.getByText(/What drove tech gains today/i)).toBeInTheDocument()
+      })
+      expect(screen.getByText(/Will momentum continue tomorrow/i)).toBeInTheDocument()
+    })
   })
 })

@@ -27,6 +27,9 @@ function MarketRecapIslandInner({ marketKey, unavailablePeriod, onRetryRequest }
   const [pending, setPending] = useState(true)
   const [unavailable, setUnavailable] = useState<Unavailable>(null)
   const [chatOpen, setChatOpen] = useState(false)
+  const [activeCadence, setActiveCadence] = useState<'daily' | 'weekly'>(
+    pair?.daily ? 'daily' : 'weekly',
+  )
 
   useEffect(() => {
     const backendMarket = toBackendMarketCode(marketKey)
@@ -84,14 +87,17 @@ function MarketRecapIslandInner({ marketKey, unavailablePeriod, onRetryRequest }
     )
   }
   if (!pair?.daily && !pair?.weekly) return null
-  const activeRecap = pair.daily ?? pair.weekly
-  const activeCadence = pair.daily ? 'daily' : 'weekly'
+  const activeRecap =
+    activeCadence === 'daily' ? (pair.daily ?? pair.weekly) : (pair.weekly ?? pair.daily)
   return (
     <>
       <MarketRecapCard
         daily={pair.daily}
         weekly={pair.weekly}
-        onDigDeeper={() => setChatOpen(true)}
+        onDigDeeper={(cadence) => {
+          setActiveCadence(cadence)
+          setChatOpen(true)
+        }}
       />
       {activeRecap && (
         <RecapChatModal

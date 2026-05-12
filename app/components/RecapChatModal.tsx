@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { ChatboxUI } from './Chat'
 import { useChatState } from './hooks/useChatState'
@@ -94,12 +94,9 @@ export default function RecapChatModal({
     recordActivity,
   } = useChatState(recapScope)
 
-  const questionsSeededRef = useRef<string | null>(null)
-
   useEffect(() => {
     const questions = recap.questions ?? []
     if (questions.length === 0) return
-    if (questionsSeededRef.current === recapId) return
 
     const threadId = `recap-questions-${recapId}`
     const existing = threads.find((t) => t.question === 'Dig deeper into this recap')
@@ -112,7 +109,6 @@ export default function RecapChatModal({
     } else if (existing.relatedQuestions.length !== questions.length) {
       updateThread(existing.id, { relatedQuestions: questions })
     }
-    questionsSeededRef.current = recapId
   }, [recap.questions, recapId, updateThread, threads])
 
   const { handleSubmit, isLoading, isThinking, cancelRequest } = useRecapChatAPI(

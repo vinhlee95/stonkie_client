@@ -59,9 +59,11 @@ const dailyRecap: MarketRecapItem = {
   questions: [],
 }
 
+const noop = () => {}
+
 describe('MarketRecapCard', () => {
   it('renders recap created_at timestamp', () => {
-    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
     const expectedLocalizedCreatedAt = new Intl.DateTimeFormat(undefined, {
       dateStyle: 'medium',
@@ -80,7 +82,7 @@ describe('MarketRecapCard', () => {
   })
 
   it('renders collapsed by default with summary visible', () => {
-    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
     expect(screen.getByText('Market Recap')).toBeInTheDocument()
     expect(screen.getByText(/S&P 500 closed slightly higher/i)).toBeInTheDocument()
@@ -88,7 +90,7 @@ describe('MarketRecapCard', () => {
   })
 
   it('shows bullets after expanding without ask-market chat CTA', () => {
-    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
     const toggle = screen.getByRole('button', { name: /market recap/i })
     fireEvent.click(toggle)
@@ -99,7 +101,7 @@ describe('MarketRecapCard', () => {
   })
 
   it('clamps summary only when collapsed', () => {
-    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
     const summary = screen.getByText(/S&P 500 closed slightly higher/i)
     expect(summary).toHaveClass('line-clamp-6')
@@ -109,7 +111,7 @@ describe('MarketRecapCard', () => {
   })
 
   it('renders citation chips using publisher/site name', () => {
-    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
 
@@ -137,7 +139,7 @@ describe('MarketRecapCard', () => {
       bullets: [{ text: 'Fallback source example', citations: [{ source_id: 's1' }] }],
     }
 
-    render(<MarketRecapCard daily={null} weekly={recapWithoutPublisher} />)
+    render(<MarketRecapCard daily={null} weekly={recapWithoutPublisher} onDigDeeper={noop} />)
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
 
     expect(screen.getByRole('link', { name: /^reuters$/i })).toBeInTheDocument()
@@ -156,7 +158,7 @@ describe('MarketRecapCard', () => {
       bullets: [{ text: 'Publisher website example', citations: [{ source_id: 's1' }] }],
     }
 
-    render(<MarketRecapCard daily={null} weekly={recapWithWebsitePublisher} />)
+    render(<MarketRecapCard daily={null} weekly={recapWithWebsitePublisher} onDigDeeper={noop} />)
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
 
     expect(screen.getByRole('link', { name: /^reuters$/i })).toBeInTheDocument()
@@ -164,7 +166,7 @@ describe('MarketRecapCard', () => {
   })
 
   it('shows source detail popup on chip hover', () => {
-    render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+    render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
 
     const sourceChip = screen.getByRole('link', { name: /reuters/i })
@@ -188,7 +190,7 @@ describe('MarketRecapCard', () => {
       ],
     }
 
-    render(<MarketRecapCard daily={null} weekly={recapWithDuplicateSource} />)
+    render(<MarketRecapCard daily={null} weekly={recapWithDuplicateSource} onDigDeeper={noop} />)
     fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
 
     const reutersLinks = screen.getAllByRole('link', { name: /reuters/i })
@@ -199,21 +201,21 @@ describe('MarketRecapCard', () => {
 
   describe('cadence toggle', () => {
     it('renders daily content by default when both cadences are provided', () => {
-      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} />)
+      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       expect(screen.getByText(/Stocks finished the Friday session/i)).toBeInTheDocument()
       expect(screen.queryByText(/S&P 500 closed slightly higher/i)).not.toBeInTheDocument()
     })
 
     it('renders Daily and Weekly pill toggles when both cadences are provided', () => {
-      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} />)
+      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       expect(screen.getByRole('button', { name: /^daily$/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /^weekly$/i })).toBeInTheDocument()
     })
 
     it('switches displayed summary when Weekly pill is clicked', () => {
-      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} />)
+      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       fireEvent.click(screen.getByRole('button', { name: /^weekly$/i }))
 
@@ -222,7 +224,7 @@ describe('MarketRecapCard', () => {
     })
 
     it('does not expand the card when toggling cadence', () => {
-      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} />)
+      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       fireEvent.click(screen.getByRole('button', { name: /^weekly$/i }))
 
@@ -231,14 +233,14 @@ describe('MarketRecapCard', () => {
     })
 
     it('hides the pill toggle when only weekly is provided', () => {
-      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       expect(screen.queryByRole('button', { name: /^daily$/i })).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /^weekly$/i })).not.toBeInTheDocument()
     })
 
     it('hides the pill toggle when only daily is provided', () => {
-      render(<MarketRecapCard daily={dailyRecap} weekly={null} />)
+      render(<MarketRecapCard daily={dailyRecap} weekly={null} onDigDeeper={noop} />)
 
       expect(screen.queryByRole('button', { name: /^daily$/i })).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /^weekly$/i })).not.toBeInTheDocument()
@@ -248,7 +250,7 @@ describe('MarketRecapCard', () => {
 
   describe('period pill', () => {
     it('renders a single date for a daily recap (period_start === period_end)', () => {
-      render(<MarketRecapCard daily={dailyRecap} weekly={null} />)
+      render(<MarketRecapCard daily={dailyRecap} weekly={null} onDigDeeper={noop} />)
 
       const expected = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
         new Date('2026-04-24T00:00:00Z'),
@@ -259,7 +261,7 @@ describe('MarketRecapCard', () => {
     })
 
     it('renders a date range for a weekly recap', () => {
-      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       const start = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
         new Date('2026-04-20T00:00:00Z'),
@@ -273,14 +275,14 @@ describe('MarketRecapCard', () => {
     })
 
     it('renders both period and created_at chips at the same time', () => {
-      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       expect(screen.getByLabelText(/Recap period/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/Recap created/i)).toBeInTheDocument()
     })
 
     it('places the created_at chip after the summary text in DOM order', () => {
-      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       const summary = screen.getByText(/S&P 500 closed slightly higher/i)
       const createdAtChip = screen.getByLabelText(/Recap created/i)
@@ -290,14 +292,14 @@ describe('MarketRecapCard', () => {
     })
 
     it('prefixes the created_at chip with "Curated on:"', () => {
-      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       const chip = screen.getByLabelText(/Recap created/i)
       expect(chip.textContent ?? '').toMatch(/Curated on:/i)
     })
 
     it('updates the period chip when the cadence is toggled', () => {
-      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} />)
+      render(<MarketRecapCard daily={dailyRecap} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       const dailyExpected = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
         new Date('2026-04-24T00:00:00Z'),
@@ -317,32 +319,25 @@ describe('MarketRecapCard', () => {
   })
 
   describe('Dig deeper button', () => {
-    it('is hidden when collapsed or onDigDeeper is not provided', () => {
-      render(<MarketRecapCard daily={null} weekly={weeklyRecap} />)
-      expect(screen.queryByRole('button', { name: /dig deeper/i })).not.toBeInTheDocument()
-
-      fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
+    it('is hidden when collapsed', () => {
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
       expect(screen.queryByRole('button', { name: /dig deeper/i })).not.toBeInTheDocument()
     })
 
-    it('appears in expanded state when onDigDeeper is provided', () => {
-      const handler = vi.fn()
-      render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={handler} />)
-
-      expect(screen.queryByRole('button', { name: /dig deeper/i })).not.toBeInTheDocument()
+    it('appears in expanded state', () => {
+      render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
-      const digBtn = screen.getByRole('button', { name: /dig deeper/i })
-      expect(digBtn).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /dig deeper/i })).toBeInTheDocument()
     })
 
-    it('fires onDigDeeper on click', () => {
+    it('fires onDigDeeper with current cadence on click', () => {
       const handler = vi.fn()
       render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={handler} />)
 
       fireEvent.click(screen.getByRole('button', { name: /market recap/i }))
       fireEvent.click(screen.getByRole('button', { name: /dig deeper/i }))
-      expect(handler).toHaveBeenCalledTimes(1)
+      expect(handler).toHaveBeenCalledWith('weekly')
     })
   })
 })
