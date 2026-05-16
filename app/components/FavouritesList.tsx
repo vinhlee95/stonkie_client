@@ -17,7 +17,8 @@ function FavouritesSkeleton() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 animate-pulse h-20"
+            className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 animate-pulse"
+            style={{ height: 180 }}
           />
         ))}
       </div>
@@ -26,7 +27,7 @@ function FavouritesSkeleton() {
           <div
             key={i}
             className="bg-gray-100 dark:bg-gray-800 rounded-2xl p-4 animate-pulse shrink-0"
-            style={{ width: 260, height: 80 }}
+            style={{ width: 260, height: 160 }}
           />
         ))}
       </div>
