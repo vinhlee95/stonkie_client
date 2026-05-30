@@ -12,6 +12,7 @@ interface ChatInputProps {
   setDeepAnalysis: Dispatch<SetStateAction<boolean>>
   preferredModel: string
   setPreferredModel: (model: string) => void
+  placeholder?: string
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -24,6 +25,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   setDeepAnalysis,
   preferredModel,
   setPreferredModel,
+  placeholder = 'Ask follow-up...',
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -55,7 +57,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               setInput('')
             }
           }}
-          placeholder="Ask follow-up..."
+          placeholder={placeholder}
           rows={1}
           className="w-full text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 py-3 pl-6 pr-6 focus:outline-none focus:ring-gray-300 dark:focus:ring-[#333333] transition-all duration-200 resize-none overflow-hidden bg-transparent rounded-t-xl"
           style={{ minHeight: '48px' }}

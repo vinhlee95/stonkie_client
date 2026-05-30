@@ -297,6 +297,11 @@ export const useChatState = (ticker: string | undefined) => {
     })
   }, [])
 
+  const clearThreads = useCallback(() => {
+    setThreads([])
+    setCurrentThreadId(null)
+  }, [])
+
   return {
     threads,
     currentThreadId,
@@ -305,6 +310,7 @@ export const useChatState = (ticker: string | undefined) => {
     setInput,
     addThread,
     updateThread,
+    clearThreads,
     deepAnalysis,
     setDeepAnalysis,
     preferredModel,

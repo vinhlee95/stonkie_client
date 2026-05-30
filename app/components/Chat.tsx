@@ -1,12 +1,19 @@
 'use client'
 import React, { useEffect, useRef, useContext, createContext, ReactNode, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { ListPlus, FileSearch, Cpu, FileText } from 'lucide-react'
+import { ListPlus, FileSearch, Cpu, FileText, Sun, ArrowLeft, Minus } from 'lucide-react'
 import ChatHeader from './ChatHeader'
 import ChatInput from './ChatInput'
 import { useChatState, Thread, isNormalThread } from './hooks/useChatState'
 import { useChatAPI } from './hooks/useChatAPI'
+import { useRecapChatAPI } from './hooks/useRecapChatAPI'
 import { useFAQQuery } from './hooks/useFAQQuery'
+import { useFavourites } from './hooks/useFavourites'
+import { useBriefMarkets } from './hooks/useBriefMarkets'
+import { useBriefData } from './hooks/useBriefData'
+import SmartBriefPanel from './chat/SmartBriefPanel'
+import RecapDetailView from './chat/RecapDetailView'
+import type { Company } from '@/app/CompanyList'
 import { ThoughtBubble } from './ThoughtBubble'
 import { Plus } from 'lucide-react'
 import AnswerContent from './AnswerContent'
@@ -34,10 +41,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const { data: faqQuestions } = useFAQQuery(ticker)
   const faqProcessedRef = useRef<string | null>(null)
 
-  // Create FAQ thread when FAQs are loaded
+  // Create FAQ thread when FAQs are loaded (only on ticker pages, not Home)
   useEffect(() => {
+    if (!ticker) return
     if (faqQuestions && faqQuestions.length > 0) {
-      const threadId = `faq-${ticker || 'general'}`
+      const threadId = `faq-${ticker}`
 
       // Only process if we haven't already processed FAQs for this ticker
       if (faqProcessedRef.current !== threadId) {
@@ -199,6 +207,8 @@ interface ChatboxUIProps {
   setDeepAnalysis: React.Dispatch<React.SetStateAction<boolean>>
   preferredModel: string
   setPreferredModel: (model: string) => void
+  placeholder?: string
+  headerContent?: React.ReactNode
 }
 
 export const ChatboxUI: React.FC<ChatboxUIProps> = ({
@@ -218,6 +228,8 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   setDeepAnalysis,
   preferredModel,
   setPreferredModel,
+  placeholder,
+  headerContent,
 }) => {
   const latestThreadRef = useRef<HTMLDivElement>(null)
   const [isMaximized, setIsMaximized] = useState(false)
@@ -269,9 +281,13 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
       <div
         className={`bg-[var(--background)] text-[var(--foreground)] rounded-none shadow-lg flex flex-col h-full w-full overflow-hidden overflow-x-hidden ${isDesktop ? 'md:h-full md:w-full md:flex md:flex-col md:rounded-xl md:overflow-x-hidden' : ''}`}
       >
-        <ChatHeader onClose={onClose} onMaximize={handleMaximize} isMaximized={isMaximized} />
+        {headerContent || (
+          <ChatHeader onClose={onClose} onMaximize={handleMaximize} isMaximized={isMaximized} />
+        )}
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 mt-4 modal-content">
+        <div
+          className={`flex-1 overflow-y-auto overflow-x-hidden px-4 ${headerContent ? 'pt-3' : 'mt-4'} modal-content`}
+        >
           <div className="w-full max-w-4xl mx-auto">
             {children}
             {threads.map((thread: Thread, index: number) => (
@@ -304,6 +320,7 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
             setDeepAnalysis={setDeepAnalysis}
             preferredModel={preferredModel}
             setPreferredModel={setPreferredModel}
+            placeholder={placeholder}
           />
         </div>
       </div>
@@ -311,7 +328,64 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   )
 }
 
+/** Header for Smart Brief mode — shows title, subtitle, close/maximize */
+function BriefHeader({
+  primaryLabel,
+  onClose,
+  showBackToBrief,
+  onBackToBrief,
+}: {
+  primaryLabel: string
+  onClose: () => void
+  showBackToBrief: boolean
+  onBackToBrief: () => void
+}) {
+  const today = new Intl.DateTimeFormat(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(new Date())
+
+  return (
+    <div className="flex items-start justify-between gap-3 px-4 pt-3.5 pb-2 border-b border-gray-100 dark:border-gray-800">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-light)] dark:bg-[var(--accent-light-dark)] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)] shrink-0">
+          <Sun size={13} strokeWidth={2.4} />
+        </span>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight truncate">
+            Your morning brief
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 leading-tight mt-0.5 truncate">
+            {today} · Focused on {primaryLabel}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        {showBackToBrief && (
+          <button
+            onClick={onBackToBrief}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <ArrowLeft size={10} />
+            Brief
+          </button>
+        )}
+        <button
+          onClick={onClose}
+          className="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+          aria-label="Close"
+        >
+          <Minus size={14} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, isDesktop }) => {
+  const params = useParams()
+  const ticker = params.ticker as string | undefined
   const context = useContext(ChatContext)
   if (!context) throw new Error('ChatContext must be used within a ChatProvider')
 
@@ -320,6 +394,8 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
     input,
     setInput,
     addThread,
+    updateThread,
+    clearThreads,
     handleSubmit,
     isLoading,
     isThinking,
@@ -328,26 +404,125 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
     setDeepAnalysis,
     preferredModel,
     setPreferredModel,
+    conversationId,
+    setConversationId,
+    recordActivity,
   } = context
+
+  // Smart Brief: only on Home route (no ticker)
+  const isHomeRoute = !ticker
+  const { favourites } = useFavourites<Company>('stonkie_favourites')
+  const briefMarkets = useBriefMarkets(favourites)
+  const briefData = useBriefData(briefMarkets)
+
+  const [activeRecapId, setActiveRecapId] = useState<string | null>(null)
+  const [activeRecapMarket, setActiveRecapMarket] = useState<string | null>(null)
+
+  // Show brief when no user-initiated threads exist (ignore auto-seeded FAQ/recap-question threads)
+  const hasUserThreads = threads.some((t) => isNormalThread(t))
+  const showBrief = isHomeRoute && !hasUserThreads && activeRecapId === null
+
+  // Wire recap chat API for when user digs into a specific market
+  const {
+    handleSubmit: handleRecapSubmit,
+    isLoading: recapLoading,
+    isThinking: recapThinking,
+    cancelRequest: cancelRecap,
+  } = useRecapChatAPI(
+    activeRecapId ?? '',
+    updateThread,
+    conversationId,
+    setConversationId,
+    recordActivity,
+  )
+
+  const handleDigIntoRecap = (recapId: string, marketKey: string) => {
+    setActiveRecapId(recapId)
+    setActiveRecapMarket(marketKey)
+  }
+
+  const handleBackToBrief = () => {
+    clearThreads()
+    setActiveRecapId(null)
+    setActiveRecapMarket(null)
+  }
 
   const handleFAQClick = async (question: string) => {
     const threadId = addThread(question)
-    await handleSubmit(question, threadId, false, deepAnalysis, preferredModel)
+    if (activeRecapId) {
+      await handleRecapSubmit(question, threadId, false, deepAnalysis, preferredModel)
+    } else {
+      await handleSubmit(question, threadId, false, deepAnalysis, preferredModel)
+    }
   }
+
+  const handleAskQuestion = async (question: string) => {
+    const threadId = addThread(question)
+    if (activeRecapId) {
+      await handleRecapSubmit(question, threadId, false, deepAnalysis, preferredModel)
+    } else {
+      await handleSubmit(question, threadId, false, deepAnalysis, preferredModel)
+    }
+  }
+
+  // Build brief header
+  const briefHeader = isHomeRoute ? (
+    <BriefHeader
+      primaryLabel={briefMarkets.primary.label}
+      onClose={onClose}
+      showBackToBrief={!showBrief && activeRecapId !== null}
+      onBackToBrief={handleBackToBrief}
+    />
+  ) : undefined
+
+  // Build brief content — either the panel or the recap detail view
+  const activeMarketData = activeRecapId
+    ? briefData.markets.find((m) => m.market.key === activeRecapMarket)
+    : null
+
+  let briefContent: React.ReactNode | undefined
+  if (showBrief) {
+    briefContent = (
+      <SmartBriefPanel
+        briefData={briefData}
+        favourites={favourites}
+        briefMarkets={briefMarkets}
+        onDigIntoRecap={handleDigIntoRecap}
+        onAskQuestion={handleAskQuestion}
+      />
+    )
+  } else if (activeMarketData?.recap && threads.length === 0) {
+    briefContent = (
+      <RecapDetailView
+        market={activeMarketData}
+        onAskQuestion={handleAskQuestion}
+        onBackToBrief={handleBackToBrief}
+      />
+    )
+  }
+
+  const effectiveLoading = activeRecapId ? recapLoading : isLoading
+  const effectiveThinking = activeRecapId ? recapThinking : isThinking
+  const effectiveCancel = activeRecapId ? cancelRecap : cancelRequest
+
+  // When showing brief or recap detail, hide threads
+  const visibleThreads = briefContent ? [] : threads
 
   return (
     <ChatboxUI
-      threads={threads}
+      threads={visibleThreads}
       input={input}
       setInput={setInput}
       addThread={addThread}
-      handleSubmit={(question: string, threadId: string) =>
-        handleSubmit(question, threadId, false, deepAnalysis, preferredModel)
-      }
-      isLoading={isLoading}
-      isThinking={isThinking}
-      cancelRequest={cancelRequest}
-      children={children}
+      handleSubmit={(question: string, threadId: string) => {
+        if (activeRecapId) {
+          return handleRecapSubmit(question, threadId, false, deepAnalysis, preferredModel)
+        }
+        return handleSubmit(question, threadId, false, deepAnalysis, preferredModel)
+      }}
+      isLoading={effectiveLoading}
+      isThinking={effectiveThinking}
+      cancelRequest={effectiveCancel}
       onClose={onClose}
       isDesktop={isDesktop}
       handleFAQClick={handleFAQClick}
@@ -355,7 +530,11 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
       setDeepAnalysis={setDeepAnalysis}
       preferredModel={preferredModel}
       setPreferredModel={setPreferredModel}
-    />
+      placeholder={showBrief ? 'Or ask your own question...' : 'Ask follow-up...'}
+      headerContent={briefHeader}
+    >
+      {briefContent || children}
+    </ChatboxUI>
   )
 }
 

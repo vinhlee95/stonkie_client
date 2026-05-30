@@ -2,14 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 import { chatService } from '../services/chatService'
 
 /**
- * Fetches FAQs for a given ticker (or general FAQs if ticker is undefined)
- * Uses React Query for caching and automatic deduplication
+ * Fetches FAQs for a given ticker.
+ * Disabled when no ticker is provided (Home route uses Smart Brief instead).
  */
 export function useFAQQuery(ticker: string | undefined) {
-  const queryKey = ['faqs', ticker || 'general']
-
   return useQuery({
-    queryKey,
+    queryKey: ['faqs', ticker],
+    enabled: !!ticker,
     queryFn: async (): Promise<string[]> => {
       const reader = await chatService.fetchFAQs(ticker)
       if (!reader) {
@@ -37,11 +36,7 @@ export function useFAQQuery(ticker: string | undefined) {
                   throw new Error(data.message || 'Error fetching FAQs')
               }
             } catch (e) {
-              // If it's an error type, rethrow
-              if (e instanceof Error) {
-                throw e
-              }
-              // Otherwise, log parsing errors but continue
+              if (e instanceof Error) throw e
               console.error('Error parsing FAQ data:', e)
             }
           }
@@ -50,7 +45,7 @@ export function useFAQQuery(ticker: string | undefined) {
 
       return questions
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   })
 }

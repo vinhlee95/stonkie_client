@@ -1,0 +1,331 @@
+{
+  "title": "Smart Brief Panel — Morning Brief in Home Chat Modal",
+  "context": "The general chat modal (bottom nav chat icon, Home route) currently opens to an empty chat. This replaces that empty state with a Smart Brief panel showing all 3 markets (US, Finland, Vietnam) with recap data, watchlist, and cross-market questions. Favourites are cosmetic only — the brief always shows regardless of favourite count. Tapping a market block replaces the brief with that market's recap detail + thread composer using the real recap chat API. Ticker detail page chat is unchanged.",
+  "decisions": {
+    "data_source": "Aggregate existing /api/markets/{market}/recaps client-side. Daily first, weekly fallback.",
+    "heuristic": "favCount per market → locale tie-break → US fallback. Determines primary (hero) vs secondary (collapsed). All 3 markets always shown.",
+    "recap_tap": "Replace brief with recap detail view (RecapContextCard + dig-deeper questions + thread composer). Reuses existing RecapChatModal pattern.",
+    "watchlist_taps": "Deferred — display only for now.",
+    "brief_visibility": "Shows on Home route chat when threads.length === 0. Previous threads → show threads directly.",
+    "favourites_role": "Cosmetic only — 'N favourites here' labels, watchlist section visibility, primary ranking.",
+    "index_delta": "Omitted (no structured source). DeltaPill stubbed.",
+    "analytics": "Deferred.",
+    "cross_market_questions": "Hardcoded constant array.",
+    "recap_caching": "React Query useQuery per market, ~5 min stale time.",
+    "header": "Shows 'Your morning brief' title + 'Focused on {primary}' subtitle + sun icon. 'Back to brief' button in thread body per design."
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Market Pulse Cards — Primary Hero + Secondary Accordion",
+      "description": "Render the top section of the Smart Brief: data hooks, primary PulseCard hero, secondary CollapsedMarketRows with accordion, section labels. Wire into BottomNavigation chat modal as children of ChatboxUI. Header shows brief title/subtitle.",
+      "phases": [
+        {
+          "id": "M1-P1",
+          "title": "Data Layer",
+          "tasks": [
+            {
+              "id": "M1-P1-T1",
+              "title": "useBriefMarkets hook",
+              "file": "app/components/hooks/useBriefMarkets.ts",
+              "test_file": "app/components/hooks/__tests__/useBriefMarkets.test.ts",
+              "red": [
+                "always returns all 3 markets even with 0 favourites",
+                "picks market with most favourites as primary",
+                "breaks tie using navigator.language locale code",
+                "falls back to US as primary when 0 favourites or unknown locale",
+                "returns secondaries sorted by fav count desc",
+                "attaches correct metadata (flag, label, indexLabel, backendCode)",
+                "attaches correct favouriteCount per market"
+              ],
+              "green": {
+                "types": "BriefMarket { key, label, flag, backendCode, indexLabel, favouriteCount }, BriefMarketsResult { primary, secondaries }",
+                "signature": "useBriefMarkets(favourites: Company[]): BriefMarketsResult",
+                "reuses": [
+                  "matchesMarket() from MarketFilter.tsx",
+                  "FRONTEND_TO_BACKEND_MARKET from lib/api/marketRecap.ts"
+                ],
+                "notes": "Hardcode INDEX_LABELS: { USA: 'S&P 500', Finland: 'OMXH25', Vietnam: 'VN-Index' }. Pure useMemo, no side effects."
+              },
+              "refactor": "Extract pure pickPrimaryMarket() function for easier unit testing without renderHook."
+            },
+            {
+              "id": "M1-P1-T2",
+              "title": "useBriefData hook",
+              "file": "app/components/hooks/useBriefData.ts",
+              "test_file": "app/components/hooks/__tests__/useBriefData.test.ts",
+              "red": [
+                "fetches daily recap for each market, falls back to weekly",
+                "returns isLoading=true while fetching",
+                "handles fetch failure gracefully (null recap for failed market)",
+                "returns recap summary as headline per market"
+              ],
+              "green": {
+                "types": "BriefMarketData { market, recap, recapId }, BriefData { markets[], isLoading }",
+                "signature": "useBriefData(briefMarkets: BriefMarketsResult): BriefData",
+                "notes": "React Query useQuery per market with ~5 min stale time. Fetch from /api/markets/{backendCode}/recaps same as MarketRecapIsland.tsx line 46."
+              },
+              "refactor": "Extract fetchMarketRecapClient() if reused elsewhere."
+            }
+          ]
+        },
+        {
+          "id": "M1-P2",
+          "title": "Atom Components",
+          "tasks": [
+            {
+              "id": "M1-P2-T1",
+              "title": "SectionLabel atom",
+              "file": "app/components/chat/SectionLabel.tsx",
+              "red": [
+                "renders icon + uppercase label text",
+                "renders accessory element when provided"
+              ],
+              "green": {
+                "props": "{ icon: ReactNode, children: ReactNode, accessory?: ReactNode }",
+                "styling": "text-[10.5px] uppercase tracking-[0.13em] font-bold text-gray-500"
+              }
+            },
+            {
+              "id": "M1-P2-T2",
+              "title": "DeltaPill stub",
+              "file": "app/components/chat/DeltaPill.tsx",
+              "red": [
+                "renders +N% in green for positive delta",
+                "renders -N% in red for negative delta",
+                "renders nothing when delta is null"
+              ],
+              "green": {
+                "props": "{ delta: number | null }",
+                "styling": "text-emerald-700 / text-rose-600, tabular-nums"
+              }
+            }
+          ]
+        },
+        {
+          "id": "M1-P3",
+          "title": "Composite Components",
+          "tasks": [
+            {
+              "id": "M1-P3-T1",
+              "title": "PulseCard — primary market hero",
+              "file": "app/components/chat/PulseCard.tsx",
+              "test_file": "app/components/__tests__/PulseCard.test.tsx",
+              "red": [
+                "renders market flag and 'MARKET PULSE' label",
+                "renders index label (e.g. S&P 500)",
+                "renders headline from recap.summary",
+                "renders favourite count when > 0, hidden when 0",
+                "renders 'Dig in →' CTA",
+                "whole card is a button — calls onDigIn on tap"
+              ],
+              "green": {
+                "props": "{ market: BriefMarketData, favouriteCount: number, onDigIn: () => void }",
+                "styling": "rounded-2xl, border-[var(--border-soft)], gradient bg from-[var(--accent-light)] to-[#f4f8f5]. Header: flag 16px, label 10.5px extrabold uppercase tracking-[0.13em] accent-active, index 10px gray-400. Headline 12.5px gray-800 leading-snug. Footer: 'Dig in →' 11.5px semibold accent-active, fav count 10.5px gray-500."
+              }
+            },
+            {
+              "id": "M1-P3-T2",
+              "title": "CollapsedMarketRow — secondary accordion",
+              "file": "app/components/chat/CollapsedMarketRow.tsx",
+              "test_file": "app/components/__tests__/CollapsedMarketRow.test.tsx",
+              "red": [
+                "collapsed: shows flag, label, fav count, first sentence of headline, chevron →",
+                "expanded: shows full headline + 'Dig into pulse' chip (solid accent bg) + up to 2 question chips (truncated 38 chars)",
+                "chevron rotates 90° when expanded",
+                "border changes to accent-active/30 and bg to accent-light/40 when expanded",
+                "calls onToggle on row click",
+                "calls onDigIn when 'Dig into pulse' chip clicked",
+                "calls onAskQuestion when a question chip clicked"
+              ],
+              "green": {
+                "props": "{ market: BriefMarketData, favouriteCount: number, expanded: boolean, onToggle: () => void, onDigIn: () => void, onAskQuestion: (q: string) => void }",
+                "styling": "rounded-xl, collapsed: border-gray-200 bg-white. Expanded: border-accent-active/30, bg-accent-light/40. Chips: 'Dig into pulse' = bg-accent-active text-white rounded-full, others = bg-white border-gray-200 rounded-full."
+              }
+            }
+          ]
+        },
+        {
+          "id": "M1-P4",
+          "title": "Integration — Wire Pulse Cards into Chat Modal",
+          "tasks": [
+            {
+              "id": "M1-P4-T1",
+              "title": "SmartBriefPanel orchestrator (pulse section only)",
+              "file": "app/components/chat/SmartBriefPanel.tsx",
+              "test_file": "app/components/__tests__/SmartBriefPanel.test.tsx",
+              "red": [
+                "renders PulseCard for primary market",
+                "renders 'Also today · tap to expand' section label",
+                "renders CollapsedMarketRow for each secondary",
+                "only one secondary expanded at a time",
+                "calls onDigIntoRecap when any dig CTA is tapped",
+                "renders loading skeleton when isLoading"
+              ],
+              "green": {
+                "props": "{ briefData, favourites, briefMarkets, onDigIntoRecap, onAskQuestion }",
+                "state": "expandedSecondary: string | null"
+              }
+            },
+            {
+              "id": "M1-P4-T2",
+              "title": "Wire into FinancialChatbox + ChatHeader",
+              "files_modified": [
+                "app/components/Chat.tsx — add brief state, render SmartBriefPanel as children",
+                "app/components/ChatInput.tsx — accept optional placeholder prop",
+                "app/components/ChatHeader.tsx — show brief title/subtitle/sun icon, add 'Back to brief' and reset buttons"
+              ],
+              "red": [
+                "shows SmartBriefPanel when chat opens from Home with no threads",
+                "hides SmartBriefPanel after user digs into recap",
+                "shows 'Back to brief' in thread view, restores brief on click",
+                "header shows 'Your morning brief' + 'Focused on {primary}' in brief mode",
+                "composer placeholder changes between brief and thread mode",
+                "does NOT show brief on ticker detail page"
+              ],
+              "green": {
+                "brief_state": "showBrief: true when ticker===undefined AND threads.length===0",
+                "recap_transition": "onDigIntoRecap → set showBrief=false, store recapId/marketKey, show RecapContextCard, seed FAQ thread, wire useRecapChatAPI",
+                "back_to_brief": "reset threads, set showBrief=true"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Watchlist Section — 'On your watchlist'",
+      "description": "Render the cross-market watchlist section below the pulse cards. Shows favourite companies sorted primary-market-first with market flags. Display only (no tap handler). Hidden when 0 favourites.",
+      "phases": [
+        {
+          "id": "M2-P1",
+          "title": "WatchlistRow Component",
+          "tasks": [
+            {
+              "id": "M2-P1-T1",
+              "title": "WatchlistRow — favourite display row",
+              "file": "app/components/chat/WatchlistRow.tsx",
+              "test_file": "app/components/__tests__/WatchlistRow.test.tsx",
+              "red": [
+                "renders avatar circle with initial letter on brand color background",
+                "renders ticker and company name",
+                "renders market flag emoji after company name",
+                "renders note/subtitle text (truncated)"
+              ],
+              "green": {
+                "props": "{ company: Company, marketFlag: string }",
+                "styling": "rounded-xl border-gray-200, avatar 32x32 rounded-full with brand color bg + white initial. Ticker 12.5px semibold, name 11px gray-500, flag 11px, note 11px gray-600 truncated. Whole row is a div (no tap handler yet)."
+              }
+            }
+          ]
+        },
+        {
+          "id": "M2-P2",
+          "title": "Integrate Watchlist into SmartBriefPanel",
+          "tasks": [
+            {
+              "id": "M2-P2-T1",
+              "title": "Add watchlist section to SmartBriefPanel",
+              "file": "app/components/chat/SmartBriefPanel.tsx",
+              "red": [
+                "renders 'On your watchlist' section label with star icon",
+                "renders WatchlistRow for each favourite company",
+                "favourites sorted primary-market-first then by market order",
+                "hides watchlist section entirely when 0 favourites",
+                "market flag resolved correctly for each company"
+              ],
+              "green": {
+                "notes": "Use matchesMarket() to determine which market each favourite belongs to. Sort by market order [primary, ...secondaries]. Map each to its market's flag emoji."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Across Markets Section — Cross-Market Questions",
+      "description": "Render the 'Across markets' section with 3 hardcoded cross-market questions. Tapping a question transitions to thread view using the chat API.",
+      "phases": [
+        {
+          "id": "M3-P1",
+          "title": "DigRow Component",
+          "tasks": [
+            {
+              "id": "M3-P1-T1",
+              "title": "DigRow — cross-market question row",
+              "file": "app/components/chat/DigRow.tsx",
+              "test_file": "app/components/__tests__/DigRow.test.tsx",
+              "red": [
+                "renders question text",
+                "renders + icon right-aligned",
+                "calls onClick when row is tapped",
+                "hover: text changes to accent-hover, icon to accent-active"
+              ],
+              "green": {
+                "props": "{ question: string, onClick: () => void }",
+                "styling": "Borderless button, py-2.5 border-b border-gray-100 last:border-b-0. Text 13px gray-800. + icon 13px gray-400."
+              }
+            }
+          ]
+        },
+        {
+          "id": "M3-P2",
+          "title": "Integrate Across Markets into SmartBriefPanel",
+          "tasks": [
+            {
+              "id": "M3-P2-T1",
+              "title": "Add cross-market section + hardcoded questions",
+              "file": "app/components/chat/SmartBriefPanel.tsx",
+              "red": [
+                "renders 'Across markets' section label with listPlus icon",
+                "renders exactly 3 DigRow components from CROSS_MARKET_QUESTIONS constant",
+                "calls onAskQuestion with the question text when a DigRow is tapped"
+              ],
+              "green": {
+                "constants": "CROSS_MARKET_QUESTIONS = ['Which of my markets is strongest this week?', 'Compare my US vs Vietnam exposure', 'What macro themes affect all my markets?']",
+                "notes": "Define constant in SmartBriefPanel or a shared constants file. Wire onClick to onAskQuestion prop which triggers the chat API flow."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "files": {
+    "new": [
+      "app/components/hooks/useBriefMarkets.ts",
+      "app/components/hooks/useBriefData.ts",
+      "app/components/chat/SmartBriefPanel.tsx",
+      "app/components/chat/PulseCard.tsx",
+      "app/components/chat/CollapsedMarketRow.tsx",
+      "app/components/chat/WatchlistRow.tsx",
+      "app/components/chat/DigRow.tsx",
+      "app/components/chat/SectionLabel.tsx",
+      "app/components/chat/DeltaPill.tsx"
+    ],
+    "modified": [
+      "app/components/Chat.tsx",
+      "app/components/ChatInput.tsx",
+      "app/components/ChatHeader.tsx"
+    ],
+    "reused": [
+      "app/components/MarketFilter.tsx — matchesMarket(), MARKETS, getMarketDef()",
+      "lib/api/marketRecap.ts — types, FRONTEND_TO_BACKEND_MARKET",
+      "app/components/hooks/useFavourites.ts — useFavourites<Company>()",
+      "app/components/RecapChatModal.tsx — RecapContextCard (extract + reuse)",
+      "app/components/hooks/useRecapChatAPI.ts — recap streaming",
+      "app/components/hooks/useChatState.ts — thread/conversation state"
+    ]
+  },
+  "edge_cases": [
+    "Market with no recap data: PulseCard/Row shows 'No recap available' state",
+    "0 favourites: Brief still shows all 3 markets, watchlist hidden, fav count labels hidden",
+    "Favourites changing while brief open: useMemo recalculates",
+    "navigator.language undefined: fallback to 'en-US'",
+    "Empty recap.questions: no question chips rendered",
+    "Long headlines: line-clamp-3 on PulseCard, first sentence on collapsed row",
+    "Dark mode: uses existing CSS vars"
+  ]
+}
