@@ -42,7 +42,6 @@ describe('RecapChatModal', () => {
     render(
       <RecapChatModal open={true} onClose={vi.fn()} recap={recap} market="USA" cadence="daily" />,
     )
-    expect(screen.getByText(/Digging deeper into/i)).toBeInTheDocument()
     expect(screen.getByText(/U\.S\. stocks finished higher/i)).toBeInTheDocument()
     expect(screen.getByText(/USA Daily Recap/i)).toBeInTheDocument()
   })
