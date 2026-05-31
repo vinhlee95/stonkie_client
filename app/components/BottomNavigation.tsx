@@ -10,6 +10,7 @@ import { usePopularCompanies } from './hooks/usePopularCompanies'
 
 const BottomNavigation = () => {
   const [isChatVisible, setIsChatVisible] = useState(false)
+  const [isChatClosing, setIsChatClosing] = useState(false)
   const [isSearchVisible, setIsSearchVisible] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
 
@@ -49,18 +50,27 @@ const BottomNavigation = () => {
 
   const handleChatClick = () => {
     setIsSearchVisible(false)
+    setIsChatClosing(false)
     setIsChatVisible(true)
   }
 
+  // Animated close: slide the modal down, then unmount. Matches the duration of
+  // the ChatboxUI translate-y transition (300ms).
   const handleChatClose = () => {
-    setIsChatVisible(false)
+    setIsChatClosing(true)
+    setTimeout(() => {
+      setIsChatVisible(false)
+      setIsChatClosing(false)
+    }, 300)
   }
 
   return (
     <>
       <Suspense>
         <ChatProvider>
-          {isChatVisible && <Chat onClose={handleChatClose} isDesktop={isDesktop} />}
+          {isChatVisible && (
+            <Chat onClose={handleChatClose} isDesktop={isDesktop} isClosing={isChatClosing} />
+          )}
         </ChatProvider>
       </Suspense>
 

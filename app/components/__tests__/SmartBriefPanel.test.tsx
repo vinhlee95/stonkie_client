@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import SmartBriefPanel from '../chat/SmartBriefPanel'
 import type { BriefData } from '../hooks/useBriefData'
 import type { BriefMarketsResult } from '../hooks/useBriefMarkets'
+import type { Company } from '@/app/CompanyList'
 
 const briefMarkets: BriefMarketsResult = {
   primary: {
@@ -125,5 +126,37 @@ describe('SmartBriefPanel', () => {
     const pulseButton = screen.getByText(/US Pulse/i).closest('button')!
     fireEvent.click(pulseButton)
     expect(onDigIntoRecap).toHaveBeenCalledWith('1', 'USA')
+  })
+
+  it('hides the watchlist section when there are no favourites', () => {
+    render(<SmartBriefPanel {...defaultProps} favourites={[]} />)
+    expect(screen.queryByText(/On your watchlist/i)).not.toBeInTheDocument()
+  })
+
+  it('renders watchlist rows sorted primary-market-first', () => {
+    const favourites: Company[] = [
+      {
+        name: 'Nokia',
+        ticker: 'NOKIA.HE',
+        logo_url: '',
+        sector: 'Tech',
+        country: 'Finland',
+        exchange: 'OMX',
+      },
+      {
+        name: 'NVIDIA',
+        ticker: 'NVDA',
+        logo_url: '',
+        sector: 'Tech',
+        country: 'USA',
+        exchange: 'NASDAQ',
+      },
+    ]
+    render(<SmartBriefPanel {...defaultProps} favourites={favourites} />)
+
+    expect(screen.getByText(/On your watchlist/i)).toBeInTheDocument()
+    const tickers = screen.getAllByText(/NVDA|NOKIA\.HE/).map((el) => el.textContent)
+    // USA is primary → NVDA before NOKIA.HE despite insertion order
+    expect(tickers).toEqual(['NVDA', 'NOKIA.HE'])
   })
 })

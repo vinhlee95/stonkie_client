@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Globe } from 'lucide-react'
+import { Globe, Star } from 'lucide-react'
 import PulseCard from './PulseCard'
 import CollapsedMarketRow from './CollapsedMarketRow'
+import WatchlistRow from './WatchlistRow'
 import SectionLabel from './SectionLabel'
+import { matchesMarket } from '../MarketFilter'
 import type { BriefData } from '../hooks/useBriefData'
-import type { BriefMarketsResult } from '../hooks/useBriefMarkets'
+import type { BriefMarket, BriefMarketsResult } from '../hooks/useBriefMarkets'
 import type { Company } from '@/app/CompanyList'
 
 interface SmartBriefPanelProps {
@@ -15,14 +17,17 @@ interface SmartBriefPanelProps {
   briefMarkets: BriefMarketsResult
   onDigIntoRecap: (recapId: string, marketKey: string) => void
   onAskQuestion: (question: string) => void
+  /** Closes the brief modal — called before navigating to a ticker page. */
+  onClose?: () => void
 }
 
 export default function SmartBriefPanel({
   briefData,
-  favourites: _favourites,
+  favourites,
   briefMarkets,
   onDigIntoRecap,
   onAskQuestion,
+  onClose,
 }: SmartBriefPanelProps) {
   const [expandedSecondary, setExpandedSecondary] = useState<string | null>(null)
 
@@ -32,6 +37,8 @@ export default function SmartBriefPanel({
 
   const primaryData = briefData.markets[0]
   const secondaryData = briefData.markets.slice(1)
+
+  const watchlist = sortWatchlist(favourites, briefMarkets)
 
   return (
     <div className="pb-2">
@@ -79,8 +86,46 @@ export default function SmartBriefPanel({
           </div>
         </>
       )}
+
+      {/* Watchlist — favourites, sorted primary-market-first */}
+      {watchlist.length > 0 && (
+        <>
+          <SectionLabel icon={<Star size={11} className="text-gray-500 dark:text-gray-400" />}>
+            On your watchlist
+          </SectionLabel>
+          <div className="space-y-1.5">
+            {watchlist.map(({ company, flag }) => (
+              <WatchlistRow
+                key={company.ticker}
+                company={company}
+                flag={flag}
+                onNavigate={onClose}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
+}
+
+interface WatchlistEntry {
+  company: Company
+  flag: string
+}
+
+/** Sorts favourites primary-market-first and resolves each company's market flag. */
+function sortWatchlist(favourites: Company[], briefMarkets: BriefMarketsResult): WatchlistEntry[] {
+  const order: BriefMarket[] = [briefMarkets.primary, ...briefMarkets.secondaries]
+  const marketOf = (company: Company) => order.find((m) => matchesMarket(m.key, company.country))
+  const rankOf = (company: Company) => {
+    const idx = order.findIndex((m) => matchesMarket(m.key, company.country))
+    return idx === -1 ? order.length : idx
+  }
+
+  return [...favourites]
+    .sort((a, b) => rankOf(a) - rankOf(b))
+    .map((company) => ({ company, flag: marketOf(company)?.flag ?? '🌍' }))
 }
 
 function SmartBriefSkeleton() {

@@ -1,6 +1,7 @@
 import TabNavigation from './TabNavigation'
 import { KeyStatsType } from './KeyStats'
 import TickerHeader from './TickerHeader'
+import TickerEntryTransition from './TickerEntryTransition'
 import { Company } from '@/app/CompanyList'
 
 async function LogoAndTickerBlock({ ticker }: { ticker: string }) {
@@ -37,12 +38,12 @@ export default async function RootLayout({
   const { ticker } = await params
 
   return (
-    <>
+    <TickerEntryTransition>
       <LogoAndTickerBlock ticker={ticker} />
       <TabNavigation ticker={ticker} />
       <main>
         <div className="px-4">{children}</div>
       </main>
-    </>
+    </TickerEntryTransition>
   )
 }

@@ -86,6 +86,8 @@ interface FinancialChatboxProps {
   onClose: () => void
   children?: React.ReactNode
   isDesktop?: boolean
+  /** When true, plays the modal slide-down exit animation. */
+  isClosing?: boolean
 }
 
 interface ThreadViewProps {
@@ -209,6 +211,8 @@ interface ChatboxUIProps {
   setPreferredModel: (model: string) => void
   placeholder?: string
   headerContent?: React.ReactNode
+  /** When true, plays the slide-down exit animation before unmounting. */
+  isClosing?: boolean
 }
 
 export const ChatboxUI: React.FC<ChatboxUIProps> = ({
@@ -230,10 +234,20 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   setPreferredModel,
   placeholder,
   headerContent,
+  isClosing,
 }) => {
   const latestThreadRef = useRef<HTMLDivElement>(null)
   const [isMaximized, setIsMaximized] = useState(false)
   const [isCursorOnChat, setIsCursorOnChat] = useState(false)
+  // Entrance animation: start off-screen (translate-y-full), then flip to 0 after
+  // first paint so the transition slides the sheet up from the bottom.
+  const [entered, setEntered] = useState(false)
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setEntered(true))
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [])
 
   const handleMaximize = () => setIsMaximized((prev) => !prev)
 
@@ -274,7 +288,7 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
 
   return (
     <div
-      className={`fixed z-50 overflow-x-hidden ${isMaximized ? 'top-0 left-0 right-0 bottom-0 w-full h-full' : isDesktop ? 'md:fixed md:top-[15vh] md:right-8 md:left-auto md:h-[80vh] md:max-h-[80vh] md:w-[50vw] md:shadow-[0_2px_16px_rgba(0,0,0,0.15)] md:z-50 md:rounded-xl md:overflow-x-hidden' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}
+      className={`fixed z-50 overflow-x-hidden transition-transform duration-300 ease-[cubic-bezier(0.2,0.7,0.2,1)] ${isClosing || !entered ? 'translate-y-full' : 'translate-y-0'} ${isMaximized ? 'top-0 left-0 right-0 bottom-0 w-full h-full' : isDesktop ? 'md:fixed md:top-[15vh] md:right-8 md:left-auto md:h-[80vh] md:max-h-[80vh] md:w-[50vw] md:shadow-[0_2px_16px_rgba(0,0,0,0.15)] md:z-50 md:rounded-xl md:overflow-x-hidden' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}
       onMouseEnter={() => setIsCursorOnChat(true)}
       onMouseLeave={() => setIsCursorOnChat(false)}
     >
@@ -383,7 +397,12 @@ function BriefHeader({
   )
 }
 
-const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, isDesktop }) => {
+const FinancialChatbox: React.FC<FinancialChatboxProps> = ({
+  onClose,
+  children,
+  isDesktop,
+  isClosing,
+}) => {
   const params = useParams()
   const ticker = params.ticker as string | undefined
   const context = useContext(ChatContext)
@@ -489,6 +508,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
         briefMarkets={briefMarkets}
         onDigIntoRecap={handleDigIntoRecap}
         onAskQuestion={handleAskQuestion}
+        onClose={onClose}
       />
     )
   } else if (activeMarketData?.recap && threads.length === 0) {
@@ -532,6 +552,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({ onClose, children, 
       setPreferredModel={setPreferredModel}
       placeholder={showBrief ? 'Or ask your own question...' : 'Ask follow-up...'}
       headerContent={briefHeader}
+      isClosing={isClosing}
     >
       {briefContent || children}
     </ChatboxUI>
