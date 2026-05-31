@@ -31,7 +31,7 @@ export default function PulseCard({ market, favouriteCount, onDigIn }: PulseCard
 
       {/* Headline */}
       {recap ? (
-        <p className="text-base md:text-lg leading-relaxed text-gray-800 dark:text-gray-200 line-clamp-3">
+        <p className="text-base md:text-lg leading-relaxed text-gray-800 dark:text-gray-200">
           {recap.summary}
         </p>
       ) : (
