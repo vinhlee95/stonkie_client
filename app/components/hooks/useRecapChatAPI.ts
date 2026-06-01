@@ -33,7 +33,7 @@ type V2SourceChunk = {
 const visualMarker = (blockId: string) => `\n\n[[VISUAL_BLOCK:${blockId}]]\n\n`
 
 export const useRecapChatAPI = (
-  recapId: string,
+  recapIdOrRef: string | React.RefObject<string | null>,
   updateThread: (threadId: string, updates: Partial<Thread>) => void,
   conversationId: string | null = null,
   setConversationId: (id: string | null) => void = () => {},
@@ -42,6 +42,8 @@ export const useRecapChatAPI = (
   const [isLoading, setIsLoading] = useState(false)
   const isThinkingRef = useRef(false)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const getRecapId = () =>
+    typeof recapIdOrRef === 'string' ? recapIdOrRef : (recapIdOrRef.current ?? '')
 
   const cancelRequest = () => {
     if (abortControllerRef.current) {
@@ -67,7 +69,7 @@ export const useRecapChatAPI = (
     recordActivity()
     try {
       const reader = await chatService.analyzeRecapQuestion(
-        recapId,
+        getRecapId(),
         question,
         conversationId,
         deepAnalysis,

@@ -4,7 +4,7 @@
   "status": {
     "M1": "done",
     "M2": "done",
-    "M3": "not started"
+    "M3": "done"
   },
   "decisions": {
     "data_source": "Aggregate existing /api/markets/{market}/recaps client-side. Daily first, weekly fallback.",
@@ -15,7 +15,7 @@
     "favourites_role": "Cosmetic only — 'N favourites here' labels, watchlist section visibility, primary ranking.",
     "index_delta": "Omitted (no structured source). DeltaPill stubbed.",
     "analytics": "Deferred.",
-    "cross_market_questions": "Hardcoded constant array.",
+    "cross_market_questions": "1 random question picked from each market's recap.questions. Section hidden when no recaps have questions.",
     "recap_caching": "React Query useQueries per market, ~5 min stale time. Independent from MarketRecapIsland's fetch — different needs (3 markets vs 1, React Query vs useEffect).",
     "header": "BriefHeader component with sun icon, 'Your morning brief' title, 'Focused on {primary}' subtitle, and close button. Replaces default ChatHeader when on Home route.",
     "font_sizes": "Use standard Tailwind scale: text-base md:text-lg for body content (matches MarketRecapCard), text-sm for secondary text, text-xs for labels/meta.",

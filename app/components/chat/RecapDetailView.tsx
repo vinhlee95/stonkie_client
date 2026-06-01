@@ -1,7 +1,8 @@
 'use client'
 
-import { ArrowLeft, ListPlus, Plus, Clock3 } from 'lucide-react'
+import { ArrowLeft, ListPlus, Clock3 } from 'lucide-react'
 import SourceChip from '../SourceChip'
+import QuestionRow from './QuestionRow'
 import type { BriefMarketData } from '../hooks/useBriefData'
 
 const BULLET_COLORS = ['bg-blue-600', 'bg-amber-600', 'bg-rose-600', 'bg-emerald-700']
@@ -84,21 +85,11 @@ export default function RecapDetailView({
             <ListPlus size={16} className="text-gray-600 dark:text-gray-400" />
             <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">Related</span>
           </div>
-          {questions.map((q, i) => (
-            <button
-              key={i}
-              onClick={() => onAskQuestion(q)}
-              className="group w-full text-left flex items-center justify-between gap-2 py-2.5 border-b border-gray-200 dark:border-gray-700 cursor-pointer"
-            >
-              <span className="text-base text-gray-800 dark:text-gray-200 group-hover:text-[var(--accent-hover)] dark:group-hover:text-[var(--accent-hover-dark)] transition-colors">
-                {q}
-              </span>
-              <Plus
-                size={16}
-                className="text-gray-400 group-hover:text-[var(--accent-active)] dark:group-hover:text-[var(--accent-active-dark)] transition-colors shrink-0"
-              />
-            </button>
-          ))}
+          <div className="space-y-1.5">
+            {questions.map((q, i) => (
+              <QuestionRow key={i} question={q} onAsk={onAskQuestion} />
+            ))}
+          </div>
         </div>
       )}
 

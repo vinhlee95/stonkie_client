@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Globe, Star } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Globe, Star, Compass } from 'lucide-react'
 import PulseCard from './PulseCard'
 import CollapsedMarketRow from './CollapsedMarketRow'
 import WatchlistRow from './WatchlistRow'
+import QuestionRow from './QuestionRow'
 import SectionLabel from './SectionLabel'
 import { matchesMarket } from '../MarketFilter'
 import type { BriefData } from '../hooks/useBriefData'
@@ -30,6 +31,7 @@ export default function SmartBriefPanel({
   onClose,
 }: SmartBriefPanelProps) {
   const [expandedSecondary, setExpandedSecondary] = useState<string | null>(null)
+  const crossMarketQuestions = useMemo(() => pickCrossMarketQuestions(briefData), [briefData])
 
   if (briefData.isLoading) {
     return <SmartBriefSkeleton />
@@ -105,6 +107,27 @@ export default function SmartBriefPanel({
           </div>
         </>
       )}
+
+      {/* Across markets — 1 random question per market */}
+      {crossMarketQuestions.length > 0 && (
+        <>
+          <SectionLabel icon={<Compass size={11} className="text-gray-500 dark:text-gray-400" />}>
+            Across markets
+          </SectionLabel>
+          <div className="space-y-1.5">
+            {crossMarketQuestions.map((q) => (
+              <QuestionRow
+                key={q.question}
+                question={q.question}
+                onAsk={(question) => {
+                  onDigIntoRecap(q.recapId, q.marketKey)
+                  onAskQuestion(question)
+                }}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -112,6 +135,27 @@ export default function SmartBriefPanel({
 interface WatchlistEntry {
   company: Company
   flag: string
+}
+
+interface CrossMarketQuestion {
+  question: string
+  recapId: string
+  marketKey: string
+}
+
+/** Picks 1 random question from each market's recap questions. */
+function pickCrossMarketQuestions(briefData: BriefData): CrossMarketQuestion[] {
+  return briefData.markets
+    .map((md) => {
+      const questions = md.recap?.questions ?? []
+      if (questions.length === 0 || !md.recapId) return null
+      return {
+        question: questions[Math.floor(Math.random() * questions.length)],
+        recapId: md.recapId,
+        marketKey: md.market.key,
+      }
+    })
+    .filter((q): q is CrossMarketQuestion => q !== null)
 }
 
 /** Sorts favourites primary-market-first and resolves each company's market flag. */

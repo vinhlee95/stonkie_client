@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useRef, useContext, createContext, ReactNode, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { ListPlus, FileSearch, Cpu, FileText, Sun, ArrowLeft, Minus } from 'lucide-react'
+import { FileSearch, Cpu, FileText, Sun, ArrowLeft, Minus, ListPlus } from 'lucide-react'
 import ChatHeader from './ChatHeader'
 import ChatInput from './ChatInput'
 import { useChatState, Thread, isNormalThread } from './hooks/useChatState'
@@ -11,11 +11,11 @@ import { useFAQQuery } from './hooks/useFAQQuery'
 import { useFavourites } from './hooks/useFavourites'
 import { useBriefMarkets } from './hooks/useBriefMarkets'
 import { useBriefData } from './hooks/useBriefData'
+import QuestionRow from './chat/QuestionRow'
 import SmartBriefPanel from './chat/SmartBriefPanel'
 import RecapDetailView from './chat/RecapDetailView'
 import type { Company } from '@/app/CompanyList'
 import { ThoughtBubble } from './ThoughtBubble'
-import { Plus } from 'lucide-react'
 import AnswerContent from './AnswerContent'
 import ResourceChips from './ResourceChips'
 import ChatSourceChips from './ChatSourceChips'
@@ -167,25 +167,16 @@ export const ThreadView: React.FC<ThreadViewProps> = ({
       {thread.relatedQuestions.length > 0 && (
         <div>
           {isNormalThread(thread) && (
-            <div className="flex mt-6">
-              <ListPlus />
+            <div className="flex items-center gap-1.5 mt-6 mb-1">
+              <ListPlus size={16} />
               <div className="font-semibold">Related</div>
             </div>
           )}
-          <>
+          <div className="space-y-1.5">
             {thread.relatedQuestions.map((question, index) => (
-              <div
-                key={index}
-                onClick={() => onFAQClick?.(question)}
-                className="group flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700 cursor-pointer rounded transition-colors duration-200"
-              >
-                <p className="text-gray-900 dark:text-white flex-1 pr-2 transition-colors duration-200 group-hover:text-[var(--accent-hover)] dark:group-hover:text-[var(--accent-hover-dark)]">
-                  {question}
-                </p>
-                <Plus className="h-5 w-5 text-[#171717] dark:text-[#ededed] transition-colors duration-200 group-hover:text-[var(--accent-hover)] dark:group-hover:text-[var(--accent-hover-dark)]" />
-              </div>
+              <QuestionRow key={index} question={question} onAsk={onFAQClick} />
             ))}
-          </>
+          </div>
         </div>
       )}
     </div>
@@ -434,7 +425,12 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({
   const briefMarkets = useBriefMarkets(favourites)
   const briefData = useBriefData(briefMarkets)
 
-  const [activeRecapId, setActiveRecapId] = useState<string | null>(null)
+  const [activeRecapId, _setActiveRecapId] = useState<string | null>(null)
+  const activeRecapIdRef = useRef<string | null>(null)
+  const setActiveRecapId = (id: string | null) => {
+    activeRecapIdRef.current = id
+    _setActiveRecapId(id)
+  }
   const [activeRecapMarket, setActiveRecapMarket] = useState<string | null>(null)
 
   // Show brief when no user-initiated threads exist (ignore auto-seeded FAQ/recap-question threads)
@@ -448,7 +444,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({
     isThinking: recapThinking,
     cancelRequest: cancelRecap,
   } = useRecapChatAPI(
-    activeRecapId ?? '',
+    activeRecapIdRef,
     updateThread,
     conversationId,
     setConversationId,
@@ -477,7 +473,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({
 
   const handleAskQuestion = async (question: string) => {
     const threadId = addThread(question)
-    if (activeRecapId) {
+    if (activeRecapIdRef.current) {
       await handleRecapSubmit(question, threadId, false, deepAnalysis, preferredModel)
     } else {
       await handleSubmit(question, threadId, false, deepAnalysis, preferredModel)

@@ -109,12 +109,12 @@ describe('SmartBriefPanel', () => {
 
   it('only one secondary expanded at a time', () => {
     render(<SmartBriefPanel {...defaultProps} />)
-    // Click Finland to expand
-    fireEvent.click(screen.getByRole('button', { name: /Finland/i }))
+    // Click Finland to expand (use exact aria-label from CollapsedMarketRow)
+    fireEvent.click(screen.getByRole('button', { name: 'Finland' }))
     expect(screen.getByText('Dig into pulse')).toBeInTheDocument()
 
     // Click Vietnam — Finland should collapse
-    fireEvent.click(screen.getByRole('button', { name: /Vietnam/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Vietnam' }))
     // "Dig into pulse" should still be visible (for Vietnam now)
     expect(screen.getAllByText('Dig into pulse')).toHaveLength(1)
   })
