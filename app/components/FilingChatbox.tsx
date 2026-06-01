@@ -234,6 +234,11 @@ const FilingChatbox: React.FC<FilingChatboxProps> = ({
       setDeepAnalysis={setDeepAnalysis}
       preferredModel={preferredModel}
       setPreferredModel={setPreferredModel}
+      header={{
+        icon: <FileText size={13} strokeWidth={2.4} />,
+        title: filingName,
+        subtitle: ticker ? `${ticker.toUpperCase()} · ${periodEndAt}` : periodEndAt,
+      }}
     >
       <FilingHeader />
     </ChatboxUI>

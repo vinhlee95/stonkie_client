@@ -1,32 +1,45 @@
-import React from 'react'
-import { Maximize, Minimize, Minus } from 'lucide-react'
+'use client'
 
-interface ChatHeaderProps {
+import type { ReactNode } from 'react'
+import { Minus } from 'lucide-react'
+
+export interface ChatHeaderProps {
+  icon: ReactNode
+  title: string
+  subtitle?: string
   onClose: () => void
-  onMaximize: () => void
-  isMaximized: boolean
+  /** Optional actions rendered before the close button (e.g. "Back to brief"). */
+  actions?: ReactNode
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ onClose, onMaximize, isMaximized }) => {
+export default function ChatHeader({ icon, title, subtitle, onClose, actions }: ChatHeaderProps) {
   return (
-    <div className="absolute top-0 right-0 z-50 flex justify-end gap-2 bg-transparent px-4 py-2">
-      <button
-        onClick={onMaximize}
-        className="hidden md:inline-flex p-2 cursor-pointer bg-white dark:bg-black hover:bg-gray-100 dark:hover:bg-gray-900 rounded-xl"
-        aria-label={isMaximized ? 'Minimize' : 'Maximize'}
-        aria-pressed={isMaximized}
-      >
-        {isMaximized ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
-      </button>
-      <button
-        onClick={onClose}
-        className="p-2 cursor-pointer bg-white dark:bg-black hover:bg-gray-100 dark:hover:bg-gray-900 rounded-xl"
-        aria-label="Close"
-      >
-        <Minus className="w-6 h-6" />
-      </button>
+    <div className="flex items-start justify-between gap-3 px-4 pt-3.5 pb-2 border-b border-gray-100 dark:border-gray-800">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-light)] dark:bg-[var(--accent-light-dark)] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)] shrink-0">
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <div className="text-base font-semibold text-gray-900 dark:text-gray-100 leading-tight truncate">
+            {title}
+          </div>
+          {subtitle && (
+            <div className="text-sm text-gray-500 dark:text-gray-400 leading-tight mt-0.5 truncate">
+              {subtitle}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        {actions}
+        <button
+          onClick={onClose}
+          className="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+          aria-label="Close"
+        >
+          <Minus size={14} />
+        </button>
+      </div>
     </div>
   )
 }
-
-export default ChatHeader

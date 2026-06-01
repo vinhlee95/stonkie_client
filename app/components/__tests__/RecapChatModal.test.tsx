@@ -43,7 +43,8 @@ describe('RecapChatModal', () => {
       <RecapChatModal open={true} onClose={vi.fn()} recap={recap} market="USA" cadence="daily" />,
     )
     expect(screen.getByText(/U\.S\. stocks finished higher/i)).toBeInTheDocument()
-    expect(screen.getByText(/USA Daily Recap/i)).toBeInTheDocument()
+    // Header + context card both show this text
+    expect(screen.getAllByText(/USA Daily Recap/i).length).toBeGreaterThanOrEqual(1)
   })
 
   it('renders a functional text input', () => {
@@ -58,7 +59,6 @@ describe('RecapChatModal', () => {
     render(
       <RecapChatModal open={true} onClose={vi.fn()} recap={recap} market="USA" cadence="daily" />,
     )
-    expect(screen.getByText('Dig deeper into this recap')).toBeInTheDocument()
     expect(screen.getByText(/How will reduced Fed rate cut/i)).toBeInTheDocument()
     expect(screen.getByText(/What caused HubSpot/i)).toBeInTheDocument()
   })

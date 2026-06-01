@@ -1,8 +1,9 @@
 'use client'
 import React, { useEffect, useRef, useContext, createContext, ReactNode, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { FileSearch, Cpu, FileText, Sun, ArrowLeft, Minus, ListPlus } from 'lucide-react'
+import { FileSearch, Cpu, FileText, Sun, ArrowLeft, ListPlus, MessageCircle } from 'lucide-react'
 import ChatHeader from './ChatHeader'
+import type { ChatHeaderProps } from './ChatHeader'
 import ChatInput from './ChatInput'
 import { useChatState, Thread, isNormalThread } from './hooks/useChatState'
 import { useChatAPI } from './hooks/useChatAPI'
@@ -105,7 +106,7 @@ export const ThreadView: React.FC<ThreadViewProps> = ({
 }) => {
   return (
     <div className="mb-8">
-      <div className="text-2xl font-medium mb-2">{thread.question}</div>
+      {isNormalThread(thread) && <div className="text-2xl font-medium mb-2">{thread.question}</div>}
       {isNormalThread(thread) && thread.attachment && (
         <div className="mt-4 mb-4">
           <a
@@ -201,7 +202,8 @@ interface ChatboxUIProps {
   preferredModel: string
   setPreferredModel: (model: string) => void
   placeholder?: string
-  headerContent?: React.ReactNode
+  /** Header configuration — icon, title, subtitle, optional actions. */
+  header: Omit<ChatHeaderProps, 'onClose'>
   /** When true, plays the slide-down exit animation before unmounting. */
   isClosing?: boolean
 }
@@ -224,11 +226,10 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   preferredModel,
   setPreferredModel,
   placeholder,
-  headerContent,
+  header,
   isClosing,
 }) => {
   const latestThreadRef = useRef<HTMLDivElement>(null)
-  const [isMaximized, setIsMaximized] = useState(false)
   const [isCursorOnChat, setIsCursorOnChat] = useState(false)
   // Entrance animation: start off-screen (translate-y-full), then flip to 0 after
   // first paint so the transition slides the sheet up from the bottom.
@@ -239,8 +240,6 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
     })
     return () => cancelAnimationFrame(raf)
   }, [])
-
-  const handleMaximize = () => setIsMaximized((prev) => !prev)
 
   // Prevent vertical scrolling of main page when cursor is on the chat window (keep scrollbar visible if it exists)
   useEffect(() => {
@@ -279,20 +278,16 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
 
   return (
     <div
-      className={`fixed z-50 overflow-x-hidden transition-transform duration-300 ease-[cubic-bezier(0.2,0.7,0.2,1)] ${isClosing || !entered ? 'translate-y-full' : 'translate-y-0'} ${isMaximized ? 'top-0 left-0 right-0 bottom-0 w-full h-full' : isDesktop ? 'md:fixed md:top-[15vh] md:right-8 md:left-auto md:h-[80vh] md:max-h-[80vh] md:w-[50vw] md:shadow-[0_2px_16px_rgba(0,0,0,0.15)] md:z-50 md:rounded-xl md:overflow-x-hidden' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}
+      className={`fixed z-50 overflow-x-hidden transition-transform duration-300 ease-[cubic-bezier(0.2,0.7,0.2,1)] ${isClosing || !entered ? 'translate-y-full' : 'translate-y-0'} ${isDesktop ? 'md:fixed md:top-[15vh] md:right-8 md:left-auto md:h-[80vh] md:max-h-[80vh] md:w-[50vw] md:shadow-[0_2px_16px_rgba(0,0,0,0.15)] md:z-50 md:rounded-xl md:overflow-x-hidden' : 'top-0 left-0 right-0 bottom-0 w-full h-full'}`}
       onMouseEnter={() => setIsCursorOnChat(true)}
       onMouseLeave={() => setIsCursorOnChat(false)}
     >
       <div
         className={`bg-[var(--background)] text-[var(--foreground)] rounded-none shadow-lg flex flex-col h-full w-full overflow-hidden overflow-x-hidden ${isDesktop ? 'md:h-full md:w-full md:flex md:flex-col md:rounded-xl md:overflow-x-hidden' : ''}`}
       >
-        {headerContent || (
-          <ChatHeader onClose={onClose} onMaximize={handleMaximize} isMaximized={isMaximized} />
-        )}
+        <ChatHeader {...header} onClose={onClose} />
 
-        <div
-          className={`flex-1 overflow-y-auto overflow-x-hidden px-4 ${headerContent ? 'pt-3' : 'mt-4'} modal-content`}
-        >
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-3 modal-content">
           <div className="w-full max-w-4xl mx-auto">
             {children}
             {threads.map((thread: Thread, index: number) => (
@@ -333,60 +328,12 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   )
 }
 
-/** Header for Smart Brief mode — shows title, subtitle, close/maximize */
-function BriefHeader({
-  primaryLabel,
-  onClose,
-  showBackToBrief,
-  onBackToBrief,
-}: {
-  primaryLabel: string
-  onClose: () => void
-  showBackToBrief: boolean
-  onBackToBrief: () => void
-}) {
-  const today = new Intl.DateTimeFormat(undefined, {
+const BRIEF_TODAY = () =>
+  new Intl.DateTimeFormat(undefined, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
   }).format(new Date())
-
-  return (
-    <div className="flex items-start justify-between gap-3 px-4 pt-3.5 pb-2 border-b border-gray-100 dark:border-gray-800">
-      <div className="flex items-center gap-2.5 min-w-0">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-light)] dark:bg-[var(--accent-light-dark)] text-[var(--accent-active)] dark:text-[var(--accent-active-dark)] shrink-0">
-          <Sun size={13} strokeWidth={2.4} />
-        </span>
-        <div className="min-w-0">
-          <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight truncate">
-            Your morning brief
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 leading-tight mt-0.5 truncate">
-            {today} · Focused on {primaryLabel}
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-1 shrink-0">
-        {showBackToBrief && (
-          <button
-            onClick={onBackToBrief}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <ArrowLeft size={10} />
-            Brief
-          </button>
-        )}
-        <button
-          onClick={onClose}
-          className="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
-          aria-label="Close"
-        >
-          <Minus size={14} />
-        </button>
-      </div>
-    </div>
-  )
-}
 
 const FinancialChatbox: React.FC<FinancialChatboxProps> = ({
   onClose,
@@ -480,15 +427,28 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({
     }
   }
 
-  // Build brief header
-  const briefHeader = isHomeRoute ? (
-    <BriefHeader
-      primaryLabel={briefMarkets.primary.label}
-      onClose={onClose}
-      showBackToBrief={!showBrief && activeRecapId !== null}
-      onBackToBrief={handleBackToBrief}
-    />
-  ) : undefined
+  // Build header props — brief header on Home route, ticker header on company page
+  const showBackToBrief = !showBrief && activeRecapId !== null
+  const headerProps: Omit<ChatHeaderProps, 'onClose'> = isHomeRoute
+    ? {
+        icon: <Sun size={13} strokeWidth={2.4} />,
+        title: 'Your morning brief',
+        subtitle: BRIEF_TODAY(),
+        actions: showBackToBrief ? (
+          <button
+            onClick={handleBackToBrief}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <ArrowLeft size={10} />
+            Brief
+          </button>
+        ) : undefined,
+      }
+    : {
+        icon: <MessageCircle size={13} strokeWidth={2.4} />,
+        title: ticker ? ticker.toUpperCase() : 'Chat',
+        subtitle: ticker ? 'Ask about this company' : undefined,
+      }
 
   // Build brief content — either the panel or the recap detail view
   const activeMarketData = activeRecapId
@@ -547,7 +507,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({
       preferredModel={preferredModel}
       setPreferredModel={setPreferredModel}
       placeholder={showBrief ? 'Or ask your own question...' : 'Ask follow-up...'}
-      headerContent={briefHeader}
+      header={headerProps}
       isClosing={isClosing}
     >
       {briefContent || children}
@@ -650,6 +610,11 @@ export const InsightChatbox: React.FC<FinancialChatboxProps> = ({
       setDeepAnalysis={setDeepAnalysis}
       preferredModel={preferredModel}
       setPreferredModel={setPreferredModel}
+      header={{
+        icon: <MessageCircle size={13} strokeWidth={2.4} />,
+        title: ticker ? ticker.toUpperCase() : 'Chat',
+        subtitle: ticker ? 'Ask about this company' : undefined,
+      }}
     />
   )
 }

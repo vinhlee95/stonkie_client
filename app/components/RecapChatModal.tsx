@@ -25,27 +25,10 @@ function formatPeriodShort(periodStart: string, periodEnd: string): string {
   return `${fmt.format(start)} – ${fmt.format(end)}`
 }
 
-function RecapContextCard({
-  recap,
-  market,
-  cadence,
-}: {
-  recap: MarketRecapItem
-  market: string
-  cadence: string
-}) {
-  const period = formatPeriodShort(recap.period_start, recap.period_end)
-  const cadenceLabel = cadence === 'daily' ? 'Daily' : 'Weekly'
-
+function RecapContextCard({ recap }: { recap: MarketRecapItem }) {
   return (
     <div className="mb-4 rounded-xl border border-[rgba(40,105,86,0.13)] dark:border-[rgba(156,214,194,0.25)] bg-[var(--accent-light)] dark:bg-[var(--accent-light-dark)] p-3 flex items-start gap-3">
-      <span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white dark:bg-gray-800 text-[var(--accent-active)] dark:text-[var(--accent-active-dark)] shadow-sm shrink-0">
-        <Sparkles size={13} strokeWidth={2.4} />
-      </span>
       <div className="min-w-0 flex-1">
-        <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-200">
-          {market} {cadenceLabel} Recap · {period}
-        </span>
         <p className="mt-0.5 text-base leading-6 text-gray-700 dark:text-gray-200">
           {recap.summary}
         </p>
@@ -119,6 +102,9 @@ export default function RecapChatModal({
     await handleSubmit(question, threadId, false, deepAnalysis, preferredModel)
   }
 
+  const period = formatPeriodShort(recap.period_start, recap.period_end)
+  const cadenceLabel = cadence === 'daily' ? 'Daily' : 'Weekly'
+
   if (!open) return null
 
   return (
@@ -140,8 +126,13 @@ export default function RecapChatModal({
       setDeepAnalysis={setDeepAnalysis}
       preferredModel={preferredModel}
       setPreferredModel={setPreferredModel}
+      header={{
+        icon: <Sparkles size={13} strokeWidth={2.4} />,
+        title: `${market} ${cadenceLabel} Recap`,
+        subtitle: period,
+      }}
     >
-      <RecapContextCard recap={recap} market={market} cadence={cadence} />
+      <RecapContextCard recap={recap} />
     </ChatboxUI>
   )
 }

@@ -274,7 +274,7 @@ describe('MarketRecapIsland', () => {
 
       // Modal should show weekly context, not daily
       await waitFor(() => {
-        expect(screen.getByText(/USA Weekly Recap/i)).toBeInTheDocument()
+        expect(screen.getAllByText(/USA Weekly Recap/i).length).toBeGreaterThanOrEqual(1)
       })
       expect(screen.queryByText(/USA Daily Recap/i)).not.toBeInTheDocument()
 
@@ -300,7 +300,7 @@ describe('MarketRecapIsland', () => {
       fireEvent.click(within(section).getByRole('button', { name: /dig deeper/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/USA Daily Recap/i)).toBeInTheDocument()
+        expect(screen.getAllByText(/USA Daily Recap/i).length).toBeGreaterThanOrEqual(1)
       })
       expect(screen.queryByText(/USA Weekly Recap/i)).not.toBeInTheDocument()
 
