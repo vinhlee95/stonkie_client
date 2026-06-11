@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent } from '@/tests/test-utils'
 import SmartBriefPanel from '../chat/SmartBriefPanel'
 import type { BriefData } from '../hooks/useBriefData'
 import type { BriefMarketsResult } from '../hooks/useBriefMarkets'
@@ -159,5 +159,58 @@ describe('SmartBriefPanel', () => {
     const tickers = screen.getAllByText(/NVDA|NOKIA\.HE/).map((el) => el.textContent)
     // USA is primary → NVDA before NOKIA.HE despite insertion order
     expect(tickers).toEqual(['NVDA', 'NOKIA.HE'])
+  })
+
+  it('shows daily price change badges on watchlist rows when quotes resolve', async () => {
+    const favourites: Company[] = [
+      {
+        name: 'NVIDIA',
+        ticker: 'NVDA',
+        logo_url: '',
+        sector: 'Tech',
+        country: 'USA',
+        exchange: 'NASDAQ',
+      },
+      {
+        name: 'Nokia',
+        ticker: 'NOKIA.HE',
+        logo_url: '',
+        sector: 'Tech',
+        country: 'Finland',
+        exchange: 'OMX',
+      },
+    ]
+    // NOKIA.HE intentionally omitted — failed tickers are missing from the response
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        quotes: {
+          NVDA: {
+            trading_date: '2026-06-10',
+            close: 291.58,
+            prev_close: 290.55,
+            change: 1.03,
+            change_percent: 0.35,
+            currency: 'USD',
+          },
+        },
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    try {
+      render(<SmartBriefPanel {...defaultProps} favourites={favourites} />)
+
+      expect(await screen.findByText('+0.35%')).toBeInTheDocument()
+      // One batch call for the whole list, sorted for a stable cache key
+      expect(fetchMock).toHaveBeenCalledWith(
+        `/api/quotes/price-changes?tickers=${encodeURIComponent('NOKIA.HE,NVDA')}`,
+      )
+      // Missing ticker renders its row without a badge
+      expect(screen.getByText('NOKIA.HE')).toBeInTheDocument()
+      expect(screen.getAllByText(/%$/)).toHaveLength(1)
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })

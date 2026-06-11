@@ -8,6 +8,7 @@ import WatchlistRow from './WatchlistRow'
 import QuestionRow from './QuestionRow'
 import SectionLabel from './SectionLabel'
 import { matchesMarket } from '../MarketFilter'
+import { usePriceChanges } from '../hooks/usePriceChanges'
 import type { BriefData } from '../hooks/useBriefData'
 import type { BriefMarket, BriefMarketsResult } from '../hooks/useBriefMarkets'
 import type { Company } from '@/app/CompanyList'
@@ -35,6 +36,7 @@ export default function SmartBriefPanel({
 }: SmartBriefPanelProps) {
   const [expandedSecondary, setExpandedSecondary] = useState<string | null>(null)
   const crossMarketQuestions = useMemo(() => pickCrossMarketQuestions(briefData), [briefData])
+  const priceChanges = usePriceChanges(favourites.map((f) => f.ticker))
 
   if (briefData.isLoading) {
     return <SmartBriefSkeleton />
@@ -104,6 +106,7 @@ export default function SmartBriefPanel({
                 key={company.ticker}
                 company={company}
                 flag={flag}
+                quote={priceChanges[company.ticker.toUpperCase()]}
                 onNavigate={onClose}
                 onRemove={onRemoveFavourite}
               />

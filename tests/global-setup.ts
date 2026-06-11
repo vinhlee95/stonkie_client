@@ -121,6 +121,28 @@ export default async function globalSetup(_config: FullConfig) {
       return
     }
 
+    // Mock batch daily price change endpoint
+    if (req.url?.startsWith('/api/quotes/price-changes')) {
+      const tickersParam = new URL(req.url, 'http://localhost:8080').searchParams.get('tickers')
+      const tickers = (tickersParam ?? '').split(',').filter(Boolean)
+      const quotes = Object.fromEntries(
+        tickers.map((ticker) => [
+          ticker,
+          {
+            trading_date: '2026-04-24',
+            close: 101.0,
+            prev_close: 100.0,
+            change: 1.0,
+            change_percent: 1.0,
+            currency: 'USD',
+          },
+        ]),
+      )
+      res.writeHead(200)
+      res.end(JSON.stringify({ quotes }))
+      return
+    }
+
     // Mock FAQ endpoint
     if (req.url?.match(/\/api\/company\/faq/)) {
       res.writeHead(200)
