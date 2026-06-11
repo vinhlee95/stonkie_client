@@ -94,7 +94,9 @@
     },
     {
       "id": "M3",
-      "status": "not started",
+      "status": "done",
+      "commit": "7e2da4c feat(smart-brief): M3 cross-market questions + unified QuestionRow",
+      "note": "DigRow was implemented as unified QuestionRow.tsx (with QuestionRow.test.tsx) instead of DigRow.tsx",
       "title": "Across Markets Section — Cross-Market Questions",
       "description": "Render the 'Across markets' section with 3 hardcoded cross-market questions. Tapping a question transitions to thread view using the chat API.",
       "phases": [

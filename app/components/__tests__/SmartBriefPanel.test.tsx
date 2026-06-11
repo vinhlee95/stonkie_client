@@ -87,6 +87,7 @@ const defaultProps = {
   briefMarkets,
   onDigIntoRecap: vi.fn(),
   onAskQuestion: vi.fn(),
+  onRemoveFavourite: vi.fn(),
 }
 
 describe('SmartBriefPanel', () => {

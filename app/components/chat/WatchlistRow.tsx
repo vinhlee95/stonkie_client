@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Star } from 'lucide-react'
 import { TICKER_SLIDE_IN_FLAG } from '@/app/tickers/[ticker]/TickerEntryTransition'
 import type { Company } from '@/app/CompanyList'
 
@@ -39,13 +40,15 @@ export interface WatchlistRowProps {
   flag: string
   /** Called when the row is tapped — used to close the brief modal before navigating. */
   onNavigate?: () => void
+  /** Called when the star is tapped — removes the company from favourites. */
+  onRemove: (ticker: string) => void
 }
 
 /**
  * A single favourite row in the watchlist section. Tapping navigates to the
  * company's ticker page. Shows avatar, ticker, company name, and market flag.
  */
-export default function WatchlistRow({ company, flag, onNavigate }: WatchlistRowProps) {
+export default function WatchlistRow({ company, flag, onNavigate, onRemove }: WatchlistRowProps) {
   const handleClick = () => {
     // Signal the destination page to slide in from the right, then close the modal
     // (which plays its slide-down exit) before the Link navigates.
@@ -64,7 +67,7 @@ export default function WatchlistRow({ company, flag, onNavigate }: WatchlistRow
       className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[var(--card-background)] px-3 py-2.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/60 cursor-pointer"
     >
       <Avatar url={company.logo_url} name={company.name} />
-      <div className="min-w-0 flex items-center gap-1.5">
+      <div className="min-w-0 flex-1 flex items-center gap-1.5">
         <span className="font-mono text-base font-bold text-gray-900 dark:text-gray-100">
           {company.ticker}
         </span>
@@ -74,6 +77,18 @@ export default function WatchlistRow({ company, flag, onNavigate }: WatchlistRow
           {flag}
         </span>
       </div>
+      <button
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          onRemove(company.ticker)
+        }}
+        className="p-1.5 -mr-1 shrink-0 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+        aria-label={`Remove ${company.ticker} from favourites`}
+        title="Remove from favourites"
+      >
+        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+      </button>
     </Link>
   )
 }

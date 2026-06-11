@@ -20,6 +20,8 @@ interface SmartBriefPanelProps {
   onAskQuestion: (question: string) => void
   /** Closes the brief modal — called before navigating to a ticker page. */
   onClose?: () => void
+  /** Removes a ticker from favourites. */
+  onRemoveFavourite: (ticker: string) => void
 }
 
 export default function SmartBriefPanel({
@@ -29,6 +31,7 @@ export default function SmartBriefPanel({
   onDigIntoRecap,
   onAskQuestion,
   onClose,
+  onRemoveFavourite,
 }: SmartBriefPanelProps) {
   const [expandedSecondary, setExpandedSecondary] = useState<string | null>(null)
   const crossMarketQuestions = useMemo(() => pickCrossMarketQuestions(briefData), [briefData])
@@ -102,6 +105,7 @@ export default function SmartBriefPanel({
                 company={company}
                 flag={flag}
                 onNavigate={onClose}
+                onRemove={onRemoveFavourite}
               />
             ))}
           </div>

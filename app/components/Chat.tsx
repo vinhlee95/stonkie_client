@@ -368,7 +368,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({
 
   // Smart Brief: only on Home route (no ticker)
   const isHomeRoute = !ticker
-  const { favourites } = useFavourites<Company>('stonkie_favourites')
+  const { favourites, removeFavourite } = useFavourites<Company>('stonkie_favourites')
   const briefMarkets = useBriefMarkets(favourites)
   const briefData = useBriefData(briefMarkets)
 
@@ -465,6 +465,7 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({
         onDigIntoRecap={handleDigIntoRecap}
         onAskQuestion={handleAskQuestion}
         onClose={onClose}
+        onRemoveFavourite={removeFavourite}
       />
     )
   } else if (activeMarketData?.recap && threads.length === 0) {
