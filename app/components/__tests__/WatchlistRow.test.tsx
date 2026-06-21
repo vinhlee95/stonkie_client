@@ -76,36 +76,37 @@ describe('WatchlistRow', () => {
       expect(screen.queryByText(/%$/)).not.toBeInTheDocument()
     })
 
-    it('shows a green badge with + sign for a positive change', () => {
+    it('shows a green badge with + sign and point change for a positive change', () => {
       render(
         <WatchlistRow company={company} flag="🇺🇸" quote={quote(1.03, 0.35)} onRemove={vi.fn()} />,
       )
-      const badge = screen.getByText('+0.35%')
+      const badge = screen.getByText('+0.35% (1.03)')
       expect(badge.className).toContain('text-green-600')
     })
 
-    it('shows a red badge for a negative change', () => {
+    it('shows a red badge for a negative change with the point change unsigned', () => {
       render(
         <WatchlistRow company={company} flag="🇺🇸" quote={quote(-2.5, -1.2)} onRemove={vi.fn()} />,
       )
-      const badge = screen.getByText('-1.20%')
+      const badge = screen.getByText('-1.20% (2.50)')
       expect(badge.className).toContain('text-red-600')
     })
 
     it('shows a neutral badge when the change is exactly zero', () => {
       render(<WatchlistRow company={company} flag="🇺🇸" quote={quote(0, 0)} onRemove={vi.fn()} />)
-      const badge = screen.getByText('0.00%')
+      const badge = screen.getByText('0.00% (0.00)')
       expect(badge.className).toContain('text-gray-500')
       expect(badge.className).not.toContain('text-green-600')
       expect(badge.className).not.toContain('text-red-600')
     })
 
-    it('renders the trading date under the change', () => {
+    it('renders the closing price with a daily "D" marker', () => {
       render(
         <WatchlistRow company={company} flag="🇺🇸" quote={quote(1.03, 0.35)} onRemove={vi.fn()} />,
       )
-      expect(screen.getByText('+0.35%')).toBeInTheDocument()
-      expect(screen.getByText('Jun 10')).toBeInTheDocument()
+      // close = 100 + 1.03 = 101.03
+      expect(screen.getByText('101.03')).toBeInTheDocument()
+      expect(screen.getByText('D')).toBeInTheDocument()
     })
   })
 })

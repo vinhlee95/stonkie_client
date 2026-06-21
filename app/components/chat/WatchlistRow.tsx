@@ -51,17 +51,15 @@ export interface WatchlistRowProps {
  * A single favourite row in the watchlist section. Tapping navigates to the
  * company's ticker page. Shows avatar, ticker, company name, and market flag.
  */
-/** Formats an ISO trading date (e.g. "2026-06-10") as a short label like "Jun 10". */
-function formatTradingDate(isoDate: string): string {
-  const parsed = new Date(`${isoDate}T00:00:00`)
-  if (Number.isNaN(parsed.getTime())) return isoDate
-  return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+/** Formats a price with thousands separators and 2 decimals (e.g. "210.69", "27,000.00"). */
+function formatPrice(value: number): string {
+  return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 /**
- * Daily change badge — % change of the latest completed trading day, with the
- * trading date underneath so it's clear which session the change refers to.
- * Neutral grey when flat so colour only signals actual movement.
+ * Daily change badge — closing price of the latest completed trading day with a
+ * "D" marker, plus the % change and point difference for that session. Neutral
+ * grey when flat so colour only signals actual movement.
  */
 function ChangeBadge({ quote }: { quote: PriceChange }) {
   const flat = quote.change === 0
@@ -75,12 +73,15 @@ function ChangeBadge({ quote }: { quote: PriceChange }) {
 
   return (
     <span className="flex flex-col items-end shrink-0">
+      <span className="font-mono text-base font-bold tabular-nums text-gray-900 dark:text-gray-100">
+        {formatPrice(quote.close)}
+        <sup className="ml-0.5 align-super text-[9px] font-bold text-amber-500 dark:text-amber-400">
+          D
+        </sup>
+      </span>
       <span className={`font-mono text-sm font-semibold tabular-nums ${colour}`}>
         {sign}
-        {quote.change_percent.toFixed(2)}%
-      </span>
-      <span className="text-[10px] leading-tight text-gray-400 dark:text-gray-500">
-        {formatTradingDate(quote.trading_date)}
+        {quote.change_percent.toFixed(2)}% ({formatPrice(Math.abs(quote.change))})
       </span>
     </span>
   )
