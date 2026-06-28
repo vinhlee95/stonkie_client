@@ -41,6 +41,8 @@ export interface WatchlistRowProps {
   flag: string
   /** Latest completed trading day's price change. Omitted while loading or when unavailable. */
   quote?: PriceChange
+  /** Precomputed daily recap summary. Rendered as muted text under the row when present. */
+  recapSummary?: string
   /** Called when the row is tapped — used to close the brief modal before navigating. */
   onNavigate?: () => void
   /** Called when the star is tapped — removes the company from favourites. */
@@ -91,6 +93,7 @@ export default function WatchlistRow({
   company,
   flag,
   quote,
+  recapSummary,
   onNavigate,
   onRemove,
 }: WatchlistRowProps) {
@@ -109,32 +112,39 @@ export default function WatchlistRow({
     <Link
       href={`/tickers/${company.ticker}`}
       onClick={handleClick}
-      className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[var(--card-background)] px-3 py-2.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/60 cursor-pointer"
+      className="flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[var(--card-background)] px-3 py-2.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/60 cursor-pointer"
     >
-      <Avatar url={company.logo_url} name={company.name} />
-      <div className="min-w-0 flex-1 flex items-center gap-1.5">
-        <span className="font-mono text-base font-bold text-gray-900 dark:text-gray-100">
-          {company.ticker}
-        </span>
-        <span className="text-gray-400 dark:text-gray-500">·</span>
-        <span className="text-sm text-gray-500 dark:text-gray-400 truncate">{company.name}</span>
-        <span className="text-sm leading-none shrink-0" aria-hidden>
-          {flag}
-        </span>
+      <div className="flex items-center gap-3">
+        <Avatar url={company.logo_url} name={company.name} />
+        <div className="min-w-0 flex-1 flex items-center gap-1.5">
+          <span className="font-mono text-base font-bold text-gray-900 dark:text-gray-100">
+            {company.ticker}
+          </span>
+          <span className="text-gray-400 dark:text-gray-500">·</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400 truncate">{company.name}</span>
+          <span className="text-sm leading-none shrink-0" aria-hidden>
+            {flag}
+          </span>
+        </div>
+        {quote && <ChangeBadge quote={quote} />}
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onRemove(company.ticker)
+          }}
+          className="p-1.5 -mr-1 shrink-0 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+          aria-label={`Remove ${company.ticker} from favourites`}
+          title="Remove from favourites"
+        >
+          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+        </button>
       </div>
-      {quote && <ChangeBadge quote={quote} />}
-      <button
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          onRemove(company.ticker)
-        }}
-        className="p-1.5 -mr-1 shrink-0 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-        aria-label={`Remove ${company.ticker} from favourites`}
-        title="Remove from favourites"
-      >
-        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-      </button>
+      {recapSummary && (
+        <p className="mt-1.5 text-sm leading-snug text-gray-500 dark:text-gray-400">
+          {recapSummary}
+        </p>
+      )}
     </Link>
   )
 }

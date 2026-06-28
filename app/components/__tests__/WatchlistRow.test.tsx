@@ -61,6 +61,25 @@ describe('WatchlistRow', () => {
     expect(screen.getByText('NV')).toBeInTheDocument()
   })
 
+  describe('recap summary', () => {
+    it('renders the summary under the row when present', () => {
+      render(
+        <WatchlistRow
+          company={company}
+          flag="🇺🇸"
+          recapSummary="NVDA rose on strong datacenter demand."
+          onRemove={vi.fn()}
+        />,
+      )
+      expect(screen.getByText('NVDA rose on strong datacenter demand.')).toBeInTheDocument()
+    })
+
+    it('renders no summary block when absent', () => {
+      const { container } = render(<WatchlistRow company={company} flag="🇺🇸" onRemove={vi.fn()} />)
+      expect(container.querySelector('p')).not.toBeInTheDocument()
+    })
+  })
+
   describe('daily change badge', () => {
     const quote = (change: number, changePercent: number): PriceChange => ({
       trading_date: '2026-06-10',

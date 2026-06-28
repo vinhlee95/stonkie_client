@@ -161,6 +161,61 @@ describe('SmartBriefPanel', () => {
     expect(tickers).toEqual(['NVDA', 'NOKIA.HE'])
   })
 
+  it('shows the precomputed recap summary under a favourite that has one', async () => {
+    const favourites: Company[] = [
+      {
+        name: 'NVIDIA',
+        ticker: 'NVDA',
+        logo_url: '',
+        sector: 'Tech',
+        country: 'USA',
+        exchange: 'NASDAQ',
+      },
+      {
+        name: 'Nokia',
+        ticker: 'NOKIA.HE',
+        logo_url: '',
+        sector: 'Tech',
+        country: 'Finland',
+        exchange: 'OMX',
+      },
+    ]
+    // Recap exists for NVDA only; NOKIA.HE proxy returns null (no precomputed row).
+    const fetchMock = vi.fn((url: string) => {
+      if (url.includes('/api/companies/NVDA/recaps')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            id: 1,
+            period_start: '2026-06-27',
+            period_end: '2026-06-27',
+            created_at: '2026-06-28T08:00:00Z',
+            summary: 'NVDA rose on strong datacenter demand.',
+            bullets: [],
+            sources: [],
+            price_change: null,
+          }),
+        })
+      }
+      // companies/.../recaps for others → null; quotes → empty
+      if (url.includes('/recaps')) {
+        return Promise.resolve({ ok: true, json: async () => null })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ quotes: {} }) })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    try {
+      render(<SmartBriefPanel {...defaultProps} favourites={favourites} />)
+
+      expect(await screen.findByText('NVDA rose on strong datacenter demand.')).toBeInTheDocument()
+      // No summary leaks onto the favourite without a recap
+      expect(screen.getByText('NOKIA.HE')).toBeInTheDocument()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('shows daily price change badges on watchlist rows when quotes resolve', async () => {
     const favourites: Company[] = [
       {
@@ -201,14 +256,14 @@ describe('SmartBriefPanel', () => {
     try {
       render(<SmartBriefPanel {...defaultProps} favourites={favourites} />)
 
-      expect(await screen.findByText('+0.35%')).toBeInTheDocument()
+      expect(await screen.findByText('+0.35% (1.03)')).toBeInTheDocument()
       // One batch call for the whole list, sorted for a stable cache key
       expect(fetchMock).toHaveBeenCalledWith(
         `/api/quotes/price-changes?tickers=${encodeURIComponent('NOKIA.HE,NVDA')}`,
       )
       // Missing ticker renders its row without a badge
       expect(screen.getByText('NOKIA.HE')).toBeInTheDocument()
-      expect(screen.getAllByText(/%$/)).toHaveLength(1)
+      expect(screen.getAllByText(/% \(/)).toHaveLength(1)
     } finally {
       vi.unstubAllGlobals()
     }
