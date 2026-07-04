@@ -8,6 +8,7 @@ import { ETFListItem } from '@/app/components/ETFList'
 import { useFavourites } from './hooks/useFavourites'
 import TradingViewMiniChart from './TradingViewMiniChart'
 import { toTradingViewSymbol, isRestricted } from '@/app/lib/tradingview'
+import type { TickerRecapItem } from '@/lib/api/tickerRecap'
 
 type FavouriteItem = Company | ETFListItem
 
@@ -104,11 +105,101 @@ function CompactCardBody({ item }: { item: FavouriteItem }) {
   )
 }
 
+type RecapMode = 'daily' | 'weekly'
+
+/** Formats an ISO timestamp to a bare "HH:MM" 24h clock (e.g. "07:01"). Null when unparseable. */
+function formatRecapTime(iso: string | null): string | null {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+/**
+ * Compact Daily / Weekly segmented switch inside a recap caption. Card-level state.
+ * Buttons stop propagation so tapping them never triggers the card's Link navigation.
+ */
+function RecapModeSwitch({
+  mode,
+  onChange,
+}: {
+  mode: RecapMode
+  onChange: (m: RecapMode) => void
+}) {
+  const opts: { k: RecapMode; label: string; title: string }[] = [
+    { k: 'daily', label: 'D', title: 'Daily recap' },
+    { k: 'weekly', label: 'W', title: 'Weekly recap' },
+  ]
+  return (
+    <div className="inline-flex gap-0.5 p-0.5 rounded-full bg-gray-100 dark:bg-gray-700">
+      {opts.map((o) => {
+        const on = mode === o.k
+        return (
+          <button
+            key={o.k}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onChange(o.k)
+            }}
+            className={`w-6 h-5 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${
+              on
+                ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm'
+                : 'bg-transparent text-gray-400 dark:text-gray-500'
+            }`}
+            aria-pressed={on}
+            aria-label={o.title}
+            title={o.title}
+          >
+            {o.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * Inline recap caption under a card's chart: a "✦ Recap · {time}" label, a Daily/Weekly
+ * mode switch, and the recap summary. Weekly has no precomputed data yet, so its tab shows
+ * a placeholder until the backend supplies weekly recaps.
+ */
+function RecapCaption({ recap }: { recap: TickerRecapItem }) {
+  const [mode, setMode] = useState<RecapMode>('daily')
+  const time = formatRecapTime(recap.created_at)
+  return (
+    <div className="pt-3 pb-1 mt-1 border-t border-gray-100 dark:border-gray-700">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500">
+          <span className="text-amber-500 dark:text-amber-400">✦</span>Recap
+        </span>
+        {mode === 'daily' && time && (
+          <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">· {time}</span>
+        )}
+        <div className="ml-auto">
+          <RecapModeSwitch mode={mode} onChange={setMode} />
+        </div>
+      </div>
+      {mode === 'daily' ? (
+        <p className="m-0 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+          {recap.summary}
+        </p>
+      ) : (
+        <p className="m-0 text-sm italic leading-relaxed text-gray-400 dark:text-gray-500">
+          Weekly recap coming soon.
+        </p>
+      )}
+    </div>
+  )
+}
+
 export interface FavouriteCardProps {
   item: FavouriteItem
   variant?: 'grid' | 'rail'
   earningsInDays?: number
   headline?: string
+  /** Latest precomputed daily recap for this ticker. Renders a caption under the chart when present. */
+  recap?: TickerRecapItem | null
 }
 
 export default function FavouriteCard({
@@ -116,6 +207,7 @@ export default function FavouriteCard({
   variant = 'grid',
   earningsInDays,
   headline,
+  recap,
 }: FavouriteCardProps) {
   const hasEarnings = earningsInDays != null && earningsInDays <= 60
   const hasNews = !!headline
@@ -124,7 +216,8 @@ export default function FavouriteCard({
 
   const showChart = !isRestricted(toTradingViewSymbol(item.ticker))
   const chartHeight = variant === 'rail' ? 120 : 140
-  const cardHeight = showChart ? (variant === 'rail' ? 160 : 180) : undefined
+  // Fixed height only when the card has no recap caption; with a recap it grows to fit the text.
+  const cardHeight = showChart && !recap ? (variant === 'rail' ? 160 : 180) : undefined
 
   return (
     <article
@@ -175,6 +268,8 @@ export default function FavouriteCard({
             )}
           </div>
         )}
+
+        {recap && <RecapCaption recap={recap} />}
       </Link>
     </article>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import { useFavourites } from './hooks/useFavourites'
+import { useTickerRecaps } from './hooks/useTickerRecaps'
 import { Company } from '@/app/CompanyList'
 import { ETFListItem } from '@/app/components/ETFList'
 import FavouriteCard from './FavouriteCard'
@@ -41,6 +42,9 @@ export default function FavouritesList() {
   const { favourites: etfs, isInitialized: eInit } =
     useFavourites<ETFListItem>('stonkie_favourites_etf')
 
+  // Precomputed daily recaps, keyed by uppercase ticker. ETFs have no recaps.
+  const recaps = useTickerRecaps(companies.map((c) => c.ticker))
+
   if (!cInit || !eInit) return <FavouritesSkeleton />
   if (companies.length === 0 && etfs.length === 0) return null
 
@@ -72,16 +76,26 @@ export default function FavouritesList() {
       </div>
 
       {/* Desktop: grid */}
-      <div className="hidden md:grid grid-cols-2 md:grid-cols-3 gap-3.5">
+      <div className="hidden md:grid grid-cols-2 md:grid-cols-3 items-start gap-3.5">
         {items.map((it) => (
-          <FavouriteCard key={it.ticker} item={it} variant="grid" />
+          <FavouriteCard
+            key={it.ticker}
+            item={it}
+            variant="grid"
+            recap={recaps[it.ticker.toUpperCase()]}
+          />
         ))}
       </div>
 
       {/* Mobile: horizontal scroll-snap rail */}
-      <div className="md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-2 px-2 pb-1">
+      <div className="md:hidden flex items-start gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar -mx-2 px-2 pb-1">
         {items.map((it) => (
-          <FavouriteCard key={it.ticker} item={it} variant="rail" />
+          <FavouriteCard
+            key={it.ticker}
+            item={it}
+            variant="rail"
+            recap={recaps[it.ticker.toUpperCase()]}
+          />
         ))}
       </div>
     </section>
