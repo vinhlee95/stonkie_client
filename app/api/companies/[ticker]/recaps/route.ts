@@ -8,8 +8,10 @@ const BACKEND_URL =
 /** Allowed tickers: 1-10 alphanumerics, optional dot/dash segment (e.g. BRK.B). */
 const TICKER_RE = /^[A-Z0-9]{1,10}([.-][A-Z0-9]{1,4})?$/
 
+const CADENCES = ['daily', 'weekly'] as const
+
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ ticker: string }> },
 ): Promise<NextResponse> {
   const ticker = (await context.params).ticker.toUpperCase()
@@ -18,7 +20,13 @@ export async function GET(
     return NextResponse.json({ error: 'invalid ticker' }, { status: 400 })
   }
 
-  const url = `${BACKEND_URL}/api/companies/${ticker}/recaps?cadence=daily&limit=1`
+  // Default to daily so existing watchlist callers (no param) keep working.
+  const requested = req.nextUrl.searchParams.get('cadence')
+  const cadence = (CADENCES as readonly string[]).includes(requested ?? '')
+    ? (requested as string)
+    : 'daily'
+
+  const url = `${BACKEND_URL}/api/companies/${ticker}/recaps?cadence=${cadence}&limit=1`
   const response = await fetch(url, { cache: 'no-store' })
   if (!response.ok) {
     return NextResponse.json(null, {

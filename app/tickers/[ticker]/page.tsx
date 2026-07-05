@@ -8,6 +8,8 @@ import { CompanyFinancialStatement, type CompanyStatementsResponse } from '@/app
 import { Company } from '@/app/CompanyList'
 import PriceChart from './PriceChart'
 import CompanyInfo from './CompanyInfo'
+import TickerRecapIsland from '@/app/components/TickerRecapIsland'
+import { getTickerRecapPair } from '@/lib/api/tickerRecap'
 
 export const revalidate = 30
 
@@ -33,6 +35,8 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
 
   let keyStats: KeyStatsType | null = null
   let statements: CompanyFinancialStatement[] | null = null
+
+  const recapPair = await getTickerRecapPair(ticker)
 
   try {
     const keyStatsResponse = await fetch(
@@ -106,6 +110,11 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
       <Suspense fallback={<p>Loading stock price chart</p>}>
         <PriceChart ticker={ticker} />
       </Suspense>
+      <TickerRecapIsland
+        symbol={ticker.toUpperCase()}
+        daily={recapPair.daily}
+        weekly={recapPair.weekly}
+      />
       {keyStats && <KeyStats keyStats={keyStats} />}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Suspense fallback={<p>Loading growth chart...</p>}>
