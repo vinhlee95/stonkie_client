@@ -52,6 +52,7 @@ next-env.d.ts
 .claude/.initialized
 .claude/screenshots/
 .claude/plans/
+.claude/worktrees/
 
 # Playwright test results
 /test-results/

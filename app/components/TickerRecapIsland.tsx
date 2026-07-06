@@ -17,7 +17,9 @@ export default function TickerRecapIsland({
   if (!daily && !weekly) return null
 
   return (
-    <div className="mb-6">
+    // `lg:relative` makes this the containing block for the absolutely-filled
+    // recap on desktop, so the recap can't grow the row — it scrolls inside.
+    <div className="h-full lg:relative">
       <TickerRecapCard symbol={symbol} daily={daily} weekly={weekly} />
     </div>
   )
