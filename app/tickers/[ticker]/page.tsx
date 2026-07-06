@@ -107,14 +107,24 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
   return (
     <>
       {keyStats && <CompanyInfo companyInfo={keyStats} />}
-      <Suspense fallback={<p>Loading stock price chart</p>}>
-        <PriceChart ticker={ticker} />
-      </Suspense>
-      <TickerRecapIsland
-        symbol={ticker.toUpperCase()}
-        daily={recapPair.daily}
-        weekly={recapPair.weekly}
-      />
+      {recapPair.daily || recapPair.weekly ? (
+        <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[1.55fr_1fr] lg:items-stretch">
+          <div className="lg:min-h-[420px]">
+            <Suspense fallback={<p>Loading stock price chart</p>}>
+              <PriceChart ticker={ticker} fill />
+            </Suspense>
+          </div>
+          <TickerRecapIsland
+            symbol={ticker.toUpperCase()}
+            daily={recapPair.daily}
+            weekly={recapPair.weekly}
+          />
+        </div>
+      ) : (
+        <Suspense fallback={<p>Loading stock price chart</p>}>
+          <PriceChart ticker={ticker} />
+        </Suspense>
+      )}
       {keyStats && <KeyStats keyStats={keyStats} />}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Suspense fallback={<p>Loading growth chart...</p>}>

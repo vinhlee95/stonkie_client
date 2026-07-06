@@ -37,13 +37,22 @@ const dailyRecap: TickerRecapItem = {
   price_change: null,
 }
 
+const dailyRecapManyBullets: TickerRecapItem = {
+  ...dailyRecap,
+  bullets: [
+    { text: 'First insight visible by default.', citations: [] },
+    { text: 'Second insight visible by default.', citations: [] },
+    { text: 'Third insight hidden behind show more.', citations: [] },
+  ],
+}
+
 describe('TickerRecapCard', () => {
-  it('renders the ticker-scoped label and summary, expanded by default', () => {
+  it('renders the ticker-scoped label and summary, with top insights visible by default', () => {
     render(<TickerRecapCard symbol="AAPL" daily={dailyRecap} weekly={null} />)
 
     expect(screen.getByText('AAPL Recap')).toBeInTheDocument()
     expect(screen.getByText(/Apple jumped 4.8%/i)).toBeInTheDocument()
-    // Bullets visible without interaction (expanded by default).
+    // Insights visible without interaction.
     expect(screen.getByText(/Services guidance topped consensus/i)).toBeInTheDocument()
   })
 
@@ -52,11 +61,23 @@ describe('TickerRecapCard', () => {
     expect(screen.queryByRole('button', { name: /dig deeper/i })).not.toBeInTheDocument()
   })
 
-  it('collapses bullets when the collapse control is toggled', () => {
-    render(<TickerRecapCard symbol="AAPL" daily={dailyRecap} weekly={null} />)
+  it('shows only the top two insights and reveals the rest via show more', () => {
+    render(<TickerRecapCard symbol="AAPL" daily={dailyRecapManyBullets} weekly={null} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /collapse recap/i }))
-    expect(screen.getByRole('button', { name: /expand recap/i })).toBeInTheDocument()
+    expect(screen.getByText(/First insight visible/i)).toBeInTheDocument()
+    expect(screen.getByText(/Second insight visible/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Third insight hidden/i)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /show 1 more insight/i }))
+    expect(screen.getByText(/Third insight hidden/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /show less/i }))
+    expect(screen.queryByText(/Third insight hidden/i)).not.toBeInTheDocument()
+  })
+
+  it('does not render a show more control when two or fewer insights exist', () => {
+    render(<TickerRecapCard symbol="AAPL" daily={dailyRecap} weekly={null} />)
+    expect(screen.queryByRole('button', { name: /more insight/i })).not.toBeInTheDocument()
   })
 
   it('shows the Daily/Weekly toggle only when both cadences exist', () => {
@@ -79,11 +100,10 @@ describe('TickerRecapCard', () => {
     expect(screen.queryByText(/Apple jumped 4.8%/i)).not.toBeInTheDocument()
   })
 
-  it('renders period and curated chips, and citation chips using publisher name', () => {
+  it('renders the curated meta line and citation chips using publisher name', () => {
     render(<TickerRecapCard symbol="AAPL" daily={null} weekly={weeklyRecap} />)
 
-    expect(screen.getByLabelText(/Recap period/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Recap created/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Recap curated/i)).toBeInTheDocument()
     const source = screen.getByRole('link', { name: /reuters/i })
     expect(source).toHaveAttribute('href', 'https://example.com/1')
   })

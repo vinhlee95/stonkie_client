@@ -23,7 +23,7 @@ function TradingViewLinkOut({ ticker, tvSymbol }: { ticker: string; tvSymbol: st
   )
 }
 
-function TradingViewWidget({ ticker }: { ticker: string }) {
+function TradingViewWidget({ ticker, fill = false }: { ticker: string; fill?: boolean }) {
   const container = useRef<HTMLDivElement>(null)
   const hasCreatedChart = useRef<boolean>(false)
   const isDarkMode = useDarkMode()
@@ -99,9 +99,9 @@ function TradingViewWidget({ ticker }: { ticker: string }) {
   }
 
   return (
-    <div className="h-[250px] mb-6">
-      <div className="tradingview-widget-container" ref={container}>
-        <div className="tradingview-widget-container__widget"></div>
+    <div className={fill ? 'h-full min-h-[250px]' : 'h-[250px] mb-6'}>
+      <div className="tradingview-widget-container h-full" ref={container}>
+        <div className="tradingview-widget-container__widget h-full"></div>
       </div>
     </div>
   )
