@@ -1,20 +1,12 @@
 'use client'
 
-import { ArrowLeft, ListPlus, Clock3 } from 'lucide-react'
+import { ArrowLeft, ListPlus } from 'lucide-react'
 import SourceChip from '../SourceChip'
+import RecapCuratedChip from '../RecapCuratedChip'
 import QuestionRow from './QuestionRow'
 import type { BriefMarketData } from '../hooks/useBriefData'
 
 const BULLET_COLORS = ['bg-blue-600', 'bg-amber-600', 'bg-rose-600', 'bg-emerald-700']
-
-function formatRecapCreatedAt(createdAt: string): string {
-  const date = new Date(createdAt)
-  if (Number.isNaN(date.getTime())) return createdAt
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
-}
 
 interface RecapDetailViewProps {
   market: BriefMarketData
@@ -73,10 +65,7 @@ export default function RecapDetailView({
       )}
 
       {/* Curated timestamp */}
-      <span className="mt-3 inline-flex w-fit items-center gap-1 rounded-full border border-[rgba(40,105,86,0.25)] dark:border-[rgba(156,214,194,0.35)] px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300">
-        <Clock3 size={12} strokeWidth={2.25} />
-        Curated on: {formatRecapCreatedAt(recap.created_at)}
-      </span>
+      <RecapCuratedChip createdAt={recap.created_at} className="mt-3" />
 
       {/* Related questions */}
       {questions.length > 0 && (

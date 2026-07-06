@@ -7,6 +7,7 @@ import { Company } from '@/app/CompanyList'
 import { ETFListItem } from '@/app/components/ETFList'
 import { useFavourites } from './hooks/useFavourites'
 import TradingViewMiniChart from './TradingViewMiniChart'
+import { formatRecapCreatedAt } from './RecapCuratedChip'
 import { toTradingViewSymbol, isRestricted } from '@/app/lib/tradingview'
 import type { TickerRecapItem } from '@/lib/api/tickerRecap'
 
@@ -107,14 +108,6 @@ function CompactCardBody({ item }: { item: FavouriteItem }) {
 
 type RecapMode = 'daily' | 'weekly'
 
-/** Formats an ISO timestamp to a bare "HH:MM" 24h clock (e.g. "07:01"). Null when unparseable. */
-function formatRecapTime(iso: string | null): string | null {
-  if (!iso) return null
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return null
-  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-}
-
 /**
  * Compact Daily / Weekly segmented switch inside a recap caption. Card-level state.
  * Buttons stop propagation so tapping them never triggers the card's Link navigation.
@@ -166,15 +159,17 @@ function RecapModeSwitch({
  */
 function RecapCaption({ recap }: { recap: TickerRecapItem }) {
   const [mode, setMode] = useState<RecapMode>('daily')
-  const time = formatRecapTime(recap.created_at)
+  const timestamp = recap.created_at ? formatRecapCreatedAt(recap.created_at) : null
   return (
     <div className="pt-3 pb-1 mt-1 border-t border-gray-100 dark:border-gray-700">
       <div className="flex items-center gap-2 mb-2">
         <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500">
           <span className="text-amber-500 dark:text-amber-400">✦</span>Recap
         </span>
-        {mode === 'daily' && time && (
-          <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">· {time}</span>
+        {mode === 'daily' && timestamp && (
+          <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
+            · {timestamp}
+          </span>
         )}
         <div className="ml-auto">
           <RecapModeSwitch mode={mode} onChange={setMode} />

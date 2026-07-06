@@ -76,7 +76,7 @@ describe('MarketRecapCard', () => {
     ).toBeInTheDocument()
     expect(
       screen.getByLabelText(
-        new RegExp(`Recap created\\s*${escapeRegExp(expectedLocalizedCreatedAt)}`, 'i'),
+        new RegExp(`Recap curated\\s*${escapeRegExp(expectedLocalizedCreatedAt)}`, 'i'),
       ),
     ).toBeInTheDocument()
   })
@@ -278,14 +278,14 @@ describe('MarketRecapCard', () => {
       render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       expect(screen.getByLabelText(/Recap period/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Recap created/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Recap curated/i)).toBeInTheDocument()
     })
 
     it('places the created_at chip after the summary text in DOM order', () => {
       render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
       const summary = screen.getByText(/S&P 500 closed slightly higher/i)
-      const createdAtChip = screen.getByLabelText(/Recap created/i)
+      const createdAtChip = screen.getByLabelText(/Recap curated/i)
 
       const order = summary.compareDocumentPosition(createdAtChip)
       expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
@@ -294,7 +294,7 @@ describe('MarketRecapCard', () => {
     it('prefixes the created_at chip with "Curated on:"', () => {
       render(<MarketRecapCard daily={null} weekly={weeklyRecap} onDigDeeper={noop} />)
 
-      const chip = screen.getByLabelText(/Recap created/i)
+      const chip = screen.getByLabelText(/Recap curated/i)
       expect(chip.textContent ?? '').toMatch(/Curated on:/i)
     })
 

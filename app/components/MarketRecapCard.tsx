@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, CalendarDays, Clock3, Sparkles } from 'lucide-react'
+import { ArrowRight, CalendarDays, Sparkles } from 'lucide-react'
 import { MarketRecapItem } from '@/lib/api/marketRecap'
 import SourceChip from './SourceChip'
+import RecapCuratedChip from './RecapCuratedChip'
 
 type Cadence = 'daily' | 'weekly'
 
@@ -16,15 +17,6 @@ interface MarketRecapCardProps {
 function bulletColor(index: number): string {
   const palette = ['bg-blue-600', 'bg-amber-600', 'bg-rose-600', 'bg-emerald-700']
   return palette[index % palette.length]!
-}
-
-function formatRecapCreatedAt(createdAt: string): string {
-  const date = new Date(createdAt)
-  if (Number.isNaN(date.getTime())) return createdAt
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date)
 }
 
 function formatRecapPeriod(periodStart: string, periodEnd: string): string {
@@ -54,10 +46,6 @@ export default function MarketRecapCard({ daily, weekly, onDigDeeper }: MarketRe
   }, [cadence, showCadenceToggle])
 
   const teaser = useMemo(() => recap?.summary.trim() ?? '', [recap])
-  const formattedCreatedAt = useMemo(
-    () => (recap ? formatRecapCreatedAt(recap.created_at) : ''),
-    [recap],
-  )
   const formattedPeriod = useMemo(
     () => (recap ? formatRecapPeriod(recap.period_start, recap.period_end) : ''),
     [recap],
@@ -156,13 +144,7 @@ export default function MarketRecapCard({ daily, weekly, onDigDeeper }: MarketRe
             >
               {teaser}
             </p>
-            <span
-              aria-label={`Recap created ${formattedCreatedAt}`}
-              className="mt-2 inline-flex w-fit items-center gap-1 rounded-full border border-[rgba(40,105,86,0.25)] dark:border-[rgba(156,214,194,0.35)] px-2 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300"
-            >
-              <Clock3 aria-hidden="true" size={11} strokeWidth={2.25} />
-              <span>Curated on: {formattedCreatedAt}</span>
-            </span>
+            <RecapCuratedChip createdAt={recap.created_at} className="mt-2" />
           </div>
           <span
             aria-hidden="true"

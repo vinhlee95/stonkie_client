@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { TickerRecapItem, TickerRecapCadence } from '@/lib/api/tickerRecap'
 import SourceChip from './SourceChip'
+import RecapCuratedChip from './RecapCuratedChip'
 
 interface TickerRecapCardProps {
   symbol: string
@@ -20,23 +21,6 @@ function bulletColor(index: number): string {
   return palette[index % palette.length]!
 }
 
-function formatRecapMeta(createdAt: string | null): string {
-  if (!createdAt) return ''
-  const date = new Date(createdAt)
-  if (Number.isNaN(date.getTime())) return createdAt
-  const datePart = new Intl.DateTimeFormat(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(date)
-  const timePart = new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date)
-  return `${datePart} · curated ${timePart}`
-}
-
 export default function TickerRecapCard({ symbol, daily, weekly }: TickerRecapCardProps) {
   const initialCadence: TickerRecapCadence = daily ? 'daily' : 'weekly'
   const [cadence, setCadence] = useState<TickerRecapCadence>(initialCadence)
@@ -45,7 +29,6 @@ export default function TickerRecapCard({ symbol, daily, weekly }: TickerRecapCa
   const recap = cadence === 'daily' ? (daily ?? weekly) : (weekly ?? daily)
   const showCadenceToggle = Boolean(daily && weekly)
 
-  const metaLine = useMemo(() => (recap ? formatRecapMeta(recap.created_at) : ''), [recap])
   const sourceById = useMemo(() => {
     return new Map((recap?.sources ?? []).map((source) => [source.id, source]))
   }, [recap])
@@ -115,15 +98,8 @@ export default function TickerRecapCard({ symbol, daily, weekly }: TickerRecapCa
           )}
         </div>
 
-        {/* Curated meta — single compressed line */}
-        {metaLine && (
-          <p
-            aria-label={`Recap curated ${metaLine}`}
-            className="mt-2 text-xs text-gray-500 dark:text-gray-400"
-          >
-            {metaLine}
-          </p>
-        )}
+        {/* Curated meta — shared pill */}
+        <RecapCuratedChip createdAt={recap.created_at} className="mt-2" />
 
         {/* Summary */}
         <p className="mt-2.5 text-base leading-6 text-gray-700 md:text-lg md:leading-7 dark:text-gray-200">
