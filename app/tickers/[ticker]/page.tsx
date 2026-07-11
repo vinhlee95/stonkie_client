@@ -106,14 +106,18 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
 
   return (
     <>
-      {keyStats && <CompanyInfo companyInfo={keyStats} />}
       {recapPair.daily || recapPair.weekly ? (
-        <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[1.55fr_1fr] lg:items-stretch">
-          <div className="lg:min-h-[420px]">
-            <Suspense fallback={<p>Loading stock price chart</p>}>
-              <PriceChart ticker={ticker} fill />
-            </Suspense>
+        <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+          {/* Left column: company description + price chart underneath */}
+          <div className="flex flex-col">
+            {keyStats && <CompanyInfo companyInfo={keyStats} />}
+            <div className="lg:min-h-[280px] lg:flex-1">
+              <Suspense fallback={<p>Loading stock price chart</p>}>
+                <PriceChart ticker={ticker} fill />
+              </Suspense>
+            </div>
           </div>
+          {/* Right column: recap block */}
           <TickerRecapIsland
             symbol={ticker.toUpperCase()}
             daily={recapPair.daily}
@@ -121,9 +125,12 @@ export default async function TickerDetails({ params }: { params: Promise<{ tick
           />
         </div>
       ) : (
-        <Suspense fallback={<p>Loading stock price chart</p>}>
-          <PriceChart ticker={ticker} />
-        </Suspense>
+        <>
+          {keyStats && <CompanyInfo companyInfo={keyStats} />}
+          <Suspense fallback={<p>Loading stock price chart</p>}>
+            <PriceChart ticker={ticker} />
+          </Suspense>
+        </>
       )}
       {keyStats && <KeyStats keyStats={keyStats} />}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

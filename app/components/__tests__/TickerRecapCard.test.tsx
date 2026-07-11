@@ -61,23 +61,15 @@ describe('TickerRecapCard', () => {
     expect(screen.queryByRole('button', { name: /dig deeper/i })).not.toBeInTheDocument()
   })
 
-  it('shows only the top two insights and reveals the rest via show more', () => {
+  it('renders all insights without a show more control', () => {
     render(<TickerRecapCard symbol="AAPL" daily={dailyRecapManyBullets} weekly={null} />)
 
-    expect(screen.getByText(/First insight visible/i)).toBeInTheDocument()
-    expect(screen.getByText(/Second insight visible/i)).toBeInTheDocument()
-    expect(screen.queryByText(/Third insight hidden/i)).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: /show 1 more insight/i }))
-    expect(screen.getByText(/Third insight hidden/i)).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: /show less/i }))
-    expect(screen.queryByText(/Third insight hidden/i)).not.toBeInTheDocument()
-  })
-
-  it('does not render a show more control when two or fewer insights exist', () => {
-    render(<TickerRecapCard symbol="AAPL" daily={dailyRecap} weekly={null} />)
-    expect(screen.queryByRole('button', { name: /more insight/i })).not.toBeInTheDocument()
+    expect(screen.getByText(/First insight/i)).toBeInTheDocument()
+    expect(screen.getByText(/Second insight/i)).toBeInTheDocument()
+    expect(screen.getByText(/Third insight/i)).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /more insight|show less/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('shows the Daily/Weekly toggle only when both cadences exist', () => {

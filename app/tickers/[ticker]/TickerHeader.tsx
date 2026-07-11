@@ -7,9 +7,10 @@ interface TickerHeaderProps {
   ticker: string
   company: Company | null
   exchange?: string
+  subtitle?: string
 }
 
-export default function TickerHeader({ ticker, company, exchange }: TickerHeaderProps) {
+export default function TickerHeader({ ticker, company, exchange, subtitle }: TickerHeaderProps) {
   return (
     <div className="flex items-start justify-between p-4 pb-0">
       <Link href={`/tickers/${ticker}`} className="flex items-center gap-4 flex-1">
@@ -23,8 +24,7 @@ export default function TickerHeader({ ticker, company, exchange }: TickerHeader
         <div>
           <h1 className="text-2xl font-bold">{company?.name || ticker.toUpperCase()}</h1>
           <h2 className="text-gray-600 dark:text-gray-400">
-            {ticker.toUpperCase()}
-            {exchange && ` - ${exchange}`}
+            {subtitle || `${ticker.toUpperCase()}${exchange ? ` - ${exchange}` : ''}`}
           </h2>
         </div>
       </Link>

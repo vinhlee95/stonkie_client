@@ -3,16 +3,9 @@ import { useState, useEffect } from 'react'
 
 type CompanyInfoType = {
   name: string
-  sector: string
-  industry: string
   description?: string
-  country: string
 }
 
-function toTitleCase(str?: string) {
-  if (!str) return ''
-  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase())
-}
 export default function CompanyInfo({ companyInfo }: { companyInfo: CompanyInfoType }) {
   const [showMore, setShowMore] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
@@ -32,10 +25,6 @@ export default function CompanyInfo({ companyInfo }: { companyInfo: CompanyInfoT
 
   return (
     <section className="mb-4">
-      <h3 className="mb-2">
-        {toTitleCase(companyInfo.sector)} | {toTitleCase(companyInfo.industry)} |{' '}
-        {toTitleCase(companyInfo.country).toUpperCase()}
-      </h3>
       <p className="leading-relaxed">
         {displayed}
         {needsTruncate && (

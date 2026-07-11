@@ -4,6 +4,11 @@ import TickerHeader from './TickerHeader'
 import TickerEntryTransition from './TickerEntryTransition'
 import { Company } from '@/app/CompanyList'
 
+function toTitleCase(str?: string) {
+  if (!str) return ''
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
 async function LogoAndTickerBlock({ ticker }: { ticker: string }) {
   const keyStatsResponse = await fetch(
     `${process.env.BACKEND_URL}/api/companies/${ticker.toLocaleLowerCase()}/key-stats`,
@@ -25,7 +30,26 @@ async function LogoAndTickerBlock({ ticker }: { ticker: string }) {
       }
     : null
 
-  return <TickerHeader ticker={ticker} company={company} exchange={keyStats?.exchange} />
+  // Sector · industry · country, shown under the company name in place of the
+  // ticker/exchange line.
+  const sectorLine = keyStats
+    ? [
+        toTitleCase(keyStats.sector),
+        toTitleCase(keyStats.industry),
+        (keyStats.country || '').toUpperCase(),
+      ]
+        .filter(Boolean)
+        .join(' | ')
+    : ''
+
+  return (
+    <TickerHeader
+      ticker={ticker}
+      company={company}
+      exchange={keyStats?.exchange}
+      subtitle={sectorLine || undefined}
+    />
+  )
 }
 
 export default async function RootLayout({
