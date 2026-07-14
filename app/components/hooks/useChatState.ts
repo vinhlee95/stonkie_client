@@ -65,7 +65,9 @@ export const isNormalThread = (thread: Thread): thread is NormalThread => {
 }
 
 const STORAGE_KEY = 'stonkie-preferred-model'
-const DEFAULT_MODEL = 'gemini-3.0-flash'
+const DEFAULT_MODEL = 'gemini-3.5-flash'
+// Deprecated model values that should be migrated to DEFAULT_MODEL on load
+const DEPRECATED_MODELS = new Set(['gemini-3.0-flash'])
 const CONVERSATION_KEY_PREFIX = 'stonkie_conversation_'
 const ACTIVITY_TIMESTAMP_PREFIX = 'stonkie_activity_'
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000 // 15 minutes
@@ -88,7 +90,9 @@ export const useChatState = (ticker: string | undefined) => {
   const [preferredModel, setPreferredModelState] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(STORAGE_KEY)
-      return stored || DEFAULT_MODEL
+      if (stored && !DEPRECATED_MODELS.has(stored)) {
+        return stored
+      }
     }
     return DEFAULT_MODEL
   })
