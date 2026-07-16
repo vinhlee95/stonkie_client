@@ -36,7 +36,12 @@ export default function SmartBriefPanel({
   onRemoveFavourite,
 }: SmartBriefPanelProps) {
   const [expandedSecondary, setExpandedSecondary] = useState<string | null>(null)
-  const crossMarketQuestions = useMemo(() => pickCrossMarketQuestions(briefData), [briefData])
+  // Key on stable recap identity so unrelated re-renders (e.g. typing in the chat
+  // input) don't re-run the random pick and reshuffle the questions. useBriefData
+  // returns a fresh object each render, so depending on `briefData` directly reshuffles.
+  const recapKey = briefData.markets.map((md) => md.recapId ?? '').join('|')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const crossMarketQuestions = useMemo(() => pickCrossMarketQuestions(briefData), [recapKey])
   const priceChanges = usePriceChanges(favourites.map((f) => f.ticker))
   const tickerRecaps = useTickerRecaps(favourites.map((f) => f.ticker))
 
