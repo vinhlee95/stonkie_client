@@ -8,6 +8,7 @@ import { ETFListItem } from '@/app/components/ETFList'
 import { useFavourites } from './hooks/useFavourites'
 import TradingViewMiniChart from './TradingViewMiniChart'
 import { formatRecapCreatedAt } from './RecapCuratedChip'
+import RecapAudioControls from './chat/RecapAudioControls'
 import { toTradingViewSymbol, isRestricted } from '@/app/lib/tradingview'
 import type { TickerRecapItem } from '@/lib/api/tickerRecap'
 
@@ -157,7 +158,7 @@ function RecapModeSwitch({
  * mode switch, and the recap summary. Weekly has no precomputed data yet, so its tab shows
  * a placeholder until the backend supplies weekly recaps.
  */
-function RecapCaption({ recap }: { recap: TickerRecapItem }) {
+function RecapCaption({ recap, ticker }: { recap: TickerRecapItem; ticker: string }) {
   const [mode, setMode] = useState<RecapMode>('daily')
   const timestamp = recap.created_at ? formatRecapCreatedAt(recap.created_at) : null
   return (
@@ -176,9 +177,19 @@ function RecapCaption({ recap }: { recap: TickerRecapItem }) {
         </div>
       </div>
       {mode === 'daily' ? (
-        <p className="m-0 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-          {recap.summary}
-        </p>
+        <>
+          <p className="m-0 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+            {recap.summary}
+          </p>
+          {/* Only dailies are narrated; renders nothing when this one has no clip. */}
+          <RecapAudioControls
+            audio={recap.audio}
+            trackId={`home:ticker:${ticker.toUpperCase()}:${recap.id}`}
+            title={`${ticker.toUpperCase()} recap`}
+            variant="compact"
+            className="mt-2.5"
+          />
+        </>
       ) : (
         <p className="m-0 text-sm italic leading-relaxed text-gray-400 dark:text-gray-500">
           Weekly recap coming soon.
@@ -264,7 +275,7 @@ export default function FavouriteCard({
           </div>
         )}
 
-        {recap && <RecapCaption recap={recap} />}
+        {recap && <RecapCaption recap={recap} ticker={item.ticker} />}
       </Link>
     </article>
   )

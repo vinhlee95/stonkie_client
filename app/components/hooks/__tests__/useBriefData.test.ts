@@ -43,6 +43,7 @@ const mockRecapPair: MarketRecapPair = {
     summary: 'US markets rallied on strong earnings.',
     bullets: [],
     sources: [],
+    audio: null,
     questions: ['Why did tech lead?', 'How are bonds reacting?'],
   },
   weekly: null,
@@ -115,6 +116,7 @@ describe('useBriefData', () => {
         summary: 'Weekly recap',
         bullets: [],
         sources: [],
+        audio: null,
         questions: [],
       },
     }
@@ -145,6 +147,7 @@ describe('useBriefData', () => {
         summary: 'Weekly recap fallback',
         bullets: [],
         sources: [],
+        audio: null,
         questions: ['What happened this week?'],
       },
     }

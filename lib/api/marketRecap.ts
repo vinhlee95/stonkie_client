@@ -17,6 +17,17 @@ export type RecapSource = {
   fetched_at: string
 }
 
+/**
+ * Narrated MP3 for a recap. `url` is a **signed** GCS URL minted per API request
+ * and valid for 6h — never persist it, and never load it with `fetch` or
+ * `crossOrigin` (the bucket serves no CORS headers). Plain `<audio src>` only.
+ */
+export type RecapAudio = {
+  url: string
+  /** Exact clip length in seconds — safe to render before `loadedmetadata`. */
+  duration_s: number
+}
+
 export type MarketRecapItem = {
   id: number
   period_start: string
@@ -26,6 +37,8 @@ export type MarketRecapItem = {
   bullets: RecapBullet[]
   sources: RecapSource[]
   questions: string[]
+  /** Null when no audio exists (weekly recaps, older dailies). */
+  audio: RecapAudio | null
 }
 
 export type MarketRecapResponse = {

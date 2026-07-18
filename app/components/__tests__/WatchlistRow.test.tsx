@@ -1,7 +1,23 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import WatchlistRow from '../chat/WatchlistRow'
 import type { Company } from '@/app/CompanyList'
+import type { RecapAudio } from '@/lib/api/marketRecap'
+import type { TickerRecapItem } from '@/lib/api/tickerRecap'
 import type { PriceChange } from '@/lib/api/quotes'
+
+function recapWith(summary: string, audio: RecapAudio | null = null): TickerRecapItem {
+  return {
+    id: 412,
+    period_start: '2026-07-17',
+    period_end: '2026-07-17',
+    created_at: '2026-07-17T08:00:00Z',
+    summary,
+    bullets: [],
+    sources: [],
+    price_change: null,
+    audio,
+  }
+}
 
 const company: Company = {
   name: 'NVIDIA',
@@ -67,7 +83,7 @@ describe('WatchlistRow', () => {
         <WatchlistRow
           company={company}
           flag="🇺🇸"
-          recapSummary="NVDA rose on strong datacenter demand."
+          recap={recapWith('NVDA rose on strong datacenter demand.')}
           onRemove={vi.fn()}
         />,
       )

@@ -22,6 +22,7 @@ const recap: TickerRecapItem = {
   summary: 'NVIDIA slipped 1.4% as traders trimmed AI exposure ahead of supplier updates.',
   bullets: [],
   sources: [],
+  audio: null,
   price_change: null,
 }
 
@@ -47,5 +48,34 @@ describe('FavouriteCard recap caption', () => {
 
     await user.click(screen.getByRole('button', { name: /daily recap/i }))
     expect(screen.getByText(/NVIDIA slipped 1.4%/i)).toBeInTheDocument()
+  })
+
+  describe('narrated clip', () => {
+    const narrated: TickerRecapItem = {
+      ...recap,
+      audio: {
+        url: 'https://storage.googleapis.com/nvda.mp3?X-Goog-Signature=abc',
+        duration_s: 73.6,
+      },
+    }
+
+    it('offers a listen button when the recap has audio', () => {
+      render(<FavouriteCard item={company} recap={narrated} />)
+      expect(screen.getByRole('button', { name: 'Listen to NVDA recap' })).toBeInTheDocument()
+      expect(screen.getByText('1:14')).toBeInTheDocument()
+    })
+
+    it('omits the listen button when the recap has no audio', () => {
+      render(<FavouriteCard item={company} recap={recap} />)
+      expect(screen.queryByRole('button', { name: /listen to/i })).not.toBeInTheDocument()
+    })
+
+    it('hides the listen button on the weekly tab — weeklies are never narrated', async () => {
+      const user = userEvent.setup()
+      render(<FavouriteCard item={company} recap={narrated} />)
+
+      await user.click(screen.getByRole('button', { name: /weekly recap/i }))
+      expect(screen.queryByRole('button', { name: /listen to/i })).not.toBeInTheDocument()
+    })
   })
 })

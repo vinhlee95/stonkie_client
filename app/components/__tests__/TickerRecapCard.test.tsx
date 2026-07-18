@@ -23,6 +23,7 @@ const weeklyRecap: TickerRecapItem = {
       fetched_at: '2026-07-03T12:00:00Z',
     },
   ],
+  audio: null,
   price_change: null,
 }
 
@@ -34,6 +35,7 @@ const dailyRecap: TickerRecapItem = {
   summary: 'Apple jumped 4.8% to $308.63 after strong services guidance.',
   bullets: [{ text: 'Services guidance topped consensus.', citations: [] }],
   sources: [],
+  audio: null,
   price_change: null,
 }
 

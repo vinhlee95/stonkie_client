@@ -1,4 +1,4 @@
-import type { RecapBullet, RecapSource } from '@/lib/api/marketRecap'
+import type { RecapAudio, RecapBullet, RecapSource } from '@/lib/api/marketRecap'
 import type { PriceChange } from '@/lib/api/quotes'
 
 const BACKEND_URL =
@@ -22,6 +22,8 @@ export type TickerRecapItem = {
   sources: RecapSource[]
   /** Latest completed trading day's move; null when unavailable. */
   price_change: PriceChange | null
+  /** Narrated clip; null when no audio exists for this recap. */
+  audio: RecapAudio | null
 }
 
 export type TickerRecapResponse = {

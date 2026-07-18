@@ -114,7 +114,7 @@ export default function SmartBriefPanel({
                 company={company}
                 flag={flag}
                 quote={priceChanges[company.ticker.toUpperCase()]}
-                recapSummary={tickerRecaps[company.ticker.toUpperCase()]?.summary}
+                recap={tickerRecaps[company.ticker.toUpperCase()]}
                 onNavigate={onClose}
                 onRemove={onRemoveFavourite}
               />

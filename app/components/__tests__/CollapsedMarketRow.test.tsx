@@ -19,6 +19,7 @@ const mockMarket: BriefMarketData = {
     summary: 'Helsinki extended its weekly rally. Weaker EUR supports exporters.',
     bullets: [],
     sources: [],
+    audio: null,
     questions: [
       'Why is Nokia up today?',
       'How are ECB rate expectations affecting Finnish stocks?',

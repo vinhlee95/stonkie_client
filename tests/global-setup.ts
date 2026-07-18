@@ -114,6 +114,8 @@ export default async function globalSetup(_config: FullConfig) {
               summary: `${market} weekly market recap`,
               bullets: [{ text: `${market} bullet`, citations: [] }],
               sources: [],
+              // Weekly recaps are never narrated — mirrors the real API.
+              audio: null,
             },
           ],
         }),

@@ -45,6 +45,7 @@ const briefData: BriefData = {
         summary: 'US markets cautious. Bond yields in focus.',
         bullets: [],
         sources: [],
+        audio: null,
         questions: ['Why did tech lead?'],
       },
       recapId: '1',
@@ -59,6 +60,7 @@ const briefData: BriefData = {
         summary: 'Helsinki rallied on EUR weakness.',
         bullets: [],
         sources: [],
+        audio: null,
         questions: ['Why is Nokia up?', 'ECB rate outlook?'],
       },
       recapId: '2',
@@ -73,6 +75,7 @@ const briefData: BriefData = {
         summary: 'VN-Index pushed past 1,320.',
         bullets: [],
         sources: [],
+        audio: null,
         questions: [],
       },
       recapId: '3',
@@ -123,8 +126,9 @@ describe('SmartBriefPanel', () => {
   it('calls onDigIntoRecap when primary PulseCard is clicked', () => {
     const onDigIntoRecap = vi.fn()
     render(<SmartBriefPanel {...defaultProps} onDigIntoRecap={onDigIntoRecap} />)
-    // PulseCard is a button
-    const pulseButton = screen.getByText(/US Pulse/i).closest('button')!
+    // The dig-in target is the card body — the header sits outside it so the
+    // audio control can live there.
+    const pulseButton = screen.getByText(/Dig in/i).closest('button')!
     fireEvent.click(pulseButton)
     expect(onDigIntoRecap).toHaveBeenCalledWith('1', 'USA')
   })
@@ -193,6 +197,7 @@ describe('SmartBriefPanel', () => {
             summary: 'NVDA rose on strong datacenter demand.',
             bullets: [],
             sources: [],
+            audio: null,
             price_change: null,
           }),
         })

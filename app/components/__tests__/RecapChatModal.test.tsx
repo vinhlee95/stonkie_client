@@ -24,6 +24,7 @@ const recap: MarketRecapItem = {
       fetched_at: '2026-05-08T21:00:00Z',
     },
   ],
+  audio: null,
   questions: [
     'How will reduced Fed rate cut expectations impact markets?',
     "What caused HubSpot's plunge?",
@@ -74,6 +75,7 @@ describe('RecapChatModal', () => {
       summary: 'Weekly summary text.',
       bullets: [],
       sources: [],
+      audio: null,
       questions: ['What drove the weekly rally?', 'Is the trend sustainable?'],
     }
 

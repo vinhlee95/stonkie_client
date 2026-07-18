@@ -4,6 +4,7 @@ import { ArrowLeft, ListPlus } from 'lucide-react'
 import SourceChip from '../SourceChip'
 import RecapCuratedChip from '../RecapCuratedChip'
 import QuestionRow from './QuestionRow'
+import RecapAudioControls from './RecapAudioControls'
 import type { BriefMarketData } from '../hooks/useBriefData'
 
 const BULLET_COLORS = ['bg-blue-600', 'bg-amber-600', 'bg-rose-600', 'bg-emerald-700']
@@ -27,6 +28,14 @@ export default function RecapDetailView({
 
   return (
     <div className="pb-4">
+      {/* Listen to the narrated version */}
+      <RecapAudioControls
+        audio={recap.audio}
+        trackId={`brief:market:${market.market.key}:${recap.id}`}
+        title={`${market.market.label} recap`}
+        className="mb-3"
+      />
+
       {/* Summary */}
       <p className="text-base md:text-lg leading-7 text-gray-700 dark:text-gray-200">
         {recap.summary}

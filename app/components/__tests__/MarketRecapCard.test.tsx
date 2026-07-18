@@ -36,6 +36,7 @@ const weeklyRecap: MarketRecapItem = {
       fetched_at: '2026-04-25T12:10:00Z',
     },
   ],
+  audio: null,
   questions: [],
 }
 
@@ -56,6 +57,7 @@ const dailyRecap: MarketRecapItem = {
       fetched_at: '2026-04-24T21:00:00Z',
     },
   ],
+  audio: null,
   questions: [],
 }
 

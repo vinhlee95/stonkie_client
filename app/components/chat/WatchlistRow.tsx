@@ -4,7 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Star } from 'lucide-react'
 import { TICKER_SLIDE_IN_FLAG } from '@/app/tickers/[ticker]/TickerEntryTransition'
+import RecapAudioControls from './RecapAudioControls'
 import type { Company } from '@/app/CompanyList'
+import type { TickerRecapItem } from '@/lib/api/tickerRecap'
 import type { PriceChange } from '@/lib/api/quotes'
 
 function Avatar({ url, name }: { url?: string; name: string }) {
@@ -41,8 +43,11 @@ export interface WatchlistRowProps {
   flag: string
   /** Latest completed trading day's price change. Omitted while loading or when unavailable. */
   quote?: PriceChange
-  /** Precomputed daily recap summary. Rendered as muted text under the row when present. */
-  recapSummary?: string
+  /**
+   * Precomputed daily recap. Its summary renders as muted text under the row,
+   * and its narrated clip (when present) gets a compact listen button.
+   */
+  recap?: TickerRecapItem | null
   /** Called when the row is tapped — used to close the brief modal before navigating. */
   onNavigate?: () => void
   /** Called when the star is tapped — removes the company from favourites. */
@@ -93,7 +98,7 @@ export default function WatchlistRow({
   company,
   flag,
   quote,
-  recapSummary,
+  recap,
   onNavigate,
   onRemove,
 }: WatchlistRowProps) {
@@ -140,10 +145,19 @@ export default function WatchlistRow({
           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
         </button>
       </div>
-      {recapSummary && (
+      {recap?.summary && (
         <p className="mt-1.5 text-sm leading-snug text-gray-500 dark:text-gray-400">
-          {recapSummary}
+          {recap.summary}
         </p>
+      )}
+      {recap && (
+        <RecapAudioControls
+          audio={recap.audio}
+          trackId={`brief:ticker:${company.ticker.toUpperCase()}:${recap.id}`}
+          title={`${company.ticker.toUpperCase()} recap`}
+          variant="compact"
+          className="mt-2"
+        />
       )}
     </Link>
   )

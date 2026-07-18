@@ -19,6 +19,7 @@ const mockMarketData: BriefMarketData = {
     summary: 'Cautious upward move. Bond yields and consolidation are narratives to watch.',
     bullets: [],
     sources: [],
+    audio: null,
     questions: ['Why did tech lead?'],
   },
   recapId: '1',

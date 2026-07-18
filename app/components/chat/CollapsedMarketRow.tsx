@@ -1,6 +1,7 @@
 'use client'
 
 import { ChevronRight, Sparkles } from 'lucide-react'
+import RecapAudioControls from './RecapAudioControls'
 import type { BriefMarketData } from '../hooks/useBriefData'
 
 interface CollapsedMarketRowProps {
@@ -72,6 +73,14 @@ export default function CollapsedMarketRow({
           <p className="text-base md:text-lg leading-relaxed text-gray-700 dark:text-gray-300">
             {headline}
           </p>
+          {recap && (
+            <RecapAudioControls
+              audio={recap.audio}
+              trackId={`brief:market:${market.market.key}:${recap.id}`}
+              title={`${label} recap`}
+              className="mt-2.5"
+            />
+          )}
           <div className="mt-2.5 flex flex-wrap gap-2">
             {/* Dig into pulse — primary CTA */}
             <button
