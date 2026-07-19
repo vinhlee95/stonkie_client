@@ -6,6 +6,7 @@ import { ChatboxUI } from './Chat'
 import { useChatState } from './hooks/useChatState'
 import { useRecapChatAPI } from './hooks/useRecapChatAPI'
 import { useScrollLock } from './hooks/useScrollLock'
+import RecapAudioControls from './RecapAudioControls'
 import type { MarketRecapItem } from '@/lib/api/marketRecap'
 
 interface RecapChatModalProps {
@@ -25,13 +26,19 @@ function formatPeriodShort(periodStart: string, periodEnd: string): string {
   return `${fmt.format(start)} – ${fmt.format(end)}`
 }
 
-function RecapContextCard({ recap }: { recap: MarketRecapItem }) {
+function RecapContextCard({ recap, title }: { recap: MarketRecapItem; title: string }) {
   return (
     <div className="mb-4 rounded-xl border border-[rgba(40,105,86,0.13)] dark:border-[rgba(156,214,194,0.25)] bg-[var(--accent-light)] dark:bg-[var(--accent-light-dark)] p-3 flex items-start gap-3">
       <div className="min-w-0 flex-1">
         <p className="mt-0.5 text-base leading-6 text-gray-700 dark:text-gray-200">
           {recap.summary}
         </p>
+        <RecapAudioControls
+          audio={recap.audio}
+          trackId={`recap-chat:${recap.id}`}
+          title={title}
+          className="mt-2.5"
+        />
       </div>
     </div>
   )
@@ -132,7 +139,7 @@ export default function RecapChatModal({
         subtitle: period,
       }}
     >
-      <RecapContextCard recap={recap} />
+      <RecapContextCard recap={recap} title={`${market} ${cadenceLabel} Recap`} />
     </ChatboxUI>
   )
 }

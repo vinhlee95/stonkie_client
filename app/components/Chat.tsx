@@ -12,7 +12,6 @@ import { useFAQQuery } from './hooks/useFAQQuery'
 import { useFavourites } from './hooks/useFavourites'
 import { useBriefMarkets } from './hooks/useBriefMarkets'
 import { useBriefData } from './hooks/useBriefData'
-import { useRecapAudioRecovery } from './hooks/useRecapAudioRecovery'
 import QuestionRow from './chat/QuestionRow'
 import SmartBriefPanel from './chat/SmartBriefPanel'
 import RecapDetailView from './chat/RecapDetailView'
@@ -372,9 +371,6 @@ const FinancialChatbox: React.FC<FinancialChatboxProps> = ({
   const { favourites, removeFavourite } = useFavourites<Company>('stonkie_favourites')
   const briefMarkets = useBriefMarkets(favourites)
   const briefData = useBriefData(briefMarkets)
-  // Refetches recaps when a signed audio URL expires, and stops the modal's own
-  // clips when it closes (homepage-started ones keep their on-screen control).
-  useRecapAudioRecovery('brief:')
 
   const [activeRecapId, _setActiveRecapId] = useState<string | null>(null)
   const activeRecapIdRef = useRef<string | null>(null)

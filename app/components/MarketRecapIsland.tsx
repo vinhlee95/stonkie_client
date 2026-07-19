@@ -94,6 +94,7 @@ function MarketRecapIslandInner({ marketKey, unavailablePeriod, onRetryRequest }
       <MarketRecapCard
         daily={pair.daily}
         weekly={pair.weekly}
+        marketLabel={marketKey}
         onDigDeeper={(cadence) => {
           setActiveCadence(cadence)
           setChatOpen(true)

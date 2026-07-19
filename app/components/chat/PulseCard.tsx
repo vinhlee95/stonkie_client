@@ -1,7 +1,7 @@
 'use client'
 
 import { ArrowRight } from 'lucide-react'
-import RecapAudioControls from './RecapAudioControls'
+import RecapAudioControls from '../RecapAudioControls'
 import type { BriefMarketData } from '../hooks/useBriefData'
 
 interface PulseCardProps {

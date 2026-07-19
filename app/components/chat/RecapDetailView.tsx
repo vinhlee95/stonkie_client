@@ -4,7 +4,7 @@ import { ArrowLeft, ListPlus } from 'lucide-react'
 import SourceChip from '../SourceChip'
 import RecapCuratedChip from '../RecapCuratedChip'
 import QuestionRow from './QuestionRow'
-import RecapAudioControls from './RecapAudioControls'
+import RecapAudioControls from '../RecapAudioControls'
 import type { BriefMarketData } from '../hooks/useBriefData'
 
 const BULLET_COLORS = ['bg-blue-600', 'bg-amber-600', 'bg-rose-600', 'bg-emerald-700']

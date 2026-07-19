@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { TickerRecapItem, TickerRecapCadence } from '@/lib/api/tickerRecap'
 import SourceChip from './SourceChip'
 import RecapCuratedChip from './RecapCuratedChip'
+import RecapAudioControls from './RecapAudioControls'
 
 interface TickerRecapCardProps {
   symbol: string
@@ -100,6 +101,13 @@ export default function TickerRecapCard({ symbol, daily, weekly }: TickerRecapCa
         <p className="mt-2.5 text-base leading-6 text-gray-700 md:text-lg md:leading-7 dark:text-gray-200">
           {recap.summary}
         </p>
+
+        <RecapAudioControls
+          audio={recap.audio}
+          trackId={`ticker-page:${symbol}:${recap.id}`}
+          title={`${symbol} ${cadence} recap`}
+          className="mt-3"
+        />
 
         {/* Divider */}
         <div className="my-3.5 h-px bg-[rgba(40,105,86,0.12)] dark:bg-[rgba(156,214,194,0.18)]" />

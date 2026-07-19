@@ -2,7 +2,6 @@
 
 import { useFavourites } from './hooks/useFavourites'
 import { useTickerRecaps } from './hooks/useTickerRecaps'
-import { useRecapAudioRecovery } from './hooks/useRecapAudioRecovery'
 import { Company } from '@/app/CompanyList'
 import { ETFListItem } from '@/app/components/ETFList'
 import FavouriteCard from './FavouriteCard'
@@ -45,9 +44,6 @@ export default function FavouritesList() {
 
   // Precomputed daily recaps, keyed by uppercase ticker. ETFs have no recaps.
   const recaps = useTickerRecaps(companies.map((c) => c.ticker))
-  // Refetches on an expired signed audio URL; stops this section's clips when it
-  // unmounts (e.g. navigating away from the homepage).
-  useRecapAudioRecovery('home:')
 
   if (!cInit || !eInit) return <FavouritesSkeleton />
   if (companies.length === 0 && etfs.length === 0) return null

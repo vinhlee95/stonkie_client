@@ -8,7 +8,7 @@ import { ETFListItem } from '@/app/components/ETFList'
 import { useFavourites } from './hooks/useFavourites'
 import TradingViewMiniChart from './TradingViewMiniChart'
 import { formatRecapCreatedAt } from './RecapCuratedChip'
-import RecapAudioControls from './chat/RecapAudioControls'
+import RecapAudioControls from './RecapAudioControls'
 import { toTradingViewSymbol, isRestricted } from '@/app/lib/tradingview'
 import type { TickerRecapItem } from '@/lib/api/tickerRecap'
 
@@ -186,7 +186,6 @@ function RecapCaption({ recap, ticker }: { recap: TickerRecapItem; ticker: strin
             audio={recap.audio}
             trackId={`home:ticker:${ticker.toUpperCase()}:${recap.id}`}
             title={`${ticker.toUpperCase()} recap`}
-            variant="compact"
             className="mt-2.5"
           />
         </>

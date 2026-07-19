@@ -1,6 +1,11 @@
-import { render, screen, fireEvent, act } from '@testing-library/react'
-import RecapAudioControls from '../chat/RecapAudioControls'
-import { __getRecapAudioElement, __resetRecapAudio, stopIfPrefix } from '../hooks/useRecapAudio'
+import { screen, fireEvent, act } from '@testing-library/react'
+import { render } from '@/tests/test-utils'
+import RecapAudioControls from '../RecapAudioControls'
+import {
+  __getRecapAudioElement,
+  __resetRecapAudio,
+  setRecapAudioExpiryHandler,
+} from '../hooks/useRecapAudio'
 import type { RecapAudio } from '@/lib/api/marketRecap'
 
 const AUDIO: RecapAudio = {
@@ -124,22 +129,22 @@ describe('RecapAudioControls', () => {
     expect(rate).toHaveTextContent('1.25x')
   })
 
-  it('omits the scrubber in the compact variant used by watchlist rows', async () => {
+  it('collapses back to the play button when another clip takes over', async () => {
     stubMediaElement()
     render(
-      <RecapAudioControls
-        audio={AUDIO}
-        trackId="ticker:NVDA:412"
-        title="NVDA recap"
-        variant="compact"
-      />,
+      <>
+        <RecapAudioControls audio={AUDIO} trackId="market:US:257" title="US Pulse" />
+        <RecapAudioControls audio={AUDIO} trackId="market:VN:258" title="Vietnam recap" />
+      </>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Listen to NVDA recap' }))
-    await screen.findByRole('button', { name: 'Pause NVDA recap' })
+    fireEvent.click(screen.getByRole('button', { name: 'Listen to US Pulse' }))
+    expect(await screen.findByRole('slider', { name: 'Seek within US Pulse' })).toBeInTheDocument()
 
-    expect(screen.queryByRole('slider')).not.toBeInTheDocument()
-    expect(screen.getByText('0:00 / 2:00')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Listen to Vietnam recap' }))
+
+    await screen.findByRole('slider', { name: 'Seek within Vietnam recap' })
+    expect(screen.queryByRole('slider', { name: 'Seek within US Pulse' })).not.toBeInTheDocument()
   })
 
   it('ignores a stale pause event fired after the new clip started', async () => {
@@ -164,19 +169,75 @@ describe('RecapAudioControls', () => {
     expect(screen.getByRole('button', { name: 'Pause Vietnam recap' })).toBeInTheDocument()
   })
 
-  it('stops only clips owned by the given prefix', async () => {
-    stubMediaElement()
-    render(<RecapAudioControls audio={AUDIO} trackId="home:ticker:NVDA:412" title="NVDA recap" />)
+  it('stops playback when the control showing the clip unmounts', async () => {
+    const { pause } = stubMediaElement()
+    const { unmount } = render(
+      <RecapAudioControls audio={AUDIO} trackId="home:ticker:NVDA:412" title="NVDA recap" />,
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Listen to NVDA recap' }))
     await screen.findByRole('button', { name: 'Pause NVDA recap' })
 
-    // Closing the brief modal must leave a homepage-started clip alone.
-    act(() => stopIfPrefix('brief:'))
-    expect(screen.getByRole('button', { name: 'Pause NVDA recap' })).toBeInTheDocument()
+    unmount()
 
-    act(() => stopIfPrefix('home:'))
+    expect(pause).toHaveBeenCalled()
+    expect(__getRecapAudioElement()!.getAttribute('src')).toBeNull()
+  })
+
+  it('keeps playing while another control still shows the same clip', async () => {
+    stubMediaElement()
+    // The favourites list renders each card twice — a desktop grid and a mobile
+    // rail — so one copy unmounting must not silence the other.
+    function Pair({ showSecond }: { showSecond: boolean }) {
+      return (
+        <>
+          <RecapAudioControls audio={AUDIO} trackId="home:ticker:NVDA:412" title="NVDA recap" />
+          {showSecond && (
+            <RecapAudioControls audio={AUDIO} trackId="home:ticker:NVDA:412" title="NVDA recap" />
+          )}
+        </>
+      )
+    }
+    const { rerender } = render(<Pair showSecond />)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Listen to NVDA recap' })[0]!)
+    await screen.findAllByRole('button', { name: 'Pause NVDA recap' })
+
+    rerender(<Pair showSecond={false} />)
+
+    expect(screen.getByRole('button', { name: 'Pause NVDA recap' })).toBeInTheDocument()
+  })
+
+  it('stops playback when a cadence toggle swaps the recap out from under it', async () => {
+    stubMediaElement()
+    const { rerender } = render(
+      <RecapAudioControls audio={AUDIO} trackId="ticker-page:NVDA:daily" title="NVDA recap" />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Listen to NVDA recap' }))
+    await screen.findByRole('button', { name: 'Pause NVDA recap' })
+
+    rerender(
+      <RecapAudioControls audio={AUDIO} trackId="ticker-page:NVDA:weekly" title="NVDA recap" />,
+    )
+
     expect(await screen.findByRole('button', { name: 'Listen to NVDA recap' })).toBeInTheDocument()
+  })
+
+  it('notifies the expiry handler so the app can refetch a fresh URL', async () => {
+    stubMediaElement()
+    const onExpired = vi.fn()
+    setRecapAudioExpiryHandler(onExpired)
+    render(<RecapAudioControls audio={AUDIO} trackId="market:US:257" title="US Pulse" />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Listen to US Pulse' }))
+    await screen.findByRole('button', { name: 'Pause US Pulse' })
+
+    act(() => {
+      fireEvent.error(__getRecapAudioElement()!)
+    })
+
+    expect(onExpired).toHaveBeenCalledTimes(1)
   })
 
   it('offers a retry when the signed URL has expired', async () => {

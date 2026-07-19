@@ -21,9 +21,10 @@ import { useSyncExternalStore } from 'react'
 
 export type RecapAudioTrack = {
   /**
-   * Stable id, namespaced by the surface that owns the control —
-   * `brief:market:US:257`, `home:ticker:NVDA:412`. The prefix lets a surface stop
-   * only the clips it started when it unmounts (see `stopIfPrefix`).
+   * Stable id, namespaced by the surface rendering the control —
+   * `brief:market:US:257`, `home:ticker:NVDA:412`. Two surfaces showing the same
+   * recap deliberately get different ids so that closing one does not stop a clip
+   * the other is still displaying (see `registerControl`).
    */
   id: string
   url: string
@@ -80,6 +81,22 @@ const getServerSnapshot = () => INITIAL_STATE
 
 let audio: HTMLAudioElement | null = null
 
+let onExpired: (() => void) | null = null
+
+/**
+ * Registers what to do when a clip fails to load — almost always a signed URL
+ * that outlived its 6h window. The backend doc is explicit that a 403 means
+ * "reload the recap", so the app wires this once to refetch the recap queries;
+ * the next tap then gets a freshly minted URL.
+ *
+ * Kept out of the control component on purpose: `RecapAudioControls` stays a
+ * drop-in that needs no data-layer context, and the retry button works with or
+ * without a handler registered.
+ */
+export function setRecapAudioExpiryHandler(handler: (() => void) | null) {
+  onExpired = handler
+}
+
 function ensureAudio(): HTMLAudioElement {
   if (audio) return audio
 
@@ -95,7 +112,10 @@ function ensureAudio(): HTMLAudioElement {
   el.addEventListener('pause', () => setState({ isPlaying: !el.paused }))
   el.addEventListener('timeupdate', () => setState({ currentTime: el.currentTime }))
   el.addEventListener('ended', () => setState({ isPlaying: false, currentTime: 0 }))
-  el.addEventListener('error', () => setState({ isPlaying: false, errored: true }))
+  el.addEventListener('error', () => {
+    setState({ isPlaying: false, errored: true })
+    onExpired?.()
+  })
   // The element's own metadata wins once loaded; `duration_s` was only a seed.
   el.addEventListener('loadedmetadata', () => {
     if (Number.isFinite(el.duration) && el.duration > 0) setState({ duration: el.duration })
@@ -217,13 +237,30 @@ export function stop() {
   setState({ trackId: null, isPlaying: false, currentTime: 0, duration: 0, errored: false })
 }
 
+/** How many mounted controls currently render each track id. */
+const controlCount = new Map<string, number>()
+
 /**
- * Stops playback only when the loaded track belongs to `prefix`. Lets the brief
- * modal stop its own clips on close without killing one started from a homepage
- * card (which still has a visible control).
+ * Registers a mounted control for `trackId` and returns its unregister function.
+ *
+ * When the last control for the loaded track goes away — the card unmounted, or
+ * a cadence toggle swapped the recap out from under it — playback stops, so a
+ * clip can never keep playing with nothing on screen to pause it. Surfaces that
+ * show the same recap use distinct ids (see `RecapAudioTrack.id`), so closing one
+ * of them never silences a clip another surface is still displaying.
  */
-export function stopIfPrefix(prefix: string) {
-  if (state.trackId?.startsWith(prefix)) stop()
+export function registerControl(trackId: string): () => void {
+  controlCount.set(trackId, (controlCount.get(trackId) ?? 0) + 1)
+
+  return () => {
+    const remaining = (controlCount.get(trackId) ?? 1) - 1
+    if (remaining > 0) {
+      controlCount.set(trackId, remaining)
+      return
+    }
+    controlCount.delete(trackId)
+    if (state.trackId === trackId) stop()
+  }
 }
 
 export function useRecapAudio(): RecapAudioState {
@@ -235,6 +272,8 @@ export function __resetRecapAudio() {
   audio = null
   state = INITIAL_STATE
   listeners.clear()
+  controlCount.clear()
+  onExpired = null
 }
 
 /** Test-only: the shared element, so tests can assert on it and fire media events. */

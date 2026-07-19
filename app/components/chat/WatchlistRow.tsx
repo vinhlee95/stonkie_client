@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Star } from 'lucide-react'
 import { TICKER_SLIDE_IN_FLAG } from '@/app/tickers/[ticker]/TickerEntryTransition'
-import RecapAudioControls from './RecapAudioControls'
+import RecapAudioControls from '../RecapAudioControls'
 import type { Company } from '@/app/CompanyList'
 import type { TickerRecapItem } from '@/lib/api/tickerRecap'
 import type { PriceChange } from '@/lib/api/quotes'
@@ -155,7 +155,6 @@ export default function WatchlistRow({
           audio={recap.audio}
           trackId={`brief:ticker:${company.ticker.toUpperCase()}:${recap.id}`}
           title={`${company.ticker.toUpperCase()} recap`}
-          variant="compact"
           className="mt-2"
         />
       )}

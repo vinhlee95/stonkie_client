@@ -5,6 +5,7 @@ import { ArrowRight, CalendarDays, Sparkles } from 'lucide-react'
 import { MarketRecapItem } from '@/lib/api/marketRecap'
 import SourceChip from './SourceChip'
 import RecapCuratedChip from './RecapCuratedChip'
+import RecapAudioControls from './RecapAudioControls'
 
 type Cadence = 'daily' | 'weekly'
 
@@ -12,6 +13,8 @@ interface MarketRecapCardProps {
   daily: MarketRecapItem | null
   weekly: MarketRecapItem | null
   onDigDeeper: (cadence: 'daily' | 'weekly') => void
+  /** Market name for the clip's media-notification title, e.g. "USA". */
+  marketLabel?: string
 }
 
 function bulletColor(index: number): string {
@@ -28,7 +31,12 @@ function formatRecapPeriod(periodStart: string, periodEnd: string): string {
   return `${fmt.format(start)} – ${fmt.format(end)}`
 }
 
-export default function MarketRecapCard({ daily, weekly, onDigDeeper }: MarketRecapCardProps) {
+export default function MarketRecapCard({
+  daily,
+  weekly,
+  onDigDeeper,
+  marketLabel,
+}: MarketRecapCardProps) {
   const initialCadence: Cadence = daily ? 'daily' : 'weekly'
   const [cadence, setCadence] = useState<Cadence>(initialCadence)
   const [expanded, setExpanded] = useState(false)
@@ -163,6 +171,14 @@ export default function MarketRecapCard({ daily, weekly, onDigDeeper }: MarketRe
           </span>
         </div>
       </button>
+
+      {/* Listen row — outside the expand button so its controls stay clickable. */}
+      <RecapAudioControls
+        audio={recap.audio}
+        trackId={`market-card:${recap.id}`}
+        title={`${marketLabel ? `${marketLabel} ` : ''}${cadence} market recap`}
+        className="px-4 pb-3"
+      />
 
       {expanded && (
         <div className="px-4 pb-4">
