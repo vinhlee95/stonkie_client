@@ -25,7 +25,7 @@ describe('PortfolioPage', () => {
       ),
     )
     render(await PortfolioPage())
-    expect(screen.getByText(/Hi Ann/)).toBeInTheDocument()
+    expect(screen.getByText(/Hi Ann/)).toHaveClass('text-base', 'md:text-lg')
   })
 
   it('falls back to email when name is null', async () => {

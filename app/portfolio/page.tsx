@@ -32,7 +32,7 @@ export default async function PortfolioPage() {
           Couldn&apos;t load your account. Please try again later.
         </p>
       ) : (
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-base md:text-lg text-gray-600 dark:text-gray-400">
           Hi {result.me.name ?? result.me.email} — portfolio coming soon.
         </p>
       )}

@@ -3,19 +3,50 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 vi.mock('next-auth/react', () => ({ useSession: vi.fn(), signOut: vi.fn() }))
+vi.mock('next/navigation', () => ({ usePathname: vi.fn(), useSearchParams: vi.fn() }))
 
 import { signOut, useSession } from 'next-auth/react'
+import { usePathname, useSearchParams } from 'next/navigation'
 import AccountMenu from '../AccountMenu'
 
 const mockedUseSession = useSession as unknown as ReturnType<typeof vi.fn>
+const mockedPathname = usePathname as unknown as ReturnType<typeof vi.fn>
+const mockedSearchParams = useSearchParams as unknown as ReturnType<typeof vi.fn>
 
-beforeEach(() => vi.clearAllMocks())
+const signedIn = () =>
+  mockedUseSession.mockReturnValue({
+    data: {
+      user: { name: 'Ann', email: 'a@example.com', image: 'https://img/a.png' },
+      expires: '',
+    },
+    status: 'authenticated',
+  })
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  mockedPathname.mockReturnValue('/')
+  mockedSearchParams.mockReturnValue(new URLSearchParams())
+})
 
 describe('AccountMenu', () => {
   it('shows Sign in link when signed out', () => {
     mockedUseSession.mockReturnValue({ data: null, status: 'unauthenticated' })
     render(<AccountMenu />)
-    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login')
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+      'href',
+      '/login?callbackUrl=%2F',
+    )
+  })
+
+  it('Sign in link returns the user to the current page', () => {
+    mockedUseSession.mockReturnValue({ data: null, status: 'unauthenticated' })
+    mockedPathname.mockReturnValue('/tickers/AAPL')
+    mockedSearchParams.mockReturnValue(new URLSearchParams('tab=1'))
+    render(<AccountMenu />)
+    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute(
+      'href',
+      '/login?callbackUrl=%2Ftickers%2FAAPL%3Ftab%3D1',
+    )
   })
 
   it('renders neither link nor menu while loading', () => {
@@ -43,5 +74,32 @@ describe('AccountMenu', () => {
 
     await userEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
     expect(signOut).toHaveBeenCalledWith({ redirectTo: '/' })
+  })
+
+  it('moves focus into the menu and supports arrow keys', async () => {
+    signedIn()
+    render(<AccountMenu />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+    expect(screen.getByRole('menuitem', { name: 'Portfolio' })).toHaveFocus()
+
+    await userEvent.keyboard('{ArrowDown}')
+    expect(screen.getByRole('menuitem', { name: 'Sign out' })).toHaveFocus()
+    await userEvent.keyboard('{ArrowDown}')
+    expect(screen.getByRole('menuitem', { name: 'Portfolio' })).toHaveFocus()
+    await userEvent.keyboard('{ArrowUp}')
+    expect(screen.getByRole('menuitem', { name: 'Sign out' })).toHaveFocus()
+  })
+
+  it('closes on Escape and restores focus to the trigger', async () => {
+    signedIn()
+    render(<AccountMenu />)
+    const trigger = screen.getByRole('button', { name: 'Account menu' })
+
+    await userEvent.click(trigger)
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
   })
 })

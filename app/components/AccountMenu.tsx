@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { signOut, useSession } from 'next-auth/react'
 import { PersonOutline } from '@mui/icons-material'
@@ -14,6 +15,37 @@ const menuItemClass =
 export default function AccountMenu() {
   const { data: session, status } = useSession()
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const menuItems = () =>
+    Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])
+
+  useEffect(() => {
+    if (open) menuItems()[0]?.focus()
+  }, [open])
+
+  const closeMenu = () => {
+    setOpen(false)
+    triggerRef.current?.focus()
+  }
+
+  const handleMenuKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const items = menuItems()
+    const index = items.indexOf(document.activeElement as HTMLElement)
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      closeMenu()
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      items[(index + 1) % items.length]?.focus()
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      items[(index - 1 + items.length) % items.length]?.focus()
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -24,8 +56,10 @@ export default function AccountMenu() {
   }
 
   if (!session?.user) {
+    const query = searchParams?.toString()
+    const loginHref = `/login?${new URLSearchParams({ callbackUrl: query ? `${pathname}?${query}` : pathname })}`
     return (
-      <Link href="/login" aria-label="Sign in" className={itemClass}>
+      <Link href={loginHref} aria-label="Sign in" className={itemClass}>
         <PersonOutline fontSize="medium" className="relative z-10" />
       </Link>
     )
@@ -36,6 +70,7 @@ export default function AccountMenu() {
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         aria-label="Account menu"
         aria-haspopup="menu"
@@ -60,7 +95,9 @@ export default function AccountMenu() {
           <>
             <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
             <div
+              ref={menuRef}
               role="menu"
+              onKeyDown={handleMenuKeyDown}
               className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-56 rounded-2xl bg-white dark:bg-[#1C1C1C] shadow-lg border border-gray-200 dark:border-white/10 py-2"
             >
               <p className="px-4 py-2 text-xs text-gray-500 truncate">{name ?? email}</p>
