@@ -35,7 +35,8 @@ export default function AccountMenu() {
   const handleMenuKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const items = menuItems()
     const index = items.indexOf(document.activeElement as HTMLElement)
-    if (e.key === 'Escape') {
+    // Tab also closes: the menu is portalled to <body>, so native tab order would skip past the page.
+    if (e.key === 'Escape' || e.key === 'Tab') {
       e.preventDefault()
       closeMenu()
     } else if (e.key === 'ArrowDown') {
@@ -93,7 +94,12 @@ export default function AccountMenu() {
       {open &&
         createPortal(
           <>
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
+            <div
+              data-testid="account-menu-backdrop"
+              className="fixed inset-0 z-40"
+              onClick={closeMenu}
+              aria-hidden
+            />
             <div
               ref={menuRef}
               role="menu"

@@ -102,4 +102,26 @@ describe('AccountMenu', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
     expect(trigger).toHaveFocus()
   })
+
+  it('restores focus to the trigger when closed by clicking outside', async () => {
+    signedIn()
+    render(<AccountMenu />)
+    const trigger = screen.getByRole('button', { name: 'Account menu' })
+
+    await userEvent.click(trigger)
+    await userEvent.click(screen.getByTestId('account-menu-backdrop'))
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+  })
+
+  it('closes when Tab moves focus out of the menu', async () => {
+    signedIn()
+    render(<AccountMenu />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+    await userEvent.keyboard('{Tab}')
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
 })
