@@ -14,3 +14,9 @@ test('login shows error message when Auth.js reports an error', async ({ page })
     'Sign-in failed, please try again.',
   )
 })
+
+test('home stays public and shows Sign in', async ({ page }) => {
+  await page.goto('/')
+
+  await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible()
+})

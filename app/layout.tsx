@@ -6,6 +6,7 @@ import BottomNavigation from './components/BottomNavigation'
 import UpdatePrompt from './components/UpdatePrompt'
 import { GeistSans } from 'geist/font/sans'
 import { QueryProvider } from './providers/QueryProvider'
+import { AuthSessionProvider } from './providers/AuthSessionProvider'
 
 export const metadata: Metadata = {
   title: 'Stonkie 🚀',
@@ -50,14 +51,16 @@ export default function RootLayout({
       </head>
       <body className="pb-16">
         <QueryProvider>
-          <div className="px-1 md:px-8">
-            {children}
-            <SpeedInsights />
-          </div>
-          <UpdatePrompt />
-          <Suspense>
-            <BottomNavigation />
-          </Suspense>
+          <AuthSessionProvider>
+            <div className="px-1 md:px-8">
+              {children}
+              <SpeedInsights />
+            </div>
+            <UpdatePrompt />
+            <Suspense>
+              <BottomNavigation />
+            </Suspense>
+          </AuthSessionProvider>
         </QueryProvider>
       </body>
     </html>

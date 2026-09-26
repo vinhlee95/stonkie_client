@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { ChatBubbleOutline, HomeOutlined, SearchOutlined } from '@mui/icons-material'
 import { Suspense, useState, useEffect } from 'react'
+import AccountMenu from './AccountMenu'
 import Chat from './Chat'
 import { ChatProvider } from './Chat'
 import SpotlightSearch from './SpotlightSearch'
@@ -105,6 +106,8 @@ const BottomNavigation = () => {
             <div className="absolute -inset-y-3 -inset-x-8 rounded-full shadow-[inset_0_2px_8px_rgba(255,255,255,0.6),inset_0_-2px_8px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_2px_8px_rgba(255,255,255,0.3),inset_0_-2px_8px_rgba(0,0,0,0.4)] opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 pointer-events-none" />
             <ChatBubbleOutline fontSize="medium" className="relative z-10" />
           </button>
+
+          <AccountMenu />
         </div>
       </div>
     </>
