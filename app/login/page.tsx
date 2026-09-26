@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { auth, signIn } from '@/auth'
 import { sanitizeCallbackUrl } from '@/lib/auth/callbackUrl'
+import { isCompleteSessionUser } from '@/lib/auth/session'
 
 type Props = {
   searchParams: Promise<{ callbackUrl?: string | string[]; error?: string | string[] }>
@@ -11,8 +12,8 @@ export default async function LoginPage({ searchParams }: Props) {
   const redirectTo = sanitizeCallbackUrl(callbackUrl)
 
   const session = await auth()
-  // Match authedBackendFetch's requirements; a partial session would bounce back here from /portfolio forever.
-  if (session?.user?.googleSub && session.user.email) redirect(redirectTo)
+  // A partial session would bounce back here from /portfolio forever, so only redirect complete ones.
+  if (isCompleteSessionUser(session?.user)) redirect(redirectTo)
 
   async function signInWithGoogle() {
     'use server'

@@ -16,7 +16,7 @@ const mockedSearchParams = useSearchParams as unknown as ReturnType<typeof vi.fn
 const signedIn = () =>
   mockedUseSession.mockReturnValue({
     data: {
-      user: { name: 'Ann', email: 'a@example.com', image: 'https://img/a.png' },
+      user: { googleSub: 'g-1', name: 'Ann', email: 'a@example.com', image: 'https://img/a.png' },
       expires: '',
     },
     status: 'authenticated',
@@ -59,7 +59,7 @@ describe('AccountMenu', () => {
   it('opens menu with Portfolio and Sign out when signed in', async () => {
     mockedUseSession.mockReturnValue({
       data: {
-        user: { name: 'Ann', email: 'a@example.com', image: 'https://img/a.png' },
+        user: { googleSub: 'g-1', name: 'Ann', email: 'a@example.com', image: 'https://img/a.png' },
         expires: '',
       },
       status: 'authenticated',
@@ -115,13 +115,47 @@ describe('AccountMenu', () => {
     expect(trigger).toHaveFocus()
   })
 
-  it('closes when Tab moves focus out of the menu', async () => {
+  it('Tab closes the menu and moves focus to the control after the trigger', async () => {
     signedIn()
-    render(<AccountMenu />)
+    render(
+      <>
+        <button>Before</button>
+        <AccountMenu />
+        <button>After</button>
+      </>,
+    )
 
     await userEvent.click(screen.getByRole('button', { name: 'Account menu' }))
     await userEvent.keyboard('{Tab}')
 
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'After' })).toHaveFocus()
   })
+
+  it('Shift+Tab closes the menu and moves focus to the control before the trigger', async () => {
+    signedIn()
+    render(
+      <>
+        <button>Before</button>
+        <AccountMenu />
+        <button>After</button>
+      </>,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Account menu' }))
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}')
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Before' })).toHaveFocus()
+  })
+
+  it.each([{ email: 'a@example.com' }, { googleSub: 'g-1' }])(
+    'treats incomplete session user %j as signed out',
+    (user) => {
+      mockedUseSession.mockReturnValue({ data: { user, expires: '' }, status: 'authenticated' })
+      render(<AccountMenu />)
+      expect(screen.getByRole('link', { name: 'Sign in' })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Account menu' })).not.toBeInTheDocument()
+    },
+  )
 })

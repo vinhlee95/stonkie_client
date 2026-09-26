@@ -2,11 +2,12 @@
 import { auth } from '@/auth'
 import { mintBackendToken } from './backendToken'
 import { UnauthenticatedError } from './errors'
+import { isCompleteSessionUser } from './session'
 
 export async function authedBackendFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const session = await auth()
   const user = session?.user
-  if (!user?.googleSub || !user.email) throw new UnauthenticatedError()
+  if (!isCompleteSessionUser(user)) throw new UnauthenticatedError()
 
   const token = await mintBackendToken({
     googleSub: user.googleSub,

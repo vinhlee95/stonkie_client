@@ -5,9 +5,12 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { signOut, useSession } from 'next-auth/react'
 import { PersonOutline } from '@mui/icons-material'
+import { isCompleteSessionUser } from '@/lib/auth/session'
 
 const itemClass =
   'group relative p-2.5 rounded-full text-gray-700 dark:text-gray-300 focus:outline-none transition-all duration-300 hover:scale-110 active:scale-95 z-10'
+const TABBABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 const menuItemClass =
   'block w-full text-left px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
 
@@ -27,6 +30,16 @@ export default function AccountMenu() {
     if (open) menuItems()[0]?.focus()
   }, [open])
 
+  const focusNextFromTrigger = (direction: 1 | -1) => {
+    const trigger = triggerRef.current
+    if (!trigger) return
+    const tabbables = Array.from(document.querySelectorAll<HTMLElement>(TABBABLE)).filter(
+      (el) => !menuRef.current?.contains(el),
+    )
+    const target = tabbables[tabbables.indexOf(trigger) + direction]
+    ;(target ?? trigger).focus()
+  }
+
   const closeMenu = () => {
     setOpen(false)
     triggerRef.current?.focus()
@@ -35,10 +48,15 @@ export default function AccountMenu() {
   const handleMenuKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const items = menuItems()
     const index = items.indexOf(document.activeElement as HTMLElement)
-    // Tab also closes: the menu is portalled to <body>, so native tab order would skip past the page.
-    if (e.key === 'Escape' || e.key === 'Tab') {
+    if (e.key === 'Escape') {
       e.preventDefault()
       closeMenu()
+    } else if (e.key === 'Tab') {
+      // The menu is portalled to <body>, so native Tab would jump to the end of the page.
+      // Close it and move to the control after (or before) the trigger instead.
+      e.preventDefault()
+      setOpen(false)
+      focusNextFromTrigger(e.shiftKey ? -1 : 1)
     } else if (e.key === 'ArrowDown') {
       e.preventDefault()
       items[(index + 1) % items.length]?.focus()
@@ -56,7 +74,7 @@ export default function AccountMenu() {
     )
   }
 
-  if (!session?.user) {
+  if (!isCompleteSessionUser(session?.user)) {
     const query = searchParams?.toString()
     const loginHref = `/login?${new URLSearchParams({ callbackUrl: query ? `${pathname}?${query}` : pathname })}`
     return (
