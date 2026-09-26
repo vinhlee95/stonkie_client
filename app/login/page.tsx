@@ -11,7 +11,8 @@ export default async function LoginPage({ searchParams }: Props) {
   const redirectTo = sanitizeCallbackUrl(callbackUrl)
 
   const session = await auth()
-  if (session?.user) redirect(redirectTo)
+  // Match authedBackendFetch's requirements; a partial session would bounce back here from /portfolio forever.
+  if (session?.user?.googleSub && session.user.email) redirect(redirectTo)
 
   async function signInWithGoogle() {
     'use server'
