@@ -107,10 +107,14 @@ describe('mintBackendToken', () => {
 })
 
 describe('loginRedirectFor', () => {
-  it('redirects unauthenticated requests to /login with callbackUrl', () => {
+  it.each([
+    ['no session', null],
+    ['session without googleSub', { email: 'a@example.com' }],
+    ['session without email', { googleSub: 'g-1' }],
+  ])('redirects to /login with callbackUrl for %s', (_label, user) => {
     const response = loginRedirectFor(
       new NextRequest('http://localhost:3000/portfolio/x?y=1'),
-      false,
+      user,
     )
 
     expect(response?.status).toBe(307)
@@ -119,9 +123,12 @@ describe('loginRedirectFor', () => {
     expect(location.searchParams.get('callbackUrl')).toBe('/portfolio/x?y=1')
   })
 
-  it('lets authenticated requests through', () => {
+  it('lets complete sessions through', () => {
     expect(
-      loginRedirectFor(new NextRequest('http://localhost:3000/portfolio'), true),
+      loginRedirectFor(new NextRequest('http://localhost:3000/portfolio'), {
+        googleSub: 'g-1',
+        email: 'a@example.com',
+      }),
     ).toBeUndefined()
   })
 })

@@ -1,5 +1,6 @@
 // Server-only auth helpers: imports the Auth.js server session. Never import from client components.
 import { SignJWT } from 'jose'
+import type { Session } from 'next-auth'
 import { NextResponse, type NextRequest } from 'next/server'
 import { auth } from '@/auth'
 import { isCompleteSessionUser, UnauthenticatedError } from './shared'
@@ -57,12 +58,12 @@ export async function authedBackendFetch(path: string, init: RequestInit = {}): 
   return fetch(`${process.env.BACKEND_URL}${path}`, { ...init, headers, cache: 'no-store' })
 }
 
-// Used by proxy.ts to gate protected routes.
+// Used by proxy.ts to gate protected routes; same completeness rule as authedBackendFetch.
 export function loginRedirectFor(
   req: NextRequest,
-  isAuthenticated: boolean,
+  user: Session['user'] | null | undefined,
 ): NextResponse | undefined {
-  if (isAuthenticated) return undefined
+  if (isCompleteSessionUser(user)) return undefined
   const url = new URL('/login', req.nextUrl.origin)
   url.searchParams.set('callbackUrl', req.nextUrl.pathname + req.nextUrl.search)
   return NextResponse.redirect(url)
