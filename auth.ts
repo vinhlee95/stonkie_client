@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
-import { applyProfileToToken, applyTokenToSession } from '@/lib/auth/callbacks'
+import { applyProfileToToken, applyTokenToSession } from '@/lib/auth/shared'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Google],

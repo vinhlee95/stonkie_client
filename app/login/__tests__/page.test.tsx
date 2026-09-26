@@ -42,4 +42,13 @@ describe('LoginPage', () => {
       expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument()
     },
   )
+
+  it('shows the Google logo inside the sign-in button', async () => {
+    mockedAuth.mockResolvedValue(null)
+
+    render(await LoginPage(params({})))
+
+    const button = screen.getByRole('button', { name: 'Continue with Google' })
+    expect(button.querySelector('svg[data-testid="google-logo"]')).toBeInTheDocument()
+  })
 })

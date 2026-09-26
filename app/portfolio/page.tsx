@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { authedBackendFetch } from '@/lib/auth/backendFetch'
-import { UnauthenticatedError } from '@/lib/auth/errors'
+import { authedBackendFetch } from '@/lib/auth/server'
+import { UnauthenticatedError } from '@/lib/auth/shared'
 
 export const dynamic = 'force-dynamic'
 

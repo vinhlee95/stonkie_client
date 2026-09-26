@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { signOut, useSession } from 'next-auth/react'
 import { PersonOutline } from '@mui/icons-material'
-import { isCompleteSessionUser } from '@/lib/auth/session'
+import { isCompleteSessionUser } from '@/lib/auth/shared'
 
 const itemClass =
   'group relative p-2.5 rounded-full text-gray-700 dark:text-gray-300 focus:outline-none transition-all duration-300 hover:scale-110 active:scale-95 z-10'

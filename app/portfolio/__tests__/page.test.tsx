@@ -6,11 +6,11 @@ vi.mock('next/navigation', () => ({
     throw new Error('NEXT_REDIRECT')
   }),
 }))
-vi.mock('@/lib/auth/backendFetch', () => ({ authedBackendFetch: vi.fn() }))
+vi.mock('@/lib/auth/server', () => ({ authedBackendFetch: vi.fn() }))
 
 import { redirect } from 'next/navigation'
-import { authedBackendFetch } from '@/lib/auth/backendFetch'
-import { UnauthenticatedError } from '@/lib/auth/errors'
+import { authedBackendFetch } from '@/lib/auth/server'
+import { UnauthenticatedError } from '@/lib/auth/shared'
 import PortfolioPage from '../page'
 
 const fetchMe = authedBackendFetch as unknown as ReturnType<typeof vi.fn>
