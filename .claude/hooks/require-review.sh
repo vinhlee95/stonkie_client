@@ -149,8 +149,8 @@ api_dynamic_re="${gh_head}api[[:space:]]+([^[:space:]]+[[:space:]]+)*[^-[:space:
 wrapper_re='^(([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*)|command|sudo|env|exec|eval|time|nohup|nice|timeout|xargs|if|then|else|elif|do|while|until|!|\{|([^[:space:]]*/)?(busybox[[:space:]]+)?([a-z]*sh|fish)([[:space:]]+-[^[:space:]]+)*[[:space:]]+-[A-Za-z]*c[A-Za-z]*)[[:space:]]+'
 wrapped_gh_re='(^|[[:space:]])(([^[:space:]]*/)?gh([[:space:]].*)?)$'
 cd_re='^(cd|pushd)([[:space:]]+(-[LPe@]+[[:space:]]+)*(.*[^[:space:]]))?[[:space:]]*$'
-# a command name built from an expansion ($G, $(echo gh), leftover "pr create") can't be checked
-dyn_name_re='^(\$[^[:space:]]*[[:space:]]+([^[:space:]]+[[:space:]]+)*)?pr[[:space:]]+(create|new)([[:space:]]|$)'
+# a command name built from an expansion ($G, g${X}h, $(echo gh), leftover "pr create") can't be checked
+dyn_name_re='^([^[:space:]]*\$[^[:space:]]*[[:space:]]+([^[:space:]]+[[:space:]]+)*)?pr[[:space:]]+(create|new)([[:space:]]|$)'
 graphql_create_re="${gh_head}api[[:space:]]+graphql[[:space:]].*createPullRequest"
 
 # Bash brace expansion ({gh,pr,create}, g{h,}, nested {{a,b},c}) builds words before a command runs:
@@ -194,6 +194,7 @@ expand_segment() {
 is_pr_create=false
 pr_seg=""
 cd_target=""
+cd_unresolved=""
 while IFS= read -r seg; do
   seg=$(printf '%s' "$seg" | tr -d "\"'\\\\")
   seg="${seg#"${seg%%[![:space:]]*}"}"
@@ -201,8 +202,12 @@ while IFS= read -r seg; do
   wrapped=false
   while [[ "$seg" =~ $wrapper_re ]]; do seg="${seg:${#BASH_REMATCH[0]}}"; wrapped=true; done
   if $wrapped && ! [[ "$seg" =~ ^([^[:space:]]*/)?gh[[:space:]] ]] && [[ "$seg" =~ $wrapped_gh_re ]]; then
-    seg="${BASH_REMATCH[2]}"
+    # a directory change inside the wrapped script (bash -c 'cd x && gh …') can't be followed
+    gh_part="${BASH_REMATCH[2]}"
+    [[ "${seg%"$gh_part"}" =~ (^|[[:space:]])(cd|pushd|popd)([[:space:]]|$) ]] && cd_unresolved="a wrapped command changes directory"
+    seg="$gh_part"
   fi
+  if [[ "$seg" =~ ^popd([[:space:]]|$) ]]; then cd_unresolved="popd"; continue; fi
   if [[ "$seg" =~ $cd_re ]]; then cd_target="${BASH_REMATCH[4]:-$HOME}"; continue; fi
   if [[ "$seg" =~ $pr_create_re ]] || [[ "$seg" =~ $dyn_name_re ]] || [[ "$seg" =~ $graphql_create_re ]] \
      || { [[ "$seg" =~ $api_re ]] && [[ "$seg" =~ $api_write_re ]] \
@@ -216,6 +221,7 @@ $is_pr_create || exit 0
 
 cwd=$(printf '%s' "$input" | jq -r '.cwd // empty')
 [ -n "$cwd" ] || cwd="${CLAUDE_PROJECT_DIR:-$PWD}"
+[ -n "$cd_unresolved" ] && block "cannot tell which directory gh runs in ($cd_unresolved). Run gh pr create from inside the reviewed repo."
 # `cd <dir> && gh pr create` creates the PR from <dir>: judge that repo
 if [ -n "$cd_target" ]; then
   [[ "$cd_target" == "-" || "$cd_target" == *'$'* || "$cd_target" == *'`'* ]] \
@@ -259,8 +265,8 @@ if [[ "$pr_seg" =~ $api_re ]]; then
   [[ "$want" == *'$'* ]] && block "gh api PR target is dynamic ($want). Use gh pr create from the reviewed repo."
   have=$(origin_repo)
   [ -n "$have" ] && [ "$want" = "$have" ] || block "gh api targets $want, not this repository's origin (${have:-none})."
-  [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)[[:space:]]*head=([^[:space:]]+) ]] && check_head "${BASH_REMATCH[2]}"
-  [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)[[:space:]]*base=([^[:space:]]+) ]] && check_base "${BASH_REMATCH[2]}"
+  [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)([[:space:]]*|=)head=([^[:space:]]+) ]] && check_head "${BASH_REMATCH[3]}"
+  [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)([[:space:]]*|=)base=([^[:space:]]+) ]] && check_base "${BASH_REMATCH[3]}"
 fi
 if [[ "$pr_seg" =~ (^|[[:space:]])(-R|--repo)([[:space:]]+|=)([^[:space:]]+) ]]; then
   want=$(printf '%s' "${BASH_REMATCH[4]}" | tr '[:upper:]' '[:lower:]' | awk -F/ '{print $(NF-1) "/" $NF}')
