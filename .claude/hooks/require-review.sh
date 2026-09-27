@@ -228,6 +228,8 @@ is_pr_create=false
 pr_seg=""
 cd_target=""
 cd_unresolved=""
+# gh reads its target repo from GH_REPO (environment, export, VAR=… prefix, env VAR=…)
+gh_repo_override="${GH_REPO:-}"
 while IFS= read -r seg; do
   nested=false
   [[ "$seg" == $'\001'* ]] && { nested=true; seg="${seg#$'\001'}"; }
@@ -235,6 +237,7 @@ while IFS= read -r seg; do
   seg=$(printf '%s' "$seg" | tr '\002' ' ' | tr -d "\"'\\\\")
   seg="${seg#"${seg%%[![:space:]]*}"}"
   [[ "$seg" == *\{*,*\}* ]] && seg=$(set -f; expand_segment "$seg")
+  [[ "$seg" =~ (^|[[:space:]])GH_REPO=([^[:space:]]*) ]] && gh_repo_override="${BASH_REMATCH[2]:-__empty__}"
   [[ "$seg" == *[*?[]* ]] && seg=$(set -f; unglob_words "$seg")
   wrapped=false
   while [[ "$seg" =~ $wrapper_re ]]; do seg="${seg:${#BASH_REMATCH[0]}}"; wrapped=true; done
@@ -319,6 +322,11 @@ if [[ "$pr_seg" =~ $api_re ]]; then
   [ -n "$have" ] && [ "$want" = "$have" ] || block "gh api targets $want, not this repository's origin (${have:-none})."
   [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)([[:space:]]*|=)head=([^[:space:]]+) ]] && check_head "${BASH_REMATCH[3]}"
   [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)([[:space:]]*|=)base=([^[:space:]]+) ]] && check_base "${BASH_REMATCH[3]}"
+fi
+if [ -n "$gh_repo_override" ] && [ "$gh_repo_override" != "__empty__" ]; then
+  want=$(printf '%s' "$gh_repo_override" | tr '[:upper:]' '[:lower:]' | awk -F/ '{print $(NF-1) "/" $NF}')
+  have=$(origin_repo)
+  [ -n "$have" ] && [ "$want" = "$have" ] || block "GH_REPO=$gh_repo_override is not this repository's origin (${have:-none}). Unset it or create the PR from the reviewed repo."
 fi
 if [[ "$pr_seg" =~ (^|[[:space:]])(-R[[:space:]]*|--repo([[:space:]]+|=))([^[:space:]]+) ]]; then
   want=$(printf '%s' "${BASH_REMATCH[4]}" | tr '[:upper:]' '[:lower:]' | awk -F/ '{print $(NF-1) "/" $NF}')
