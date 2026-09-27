@@ -57,6 +57,20 @@ describe('portfolio BFF routes', () => {
     expect(backend).not.toHaveBeenCalled()
   })
 
+  it('PUT rejects invalid tickers without reading body or calling backend', async () => {
+    const req = new NextRequest('http://x', { method: 'PUT', body: '{}' })
+    const res = await PUT(req, ctx('../me'))
+    expect(res.status).toBe(400)
+    expect(backend).not.toHaveBeenCalled()
+  })
+
+  it('maps a non-JSON backend body to an error payload, keeping status', async () => {
+    backend.mockResolvedValue(new Response('<html>oops</html>', { status: 500 }))
+    const res = await GET()
+    expect(res.status).toBe(500)
+    expect(await res.json()).toEqual({ error: 'Invalid backend response' })
+  })
+
   it('DELETE passes 204 through', async () => {
     backend.mockResolvedValue(new Response(null, { status: 204 }))
     const res = await DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('AAPL'))

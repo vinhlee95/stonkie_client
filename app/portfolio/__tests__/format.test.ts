@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { money, pct, priceDp, shares, signedMoney, tone } from '../format'
-import { parseDecimal, TICKER_RE } from '@/lib/api/portfolio'
+import { parseDecimal, TICKER_RE, toYahooSymbol } from '@/lib/api/portfolio'
 
 describe('money', () => {
   it('formats known currencies with symbol and grouping', () => {
@@ -46,13 +46,33 @@ describe('parseDecimal', () => {
     ['12', 12],
     ['12.5', 12.5],
     ['2,35', 2.35],
+    ['12,5', 12.5],
+    ['1,000', 1000],
+    ['1,200', 1200],
+    ['1,000.5', 1000.5],
+    ['12,345,678', 12345678],
     [' 7 ', 7],
     ['.5', 0.5],
   ])('parses %j', (input, expected) => {
     expect(parseDecimal(input)).toBe(expected)
   })
-  it.each(['', '1abc', '1.2.3', '-1', '1e3', '1,000.5'])('rejects %j', (input) => {
-    expect(parseDecimal(input)).toBeNaN()
+  it.each(['', '1abc', '1.2.3', '-1', '1e3', '1,000,5', '1,2,3', '1,00.5', ','])(
+    'rejects %j',
+    (input) => {
+      expect(parseDecimal(input)).toBeNaN()
+    },
+  )
+})
+
+describe('toYahooSymbol', () => {
+  it.each([
+    ['BRK.B', 'BRK-B'],
+    ['BF.A', 'BF-A'],
+    ['AAPL', 'AAPL'],
+    ['VOD.L', 'VOD.L'],
+    ['NOKIA.HE', 'NOKIA.HE'],
+  ])('%s -> %s', (input, expected) => {
+    expect(toYahooSymbol(input)).toBe(expected)
   })
 })
 

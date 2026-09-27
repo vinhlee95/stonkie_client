@@ -56,12 +56,25 @@ export const PORTFOLIO_QUERY_KEY = ['portfolio'] as const
 export const TICKER_RE = /^[A-Z0-9][A-Z0-9.\-=^]{0,19}$/
 
 /**
- * Parse a user-typed positive decimal, accepting ',' as the decimal separator
- * (EU keyboards). Returns NaN for anything else, e.g. '1abc' or '1.2.3'.
+ * Parse a user-typed positive number. Commas in thousands groups are dropped
+ * ('1,000' and '1,200.5', matching how the UI renders numbers); a single comma
+ * with any other grouping is a decimal separator ('2,35', EU keyboards).
+ * Returns NaN for anything else, e.g. '1abc', '1.2.3' or '1,000,5'.
  */
 export function parseDecimal(input: string): number {
-  const s = input.trim().replace(',', '.')
-  return /^\d+(\.\d+)?$/.test(s) || /^\.\d+$/.test(s) ? Number(s) : NaN
+  const s = input.trim()
+  if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) return Number(s.replace(/,/g, ''))
+  if (/^\d+,\d+$/.test(s)) return Number(s.replace(',', '.'))
+  return /^(\d+(\.\d+)?|\.\d+)$/.test(s) ? Number(s) : NaN
+}
+
+/**
+ * Finnhub writes US share classes with a dot (BRK.B); Yahoo, which prices
+ * holdings, uses a dash (BRK-B). Only class letters A-C are mapped so
+ * single-letter exchange suffixes like VOD.L keep their dot.
+ */
+export function toYahooSymbol(symbol: string): string {
+  return symbol.replace(/^([A-Z]+)\.([ABC])$/, '$1-$2')
 }
 
 async function errorDetail(res: Response): Promise<string> {

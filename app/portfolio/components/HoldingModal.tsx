@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { useTickerSearch } from '@/app/components/hooks/useTickerSearch'
-import { parseDecimal, TICKER_RE, type PortfolioHolding } from '@/lib/api/portfolio'
+import { parseDecimal, TICKER_RE, toYahooSymbol, type PortfolioHolding } from '@/lib/api/portfolio'
 import { money, priceDp } from '../format'
 import { TickerLogo } from './ui'
 
@@ -255,7 +255,7 @@ function TickerSearch({
   const [q, setQ] = useState('')
   const query = q.trim()
   const { results: found, isLoading: loading } = useTickerSearch(query)
-  const results = found.slice(0, 6)
+  const results = found.slice(0, 6).map((r) => ({ ...r, symbol: toYahooSymbol(r.symbol) }))
 
   const raw = query.toUpperCase()
   const showRaw = TICKER_RE.test(raw) && !results.some((r) => r.symbol === raw)

@@ -41,7 +41,8 @@ const HOLDINGS = [
 ]
 
 function rowText(label: string): string {
-  return screen.getByText(label).closest('li, div.flex')!.textContent ?? ''
+  const row = screen.getAllByRole('listitem').find((li) => within(li).queryByText(label))
+  return row?.textContent ?? ''
 }
 
 describe('pricedHoldings', () => {

@@ -186,6 +186,35 @@ describe('PortfolioDashboard', () => {
     expect(JSON.parse(put[1].body)).toMatchObject({ shares: 2.35, avg_cost: 100 })
   })
 
+  it('adds a searched ticker using its Yahoo symbol', async () => {
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url.startsWith('/api/tickers')) {
+        return new Response(JSON.stringify([{ symbol: 'BRK.B', name: 'Berkshire Hathaway B' }]))
+      }
+      if (init?.method === 'PUT') return new Response('{}')
+      return new Response(JSON.stringify(FILLED))
+    })
+    render(<PortfolioDashboard initialData={EMPTY} />)
+
+    await userEvent.click(screen.getByRole('button', { name: /Search ticker or company/ }))
+    await userEvent.type(screen.getByLabelText('Search ticker or company'), 'berkshire')
+    await userEvent.click(await screen.findByRole('button', { name: /Berkshire Hathaway B/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Add holding' })
+    expect(within(dialog).getByText('BRK-B')).toBeInTheDocument()
+    await userEvent.type(within(dialog).getByLabelText('Shares'), '1,000')
+    await userEvent.type(within(dialog).getByLabelText(/Average cost/), '410')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add to portfolio' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    const put = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT')!
+    expect(put[0]).toBe('/api/me/portfolio/holdings/BRK-B')
+    expect(JSON.parse(put[1].body)).toEqual({
+      shares: 1000,
+      avg_cost: 410,
+      name: 'Berkshire Hathaway B',
+    })
+  })
+
   it('removes a holding from the edit dialog', async () => {
     fetchMock.mockImplementation(async (_url: string, init?: RequestInit) =>
       init?.method === 'DELETE'

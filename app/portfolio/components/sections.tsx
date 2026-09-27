@@ -88,21 +88,25 @@ export function PerformanceChart({
     }))
   }, [series, range])
 
-  const all = data.flatMap((x) => [x.p, x.b])
-  let lo = Math.min(...all)
-  let hi = Math.max(...all)
-  const padding = (hi - lo) * 0.12 || 1
-  lo -= padding
-  hi += padding
   const W = 1000
   const H = height
+  // Hover re-renders on every mousemove; keep the O(n) geometry out of that path.
+  const { lo, hi, ticks, pPath, bPath } = useMemo(() => {
+    const all = data.flatMap((pt) => [pt.p, pt.b])
+    const pad = (Math.max(...all) - Math.min(...all)) * 0.12 || 1
+    const lo = Math.min(...all) - pad
+    const hi = Math.max(...all) + pad
+    const px = (i: number) => (i / (data.length - 1)) * W
+    const py = (v: number) => H - ((v - lo) / (hi - lo)) * H
+    const path = (k: 'p' | 'b') =>
+      data.map((pt, i) => `${i ? 'L' : 'M'}${px(i).toFixed(1)} ${py(pt[k]).toFixed(1)}`).join(' ')
+    const step = hi - lo > 40 ? 20 : hi - lo > 16 ? 10 : 5
+    const ticks: number[] = []
+    for (let t = Math.ceil(lo / step) * step; t < hi; t += step) ticks.push(t)
+    return { lo, hi, ticks, pPath: path('p'), bPath: path('b') }
+  }, [data, H])
   const y = (v: number) => H - ((v - lo) / (hi - lo)) * H
   const x = (i: number) => (i / (data.length - 1)) * W
-  const path = (k: 'p' | 'b') =>
-    data.map((pt, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(pt[k]).toFixed(1)}`).join(' ')
-  const step = hi - lo > 40 ? 20 : hi - lo > 16 ? 10 : 5
-  const ticks: number[] = []
-  for (let t = Math.ceil(lo / step) * step; t < hi; t += step) ticks.push(t)
   const last = data[data.length - 1]
   const cur = hover != null ? data[hover] : last
   const fmtD = (d: Date) =>
@@ -186,9 +190,9 @@ export function PerformanceChart({
               <stop offset="1" stopColor="rgb(40,105,86)" stopOpacity="0" />
             </linearGradient>
           </defs>
-          <path d={`${path('p')} L${W} ${H} L0 ${H}Z`} fill="url(#pf-perf-fill)" />
+          <path d={`${pPath} L${W} ${H} L0 ${H}Z`} fill="url(#pf-perf-fill)" />
           <path
-            d={path('b')}
+            d={bPath}
             fill="none"
             stroke="#9aa19d"
             strokeWidth="1.5"
@@ -196,7 +200,7 @@ export function PerformanceChart({
             vectorEffect="non-scaling-stroke"
           />
           <path
-            d={path('p')}
+            d={pPath}
             fill="none"
             stroke="var(--tab-active)"
             strokeWidth="2"
@@ -377,9 +381,9 @@ export function Risk({ holdings }: { holdings: PortfolioHolding[] }) {
   }
   return (
     <Card title="Risk" right={<SampleBadge />}>
-      <div className="flex flex-col">
+      <ul className="m-0 flex list-none flex-col p-0">
         {rows.map((r, i) => (
-          <div
+          <li
             key={r.k}
             className={`flex items-center justify-between gap-2.5 py-2 ${i ? 'border-t border-gray-100 dark:border-white/10' : 'pt-0.5'}`}
           >
@@ -402,9 +406,9 @@ export function Risk({ holdings }: { holdings: PortfolioHolding[] }) {
                 {r.l[0]}
               </span>
             </div>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </Card>
   )
 }
