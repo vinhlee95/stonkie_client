@@ -155,7 +155,7 @@ api_re="${gh_head}api[[:space:]]"
 # command is the first gh word that follows, whatever options/operands sit in between
 wrapper_re='^(([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*)|([^[:space:]]*/)?(command|sudo|env|exec|eval|time|nohup|nice|timeout|xargs)|if|then|else|elif|do|while|until|!|\{|([^[:space:]]*/)?(busybox[[:space:]]+)?([a-z]*sh|fish)([[:space:]]+-[^[:space:]]+)*[[:space:]]+-[A-Za-z]*c[A-Za-z]*)[[:space:]]+'
 wrapped_gh_re='(^|[[:space:]])(([^[:space:]]*/)?gh([[:space:]].*)?)$'
-cd_re='^(cd|pushd)([[:space:]]+(-[LPe@]+[[:space:]]+)*(.*[^[:space:]]))?[[:space:]]*$'
+cd_re='^(cd|pushd)([[:space:]]+(-[LPe@]+[[:space:]]+|--[[:space:]]+)*(.*[^[:space:]]))?[[:space:]]*$'
 # a command name built from an expansion ($G, g${X}h, $(echo gh), leftover "pr create") can't be checked
 dyn_name_re='^([^[:space:]]*\$[^[:space:]]*[[:space:]]+([^[:space:]]+[[:space:]]+)*)?pr[[:space:]]+(create|new)([[:space:]]|$)'
 # gh api graphql can create PRs; a mutation, --input file, @file field or $ expansion can't be inspected
@@ -165,12 +165,14 @@ dyn_sub_re="${gh_head}([^[:space:]]*\\$|pr[[:space:]]+[^[:space:]]*\\$)"
 # a shell -c anywhere in the segment (behind an unknown executor: setsid bash -c '…') runs its script
 any_shell_c_re='(^|[[:space:]])([^[:space:]]*/)?(busybox[[:space:]]+)?([a-z]*sh|fish)([[:space:]]+-[^[:space:]]+)*[[:space:]]+-[A-Za-z]*c[A-Za-z]*[[:space:]]+(.*)$'
 # running a script file (sh ./x.sh, ./x.sh, source x, . x): look inside it
-script_re='^(([^[:space:]]*/)?([a-z]*sh|fish)([[:space:]]+-[^[:space:]]+)*[[:space:]]+|source[[:space:]]+|\.[[:space:]]+)?([^[:space:]-][^[:space:]]*)'
+script_re='^(([^[:space:]]*/)?([a-z]*sh|fish|python[0-9.]*|node|ruby|perl|php|deno([[:space:]]+run)?|bun([[:space:]]+run)?|tsx|ts-node|npx[[:space:]]+(tsx|ts-node))([[:space:]]+-[^[:space:]]+)*[[:space:]]+|source[[:space:]]+|\.[[:space:]]+)?([^[:space:]-][^[:space:]]*)'
+inline_code_re='^([^[:space:]]*/)?(python[0-9.]*|node|ruby|perl|php|deno[[:space:]]+eval|bun[[:space:]]+-e)([[:space:]]+-[^[:space:]]+)*[[:space:]]+-[A-Za-z]*[cepr]([[:space:]]|$)'
 script_creates_pr() {  # script_creates_pr <path relative to cwd>
   local f=$1
   [[ $f == /* ]] || f="${cd_target:-$cwd}/$f"
   [ -f "$f" ] && [ -r "$f" ] || return 1
-  grep -qE '(^|[^[:alnum:]_-])gh([^[:alnum:]_-]|$)' "$f" && grep -qE 'pr[[:space:]]+(create|new)|/pulls|createPullRequest|mutation' "$f"
+  grep -qE '(^|[^[:alnum:]_-])gh([^[:alnum:]_-]|$)' "$f" \
+    && grep -qE 'pr["'"'"'[:space:],]+(create|new)|/pulls|createPullRequest|mutation' "$f"
 }
 # glob patterns in the first command words (g? pr create) expand before running: match them
 unglob_words() {
@@ -376,6 +378,8 @@ cd_target=""
 cd_unresolved=""
 # gh reads its target repo from GH_REPO (environment, export, VAR=… prefix, env VAR=…)
 gh_repo_override="${GH_REPO:-}"
+gh_host_override="${GH_HOST:-}"
+head_changed=""
 while IFS= read -r seg; do
   nested=false
   [[ "$seg" == $'\001'* ]] && { nested=true; seg="${seg#$'\001'}"; }
@@ -384,6 +388,12 @@ while IFS= read -r seg; do
   seg="${seg#"${seg%%[![:space:]]*}"}"
   [[ "$seg" == *\{*,*\}* ]] && seg=$(set -f; expand_segment "$seg")
   [[ "$seg" =~ (^|[[:space:]])GH_REPO=([^[:space:]]*) ]] && gh_repo_override="${BASH_REMATCH[2]:-__empty__}"
+  [[ "$seg" =~ (^|[[:space:]])GH_HOST=([^[:space:]]*) ]] && gh_host_override="${BASH_REMATCH[2]}"
+  # env -C/--chdir and sudo -D/--chdir run the command in another directory
+  [[ "$seg" =~ ^(([^[:space:]]*/)?(env|sudo))[[:space:]].*(-C|--chdir|-D)([[:space:]=]|[^[:space:]]) ]] && cd_unresolved="a wrapper changes directory"
+  # git commands that move HEAD or switch branch before gh in the same command
+  [[ "$seg" =~ ^([^[:space:]]*/)?git([[:space:]]+-[^[:space:]]+([[:space:]]+[^-[:space:]][^[:space:]]*)?)*[[:space:]]+(commit|switch|checkout|reset|rebase|merge|pull|cherry-pick|revert|am|stash)([[:space:]]|$) ]] \
+    && head_changed="git ${BASH_REMATCH[4]}"
   [[ "$seg" == *[*?[]* ]] && seg=$(set -f; unglob_words "$seg")
   wrapped=false
   while [[ "$seg" =~ $wrapper_re ]]; do seg="${seg:${#BASH_REMATCH[0]}}"; wrapped=true; done
@@ -407,9 +417,16 @@ while IFS= read -r seg; do
   if ! [[ "$seg" =~ ^([^[:space:]]*/)?gh[[:space:]] ]] && [[ "$raw_seg" =~ $generic_re ]]; then
     seg=$(printf '%s' "${BASH_REMATCH[2]}" | tr -d "\"'\\\\")
   fi
-  if [[ "$seg" =~ $script_re ]] && [[ -n "${BASH_REMATCH[1]}" || "${BASH_REMATCH[5]}" == */* ]] \
-     && script_creates_pr "${BASH_REMATCH[5]}"; then
-    block "script ${BASH_REMATCH[5]} contains gh PR-creation commands. Run gh pr create directly after /multi-review."
+  # script file: resolve the path from the quote-aware segment so "create pr.py" stays one path
+  qseg=$(printf '%s' "$raw_seg" | tr -d "\"'\\\\")
+  if [[ "$qseg" =~ $script_re ]] && [[ -n "${BASH_REMATCH[1]}" || "${BASH_REMATCH[8]}" == */* ]]; then
+    spath=$(printf '%s' "${BASH_REMATCH[8]}" | tr '\002' ' ')
+    script_creates_pr "$spath" && block "script $spath contains gh PR-creation commands. Run gh pr create directly after /multi-review."
+  fi
+  # inline interpreter code (python -c, node -e/-p, ruby/perl -e, php -r)
+  if [[ "$seg" =~ $inline_code_re ]] && [[ "$seg" =~ (^|[^[:alnum:]_-])gh([^[:alnum:]_-]|$) ]] \
+     && [[ "$seg" =~ pr[[:space:],]+(create|new)|/pulls|createPullRequest|mutation ]]; then
+    block "inline interpreter code contains gh PR-creation commands. Run gh pr create directly after /multi-review."
   fi
   api_verdict=""
   if [[ "$seg" =~ $pr_create_re ]] || [[ "$seg" =~ $dyn_name_re ]] || [[ "$seg" =~ $dyn_sub_re ]] \
@@ -421,6 +438,7 @@ while IFS= read -r seg; do
 done < <(segments "$cmd")
 $is_pr_create || exit 0
 
+[ -n "$head_changed" ] && block "\`$head_changed\` runs before gh pr create in the same command, so HEAD may change after this check. Run it separately, then /multi-review, then gh pr create on its own."
 [ -n "$cd_unresolved" ] && block "cannot tell which directory gh runs in ($cd_unresolved). Run gh pr create from inside the reviewed repo."
 # `cd <dir> && gh pr create` creates the PR from <dir>: judge that repo
 if [ -n "$cd_target" ]; then
@@ -465,6 +483,11 @@ if [[ $api_verdict == collection* ]]; then
   [ -n "$have" ] && [ "$want" = "$have" ] || block "gh api targets $want, not this repository's origin (${have:-none})."
   [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)([[:space:]]*|=)head=([^[:space:]]+) ]] && check_head "${BASH_REMATCH[3]}"
   [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)([[:space:]]*|=)base=([^[:space:]]+) ]] && check_base "${BASH_REMATCH[3]}"
+fi
+if [ -n "$gh_host_override" ]; then
+  origin_host=$(git -C "$top" remote get-url origin 2>/dev/null | tr '[:upper:]' '[:lower:]' | sed -E 's#^[a-z]+://([^@/]*@)?##; s#^[^@]*@##; s#[:/].*$##')
+  [ "$(printf '%s' "$gh_host_override" | tr '[:upper:]' '[:lower:]')" = "${origin_host:-github.com}" ] \
+    || block "GH_HOST=$gh_host_override is not origin's host (${origin_host:-none}). Unset it or create the PR from the reviewed repo."
 fi
 if [ -n "$gh_repo_override" ] && [ "$gh_repo_override" != "__empty__" ]; then
   want=$(printf '%s' "$gh_repo_override" | tr '[:upper:]' '[:lower:]' | awk -F/ '{print $(NF-1) "/" $NF}')
