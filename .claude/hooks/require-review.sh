@@ -15,8 +15,8 @@ input=$(cat)
 
 if ! command -v jq >/dev/null 2>&1; then
   # without jq the command can't be decoded: let through only input that can't spell a gh command
-  # (g…h with only escapes/quotes between, JSON \u escapes, ANSI-C $'...', expansions)
-  nojq_re='g[^[:alnum:][:space:]]*h|\\u|\$['"'"'A-Za-z_{(]|`'
+  # (g…h with only quotes between, any backslash escape, ANSI-C $'...', expansions)
+  nojq_re='g[^[:alnum:][:space:]]*h|\\|\$['"'"'A-Za-z_{(]|`'
   [[ "$input" =~ $nojq_re ]] || exit 0
   block "jq is not installed."
 fi
@@ -40,8 +40,10 @@ cmd=$(printf '%s' "$input" | jq -er '.tool_input.command // ""' 2>/dev/null) \
 # `gh pr create` (commit messages, grep, echo) passes through.
 segments() {
   local joined=${1//$'\\\n'/}
-  printf '%s\n' "$joined" | awk '
-    function emit(s) { print s }
+  # QS (\002) stands for a space inside quotes, so quoted text stays one word for the generic check
+  printf '%s\n' "$joined" | awk -v QS=$'\002' '
+    # segments inside ( ), $( ), backticks are marked with \001: a cd there does not move the outer shell
+    function emit(s) { print (sp > 0 ? "\001" : "") s }
     function flush() {
       if (redir) { emit(buf); buf = saved; redir = 0; rt = 0 }
       emit(buf); buf = ""
@@ -62,7 +64,7 @@ segments() {
     # one character of an ANSI-C $'...' string starting at i; returns chars consumed
     function ansi(line, i,   c, nx, m, h) {
       c = substr(line, i, 1)
-      if (c != "\\") { buf = buf (c ~ /[;&|`()<>$]/ ? " " : c); return 1 }
+      if (c != "\\") { buf = buf (c ~ /[;&|`()<>$ \t]/ ? QS : c); return 1 }
       nx = substr(line, i + 1, 1)
       if (nx == "x" && match(substr(line, i + 2), /^[0-9A-Fa-f][0-9A-Fa-f]?/)) { buf = buf chr(hexval(substr(line, i + 2, RLENGTH))); return 2 + RLENGTH }
       if ((nx == "u" || nx == "U") && match(substr(line, i + 2), /^[0-9A-Fa-f]+/)) {
@@ -88,14 +90,14 @@ segments() {
     {
       while (i <= n) {
         c = substr(line, i, 1); c2 = substr(line, i, 2)
-        if (q == "\047") { if (c == "\047") q = ""; buf = buf (c == "\047" ? c : (c ~ /[;&|`()<>$]/ ? " " : c)); i++; continue }
+        if (q == "\047") { if (c == "\047") q = ""; buf = buf (c == "\047" ? c : (c ~ /[;&|`()<>$ \t]/ ? QS : c)); i++; continue }
         if (q == "A") { if (c == "\047") { q = ""; i++; continue } i += ansi(line, i); continue }
         if (q == "\"") {
-          if (c == "\\") { buf = buf " "; i += 2; continue }
+          if (c == "\\") { buf = buf QS; i += 2; continue }
           if (c == "\"") { q = ""; buf = buf c; i++; continue }
           if (c2 == "$(") { push("("); i += 2; continue }
           if (c == "`") { push("`"); i++; continue }
-          buf = buf (c ~ /[;&|()<>]/ ? " " : c); i++; continue
+          buf = buf (c ~ /[;&|()<> \t]/ ? QS : c); i++; continue
         }
         if (redir && c ~ /[ \t]/) { if (rt) flush_redir_only(); else { i++; continue } }
         if (c == "`") { if (sp > 0 && so[sp] == "`") pop(); else push("`"); i++; continue }
@@ -124,7 +126,7 @@ segments() {
         buf = buf c; i++
       }
       if (hd != "" && !hq && buf ~ /^HEREDOC /) { emit(buf); buf = ""; q = ""; next }
-      if (q == "") flush(); else buf = buf " "
+      if (q == "") flush(); else buf = buf QS
     }
     function flush_redir_only() { emit(buf); buf = saved; redir = 0; rt = 0 }
     END {
@@ -152,6 +154,10 @@ cd_re='^(cd|pushd)([[:space:]]+(-[LPe@]+[[:space:]]+)*(.*[^[:space:]]))?[[:space
 # a command name built from an expansion ($G, g${X}h, $(echo gh), leftover "pr create") can't be checked
 dyn_name_re='^([^[:space:]]*\$[^[:space:]]*[[:space:]]+([^[:space:]]+[[:space:]]+)*)?pr[[:space:]]+(create|new)([[:space:]]|$)'
 # gh api graphql can create PRs; a mutation, --input file, @file field or $ expansion can't be inspected
+# an expansion inside the subcommand (gh pr cr${X}eate, gh ${SUB} …) can't be checked
+dyn_sub_re="${gh_head}([^[:space:]]*\\$|pr[[:space:]]+[^[:space:]]*\\$)"
+# any unquoted gh … pr create|new word sequence behind an unknown executor (setsid gh …)
+generic_re='(^|[[:space:]])(([^[:space:]"'"'"']*/)?gh([[:space:]]+-[^[:space:]"'"'"']+([[:space:]]+[^-[:space:]"'"'"'][^[:space:]"'"'"']*)?)*[[:space:]]+pr[[:space:]]+(create|new)([[:space:]].*)?)$'
 graphql_create_re="${gh_head}api[[:space:]]+graphql([[:space:]]|\$).*(createPullRequest|mutation|--input|=@|\\$)"
 
 # Bash brace expansion ({gh,pr,create}, g{h,}, nested {{a,b},c}) builds words before a command runs:
@@ -197,7 +203,10 @@ pr_seg=""
 cd_target=""
 cd_unresolved=""
 while IFS= read -r seg; do
-  seg=$(printf '%s' "$seg" | tr -d "\"'\\\\")
+  nested=false
+  [[ "$seg" == $'\001'* ]] && { nested=true; seg="${seg#$'\001'}"; }
+  raw_seg="$seg"
+  seg=$(printf '%s' "$seg" | tr '\002' ' ' | tr -d "\"'\\\\")
   seg="${seg#"${seg%%[![:space:]]*}"}"
   [[ "$seg" == *\{*,*\}* ]] && seg=$(set -f; expand_segment "$seg")
   wrapped=false
@@ -209,8 +218,15 @@ while IFS= read -r seg; do
     seg="$gh_part"
   fi
   if [[ "$seg" =~ ^popd([[:space:]]|$) ]]; then cd_unresolved="popd"; continue; fi
-  if [[ "$seg" =~ $cd_re ]]; then cd_target="${BASH_REMATCH[4]:-$HOME}"; continue; fi
-  if [[ "$seg" =~ $pr_create_re ]] || [[ "$seg" =~ $dyn_name_re ]] || [[ "$seg" =~ $graphql_create_re ]] \
+  if [[ "$seg" =~ $cd_re ]]; then
+    if $nested; then cd_unresolved="cd inside a subshell"; else cd_target="${BASH_REMATCH[4]:-$HOME}"; fi
+    continue
+  fi
+  if ! [[ "$seg" =~ ^([^[:space:]]*/)?gh[[:space:]] ]] && [[ "$raw_seg" =~ $generic_re ]]; then
+    seg=$(printf '%s' "${BASH_REMATCH[2]}" | tr -d "\"'\\\\")
+  fi
+  if [[ "$seg" =~ $pr_create_re ]] || [[ "$seg" =~ $dyn_name_re ]] || [[ "$seg" =~ $dyn_sub_re ]] \
+     || [[ "$seg" =~ $graphql_create_re ]] \
      || { [[ "$seg" =~ $api_re ]] && [[ "$seg" =~ $api_write_re ]] \
           && { [[ "$seg" =~ $pulls_re ]] || [[ "$seg" =~ $api_dynamic_re ]]; }; }; then
     is_pr_create=true
@@ -269,13 +285,13 @@ if [[ "$pr_seg" =~ $api_re ]]; then
   [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)([[:space:]]*|=)head=([^[:space:]]+) ]] && check_head "${BASH_REMATCH[3]}"
   [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)([[:space:]]*|=)base=([^[:space:]]+) ]] && check_base "${BASH_REMATCH[3]}"
 fi
-if [[ "$pr_seg" =~ (^|[[:space:]])(-R|--repo)([[:space:]]+|=)([^[:space:]]+) ]]; then
+if [[ "$pr_seg" =~ (^|[[:space:]])(-R[[:space:]]*|--repo([[:space:]]+|=))([^[:space:]]+) ]]; then
   want=$(printf '%s' "${BASH_REMATCH[4]}" | tr '[:upper:]' '[:lower:]' | awk -F/ '{print $(NF-1) "/" $NF}')
   have=$(origin_repo)
   [ -n "$have" ] && [ "$want" = "$have" ] || block "--repo $want is not this repository's origin (${have:-none}). Create the PR from the reviewed repo."
 fi
-[[ "$pr_seg" =~ (^|[[:space:]])(-H|--head)([[:space:]]+|=)([^[:space:]]+) ]] && check_head "${BASH_REMATCH[4]}"
-[[ "$pr_seg" =~ (^|[[:space:]])(-B|--base)([[:space:]]+|=)([^[:space:]]+) ]] && check_base "${BASH_REMATCH[4]}"
+[[ "$pr_seg" =~ (^|[[:space:]])(-H[[:space:]]*|--head([[:space:]]+|=))([^[:space:]]+) ]] && check_head "${BASH_REMATCH[4]}"
+[[ "$pr_seg" =~ (^|[[:space:]])(-B[[:space:]]*|--base([[:space:]]+|=))([^[:space:]]+) ]] && check_base "${BASH_REMATCH[4]}"
 
 if [ -n "$(git -C "$top" status --porcelain --untracked-files=no)" ]; then
   block "uncommitted changes to tracked files. Commit them, then run /multi-review so the review covers exactly what will be pushed."
@@ -285,6 +301,7 @@ state="$top/.claude/review-state/$sha.json"
 [ -f "$state" ] || block "no review found for HEAD $sha. Run /multi-review first."
 
 jq -e 'type == "object"' "$state" >/dev/null 2>&1 || block "review state $state is malformed. Re-run /multi-review."
+jq -e --arg sha "$sha" '.sha == $sha' "$state" >/dev/null 2>&1 || block "review state $state was not written for HEAD $sha. Re-run /multi-review."
 
 bad_angles=$(jq -r --argjson req "$REQUIRED_ANGLES" '
   $req[] as $a | select((.angles // {})[$a] != "ok") | "  - angle \($a): \((.angles // {})[$a] // "missing")"
