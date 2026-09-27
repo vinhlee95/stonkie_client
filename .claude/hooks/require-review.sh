@@ -15,8 +15,8 @@ input=$(cat)
 
 if ! command -v jq >/dev/null 2>&1; then
   # without jq the command can't be decoded: let through only input that can't spell a gh command
-  # (g…h with only quotes between, any backslash escape, ANSI-C $'...', expansions)
-  nojq_re='g[^[:alnum:][:space:]]*h|\\|\$['"'"'A-Za-z_{(]|`'
+  # (g…h with only quotes between, any backslash escape, any $ expansion, backticks, globs)
+  nojq_re='g[^[:alnum:][:space:]]*h|\\|\$|`|[*?[]'
   [[ "$input" =~ $nojq_re ]] || exit 0
   block "jq is not installed."
 fi
@@ -157,6 +157,30 @@ dyn_name_re='^([^[:space:]]*\$[^[:space:]]*[[:space:]]+([^[:space:]]+[[:space:]]
 # an expansion inside the subcommand (gh pr cr${X}eate, gh ${SUB} …) can't be checked
 dyn_sub_re="${gh_head}([^[:space:]]*\\$|pr[[:space:]]+[^[:space:]]*\\$)"
 # any unquoted gh … pr create|new word sequence behind an unknown executor (setsid gh …)
+# a shell -c anywhere in the segment (behind an unknown executor: setsid bash -c '…') runs its script
+any_shell_c_re='(^|[[:space:]])([^[:space:]]*/)?(busybox[[:space:]]+)?([a-z]*sh|fish)([[:space:]]+-[^[:space:]]+)*[[:space:]]+-[A-Za-z]*c[A-Za-z]*[[:space:]]+(.*)$'
+# running a script file (sh ./x.sh, ./x.sh, source x, . x): look inside it
+script_re='^(([^[:space:]]*/)?([a-z]*sh|fish)([[:space:]]+-[^[:space:]]+)*[[:space:]]+|source[[:space:]]+|\.[[:space:]]+)?([^[:space:]-][^[:space:]]*)'
+script_creates_pr() {  # script_creates_pr <path relative to cwd>
+  local f=$1
+  [[ $f == /* ]] || f="${cd_target:-$cwd}/$f"
+  [ -f "$f" ] && [ -r "$f" ] || return 1
+  grep -qE '(^|[^[:alnum:]_-])gh([^[:alnum:]_-]|$)' "$f" && grep -qE 'pr[[:space:]]+(create|new)|/pulls|createPullRequest|mutation' "$f"
+}
+# glob patterns in the first command words (g? pr create) expand before running: match them
+unglob_words() {
+  local out="" word k=0 cand
+  for word in $1; do
+    if (( k < 4 )) && [[ $word == *[*?[]* ]]; then
+      for cand in gh pr create new api; do
+        # shellcheck disable=SC2053
+        if [[ $cand == $word || ${word##*/} != "$word" && $cand == ${word##*/} ]]; then word=$cand; break; fi
+      done
+    fi
+    out+="$word "; k=$((k + 1))
+  done
+  printf '%s' "${out% }"
+}
 generic_re='(^|[[:space:]])(([^[:space:]"'"'"']*/)?gh([[:space:]]+-[^[:space:]"'"'"']+([[:space:]]+[^-[:space:]"'"'"'][^[:space:]"'"'"']*)?)*[[:space:]]+pr[[:space:]]+(create|new)([[:space:]].*)?)$'
 graphql_create_re="${gh_head}api[[:space:]]+graphql([[:space:]]|\$).*(createPullRequest|mutation|--input|=@|\\$)"
 
@@ -198,6 +222,8 @@ expand_segment() {
   printf '%s' "${out% }"
 }
 
+cwd=$(printf '%s' "$input" | jq -r '.cwd // empty')
+[ -n "$cwd" ] || cwd="${CLAUDE_PROJECT_DIR:-$PWD}"
 is_pr_create=false
 pr_seg=""
 cd_target=""
@@ -209,8 +235,13 @@ while IFS= read -r seg; do
   seg=$(printf '%s' "$seg" | tr '\002' ' ' | tr -d "\"'\\\\")
   seg="${seg#"${seg%%[![:space:]]*}"}"
   [[ "$seg" == *\{*,*\}* ]] && seg=$(set -f; expand_segment "$seg")
+  [[ "$seg" == *[*?[]* ]] && seg=$(set -f; unglob_words "$seg")
   wrapped=false
   while [[ "$seg" =~ $wrapper_re ]]; do seg="${seg:${#BASH_REMATCH[0]}}"; wrapped=true; done
+  if ! [[ "$seg" =~ ^([^[:space:]]*/)?gh[[:space:]] ]] && [[ "$seg" =~ $any_shell_c_re ]]; then
+    seg="${BASH_REMATCH[6]}"; wrapped=true
+    while [[ "$seg" =~ $wrapper_re ]]; do seg="${seg:${#BASH_REMATCH[0]}}"; done
+  fi
   if $wrapped && ! [[ "$seg" =~ ^([^[:space:]]*/)?gh[[:space:]] ]] && [[ "$seg" =~ $wrapped_gh_re ]]; then
     # a directory change inside the wrapped script (bash -c 'cd x && gh …') can't be followed
     gh_part="${BASH_REMATCH[2]}"
@@ -219,11 +250,17 @@ while IFS= read -r seg; do
   fi
   if [[ "$seg" =~ ^popd([[:space:]]|$) ]]; then cd_unresolved="popd"; continue; fi
   if [[ "$seg" =~ $cd_re ]]; then
-    if $nested; then cd_unresolved="cd inside a subshell"; else cd_target="${BASH_REMATCH[4]:-$HOME}"; fi
+    if $nested; then cd_unresolved="cd inside a subshell"
+    elif [ -n "$cd_target" ]; then cd_unresolved="more than one cd"
+    else cd_target="${BASH_REMATCH[4]:-$HOME}"; fi
     continue
   fi
   if ! [[ "$seg" =~ ^([^[:space:]]*/)?gh[[:space:]] ]] && [[ "$raw_seg" =~ $generic_re ]]; then
     seg=$(printf '%s' "${BASH_REMATCH[2]}" | tr -d "\"'\\\\")
+  fi
+  if [[ "$seg" =~ $script_re ]] && [[ -n "${BASH_REMATCH[1]}" || "${BASH_REMATCH[5]}" == */* ]] \
+     && script_creates_pr "${BASH_REMATCH[5]}"; then
+    block "script ${BASH_REMATCH[5]} contains gh PR-creation commands. Run gh pr create directly after /multi-review."
   fi
   if [[ "$seg" =~ $pr_create_re ]] || [[ "$seg" =~ $dyn_name_re ]] || [[ "$seg" =~ $dyn_sub_re ]] \
      || [[ "$seg" =~ $graphql_create_re ]] \
@@ -236,8 +273,6 @@ while IFS= read -r seg; do
 done < <(segments "$cmd")
 $is_pr_create || exit 0
 
-cwd=$(printf '%s' "$input" | jq -r '.cwd // empty')
-[ -n "$cwd" ] || cwd="${CLAUDE_PROJECT_DIR:-$PWD}"
 [ -n "$cd_unresolved" ] && block "cannot tell which directory gh runs in ($cd_unresolved). Run gh pr create from inside the reviewed repo."
 # `cd <dir> && gh pr create` creates the PR from <dir>: judge that repo
 if [ -n "$cd_target" ]; then
