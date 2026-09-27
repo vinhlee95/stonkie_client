@@ -110,6 +110,20 @@ describe('Movers', () => {
     expect(screen.queryByText('+€0')).not.toBeInTheDocument()
   })
 
+  it('shows a dash instead of 0.00% when the daily percentage is unknown', () => {
+    const noPct = holding({
+      ticker: 'NEW',
+      value: 50,
+      weight: 5,
+      day_change: 5,
+      day_change_percent: null,
+    })
+    render(<Movers holdings={[noPct]} currency="EUR" />)
+    const row = screen.getByRole('listitem')
+    expect(within(row).getByText('—')).toBeInTheDocument()
+    expect(within(row).queryByText(/0\.00%/)).not.toBeInTheDocument()
+  })
+
   it('renders nothing when no holding has a daily change', () => {
     const noClose = holding({ ticker: 'NEW', value: 50, weight: 5, day_change: null })
     const { container } = render(<Movers holdings={[noClose]} currency="EUR" />)

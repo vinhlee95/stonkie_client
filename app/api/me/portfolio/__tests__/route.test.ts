@@ -75,5 +75,6 @@ describe('portfolio BFF routes', () => {
     backend.mockResolvedValue(new Response(null, { status: 204 }))
     const res = await DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('AAPL'))
     expect(res.status).toBe(204)
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
   })
 })

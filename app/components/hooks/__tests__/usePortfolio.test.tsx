@@ -69,4 +69,19 @@ describe('usePortfolio', () => {
     await waitFor(() => expect(client.getQueryState(PORTFOLIO_QUERY_KEY)?.status).toBe('error'))
     expect(result.current.data.summary.total_value).toBe(100)
   })
+
+  it('starts from the new server snapshot after a remount, not a cached one', async () => {
+    // Mirror QueryProvider: long gcTime, no refetch on mount.
+    client = new QueryClient({
+      defaultOptions: { queries: { gcTime: 30 * 60 * 1000, refetchOnMount: false, retry: false } },
+    })
+    const first = renderHook(() => usePortfolio(portfolio(100)), { wrapper })
+    expect(first.result.current.data.summary.total_value).toBe(100)
+    first.unmount()
+    await waitFor(() => expect(client.getQueryData(PORTFOLIO_QUERY_KEY)).toBeUndefined())
+
+    const second = renderHook(() => usePortfolio(portfolio(999)), { wrapper })
+    expect(second.result.current.data.summary.total_value).toBe(999)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
 })

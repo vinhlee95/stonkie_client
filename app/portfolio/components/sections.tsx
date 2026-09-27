@@ -448,9 +448,13 @@ export function Movers({
             <TickerLogo ticker={h.ticker} size={26} />
             <div className="flex flex-col leading-tight">
               <b className="truncate text-sm">{h.ticker}</b>
-              <Delta v={h.day_change_percent ?? 0} className="text-xs">
-                {Math.abs(h.day_change_percent ?? 0).toFixed(2)}%
-              </Delta>
+              {h.day_change_percent === null ? (
+                <span className="text-xs text-gray-400">—</span>
+              ) : (
+                <Delta v={h.day_change_percent} className="text-xs">
+                  {Math.abs(h.day_change_percent).toFixed(2)}%
+                </Delta>
+              )}
             </div>
             <div className="h-1.5 overflow-hidden rounded bg-gray-100 dark:bg-white/10">
               <span

@@ -14,10 +14,8 @@ export async function proxyToBackend(path: string, init: RequestInit = {}): Prom
     return NextResponse.json({ error: 'Backend unavailable' }, { status: 502 })
   }
 
-  if (response.status === 204) return new NextResponse(null, { status: 204 })
+  const headers = { 'Cache-Control': 'private, no-store' }
+  if (response.status === 204) return new NextResponse(null, { status: 204, headers })
   const body = await response.json().catch(() => ({ error: 'Invalid backend response' }))
-  return NextResponse.json(body, {
-    status: response.status,
-    headers: { 'Cache-Control': 'private, no-store' },
-  })
+  return NextResponse.json(body, { status: response.status, headers })
 }
