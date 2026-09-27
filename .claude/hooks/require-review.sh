@@ -13,12 +13,13 @@ block() {
 
 input=$(cat)
 
-# cheap pre-filter so a missing jq only affects commands that could invoke gh
-# (no left boundary: in raw JSON a preceding newline is the two chars `\n`; JSON `\u` escapes and
-# ANSI-C $'...' strings can spell gh)
-[[ "$input" =~ gh([^[:alnum:]_-]|$) || "$input" == *'\u'* || "$input" == *"\$'"* ]] || exit 0
-
-command -v jq >/dev/null 2>&1 || block "jq is not installed."
+if ! command -v jq >/dev/null 2>&1; then
+  # without jq the command can't be decoded: let through only input that can't spell a gh command
+  # (g…h with only escapes/quotes between, JSON \u escapes, ANSI-C $'...', expansions)
+  nojq_re='g[^[:alnum:][:space:]]*h|\\u|\$['"'"'A-Za-z_{(]|`'
+  [[ "$input" =~ $nojq_re ]] || exit 0
+  block "jq is not installed."
+fi
 command -v git >/dev/null 2>&1 || block "git is not installed."
 
 cmd=$(printf '%s' "$input" | jq -er '.tool_input.command // ""' 2>/dev/null) \
@@ -147,7 +148,10 @@ api_dynamic_re="${gh_head}api[[:space:]]+([^[:space:]]+[[:space:]]+)*[^-[:space:
 # command is the first gh word that follows, whatever options/operands sit in between
 wrapper_re='^(([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*)|command|sudo|env|exec|eval|time|nohup|nice|timeout|xargs|if|then|else|elif|do|while|until|!|\{|([^[:space:]]*/)?(busybox[[:space:]]+)?([a-z]*sh|fish)([[:space:]]+-[^[:space:]]+)*[[:space:]]+-[A-Za-z]*c[A-Za-z]*)[[:space:]]+'
 wrapped_gh_re='(^|[[:space:]])(([^[:space:]]*/)?gh([[:space:]].*)?)$'
-cd_re='^(cd|pushd)([[:space:]]+([^[:space:]]+))?[[:space:]]*$'
+cd_re='^(cd|pushd)([[:space:]]+(-[LPe@]+[[:space:]]+)*(.*[^[:space:]]))?[[:space:]]*$'
+# a command name built from an expansion ($G, $(echo gh), leftover "pr create") can't be checked
+dyn_name_re='^(\$[^[:space:]]*[[:space:]]+([^[:space:]]+[[:space:]]+)*)?pr[[:space:]]+(create|new)([[:space:]]|$)'
+graphql_create_re="${gh_head}api[[:space:]]+graphql[[:space:]].*createPullRequest"
 
 is_pr_create=false
 pr_seg=""
@@ -160,8 +164,8 @@ while IFS= read -r seg; do
   if $wrapped && ! [[ "$seg" =~ ^([^[:space:]]*/)?gh[[:space:]] ]] && [[ "$seg" =~ $wrapped_gh_re ]]; then
     seg="${BASH_REMATCH[2]}"
   fi
-  if [[ "$seg" =~ $cd_re ]]; then cd_target="${BASH_REMATCH[3]:-$HOME}"; continue; fi
-  if [[ "$seg" =~ $pr_create_re ]] \
+  if [[ "$seg" =~ $cd_re ]]; then cd_target="${BASH_REMATCH[4]:-$HOME}"; continue; fi
+  if [[ "$seg" =~ $pr_create_re ]] || [[ "$seg" =~ $dyn_name_re ]] || [[ "$seg" =~ $graphql_create_re ]] \
      || { [[ "$seg" =~ $api_re ]] && [[ "$seg" =~ $api_write_re ]] \
           && { [[ "$seg" =~ $pulls_re ]] || [[ "$seg" =~ $api_dynamic_re ]]; }; }; then
     is_pr_create=true
@@ -175,6 +179,8 @@ cwd=$(printf '%s' "$input" | jq -r '.cwd // empty')
 [ -n "$cwd" ] || cwd="${CLAUDE_PROJECT_DIR:-$PWD}"
 # `cd <dir> && gh pr create` creates the PR from <dir>: judge that repo
 if [ -n "$cd_target" ]; then
+  [[ "$cd_target" == "-" || "$cd_target" == *'$'* || "$cd_target" == *'`'* ]] \
+    && block "cannot resolve the cd target ($cd_target). Run gh pr create from inside the reviewed repo."
   case "$cd_target" in
     "~"*) cwd="$HOME${cd_target#\~}" ;;
     /*) cwd="$cd_target" ;;
@@ -185,17 +191,45 @@ fi
 top=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null) || block "$cwd is not inside a git repository."
 sha=$(git -C "$top" rev-parse HEAD 2>/dev/null) || block "could not resolve HEAD in $top."
 
-# the PR must target the reviewed repo and branch
+# the PR must target the reviewed repo, branch and base
+origin_repo() {
+  git -C "$top" remote get-url origin 2>/dev/null | tr '[:upper:]' '[:lower:]' | sed -E 's#\.git$##; s#^.*[:/]([^/:]+/[^/]+)$#\1#'
+}
+check_head() {  # check_head <owner:branch | branch>
+  local owner="" branch="$1" current
+  if [[ "$1" == *:* ]]; then owner=$(printf '%s' "${1%%:*}" | tr '[:upper:]' '[:lower:]'); branch="${1##*:}"; fi
+  current=$(git -C "$top" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  [ "$branch" = "$current" ] || block "head $branch is not the reviewed branch ($current). Check it out and run /multi-review there."
+  if [ -n "$owner" ]; then
+    local have; have=$(origin_repo)
+    [ "$owner" = "${have%%/*}" ] || block "head owner $owner is not this repository's owner (${have%%/*}). Only the reviewed branch can be proposed."
+  fi
+}
+check_base() {  # check_base <branch>
+  local def
+  def=$(git -C "$top" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null); def="${def#origin/}"
+  [ "$1" = "${def:-main}" ] || block "base $1 differs from the reviewed base (${def:-main}); /multi-review reviews origin/${def:-main}...HEAD."
+}
+if [[ "$pr_seg" =~ $graphql_create_re ]]; then
+  block "PR creation through gh api graphql can't be checked. Use gh pr create from the reviewed repo."
+fi
+if [[ "$pr_seg" =~ $api_re ]]; then
+  [[ "$pr_seg" =~ repos/([^/[:space:]]+)/([^/[:space:]?]+)/pulls ]] \
+    || block "gh api PR target can't be determined. Use gh pr create from the reviewed repo."
+  want=$(printf '%s/%s' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" | tr '[:upper:]' '[:lower:]')
+  [[ "$want" == *'$'* ]] && block "gh api PR target is dynamic ($want). Use gh pr create from the reviewed repo."
+  have=$(origin_repo)
+  [ -n "$have" ] && [ "$want" = "$have" ] || block "gh api targets $want, not this repository's origin (${have:-none})."
+  [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)[[:space:]]*head=([^[:space:]]+) ]] && check_head "${BASH_REMATCH[2]}"
+  [[ "$pr_seg" =~ [[:space:]](-f|-F|--field|--raw-field)[[:space:]]*base=([^[:space:]]+) ]] && check_base "${BASH_REMATCH[2]}"
+fi
 if [[ "$pr_seg" =~ (^|[[:space:]])(-R|--repo)([[:space:]]+|=)([^[:space:]]+) ]]; then
   want=$(printf '%s' "${BASH_REMATCH[4]}" | tr '[:upper:]' '[:lower:]' | awk -F/ '{print $(NF-1) "/" $NF}')
-  have=$(git -C "$top" remote get-url origin 2>/dev/null | tr '[:upper:]' '[:lower:]' | sed -E 's#\.git$##; s#^.*[:/]([^/:]+/[^/]+)$#\1#')
+  have=$(origin_repo)
   [ -n "$have" ] && [ "$want" = "$have" ] || block "--repo $want is not this repository's origin (${have:-none}). Create the PR from the reviewed repo."
 fi
-if [[ "$pr_seg" =~ (^|[[:space:]])(-H|--head)([[:space:]]+|=)([^[:space:]]+) ]]; then
-  head_branch="${BASH_REMATCH[4]##*:}"
-  current=$(git -C "$top" rev-parse --abbrev-ref HEAD 2>/dev/null)
-  [ "$head_branch" = "$current" ] || block "--head $head_branch is not the reviewed branch ($current). Check it out and run /multi-review there."
-fi
+[[ "$pr_seg" =~ (^|[[:space:]])(-H|--head)([[:space:]]+|=)([^[:space:]]+) ]] && check_head "${BASH_REMATCH[4]}"
+[[ "$pr_seg" =~ (^|[[:space:]])(-B|--base)([[:space:]]+|=)([^[:space:]]+) ]] && check_base "${BASH_REMATCH[4]}"
 
 if [ -n "$(git -C "$top" status --porcelain --untracked-files=no)" ]; then
   block "uncommitted changes to tracked files. Commit them, then run /multi-review so the review covers exactly what will be pushed."
