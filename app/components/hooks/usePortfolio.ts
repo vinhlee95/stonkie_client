@@ -15,6 +15,8 @@ export function usePortfolio(initialData: Portfolio) {
     queryFn: fetchPortfolio,
     initialData,
     staleTime: 60 * 1000,
+    // Matches the backend's 5 min live-quote cache; paused while the tab is hidden.
+    refetchInterval: 5 * 60 * 1000,
     // Drop the entry once the dashboard unmounts. The app-wide client keeps
     // queries for 30 min without refetching on mount, so a kept entry would
     // override the next server snapshot: stale values, or the previous

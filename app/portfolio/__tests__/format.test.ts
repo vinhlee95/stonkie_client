@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { money, pct, plural, priceDp, shares, signedMoney, tone } from '../format'
+import { asOf, money, pct, plural, priceDp, shares, signedMoney, tone } from '../format'
 import { isAmbiguousDecimal, parseDecimal, TICKER_RE, toYahooSymbol } from '@/lib/api/portfolio'
 
 describe('money', () => {
@@ -98,5 +98,21 @@ describe('TICKER_RE', () => {
   })
   it.each(['', 'aapl', '../me', '$$$', '^GSPC', 'A'.repeat(21)])('rejects %j', (t) => {
     expect(TICKER_RE.test(t)).toBe(false)
+  })
+})
+
+describe('asOf', () => {
+  // Local-time Dates so the expectations hold in any test timezone.
+  const now = new Date(2026, 8, 25, 15, 0)
+  const iso = (d: Date) => d.toISOString()
+
+  it('shows only the time for a quote from today', () => {
+    expect(asOf(iso(new Date(2026, 8, 25, 14, 32)), now)).toBe('14:32')
+  })
+  it('adds the weekday for a quote from earlier this week', () => {
+    expect(asOf(iso(new Date(2026, 8, 25, 22, 0)), new Date(2026, 8, 27, 10, 0))).toBe('Fri 22:00')
+  })
+  it('shows the date for older quotes', () => {
+    expect(asOf(iso(new Date(2026, 8, 10, 22, 0)), now)).toBe('10 Sep')
   })
 })

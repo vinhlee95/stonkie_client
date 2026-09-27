@@ -42,6 +42,17 @@ export function SampleBadge() {
   )
 }
 
+export function DelayedTag() {
+  return (
+    <span
+      title="Live price unavailable — showing last close"
+      className="whitespace-nowrap rounded-full border border-gray-300 px-1.5 text-[10px] font-semibold text-gray-500 dark:border-gray-600 dark:text-gray-400"
+    >
+      delayed
+    </span>
+  )
+}
+
 export function Label({ children }: { children: ReactNode }) {
   return (
     <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-gray-500 dark:text-gray-400">

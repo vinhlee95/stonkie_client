@@ -13,6 +13,8 @@ const AAPL: PortfolioHolding = {
   price: 210,
   day_change_percent: 1,
   trading_date: '2026-09-25',
+  as_of: null,
+  delayed: false,
   fx_rate: 0.8,
   value: 1680,
   cost_basis: 800,

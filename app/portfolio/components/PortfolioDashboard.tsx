@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { Plus, Search } from 'lucide-react'
 import type { Company } from '@/app/CompanyList'
 import { useFavourites } from '@/app/components/hooks/useFavourites'
+import { useIsClient } from '@/app/components/hooks/useIsClient'
 import { usePortfolio } from '@/app/components/hooks/usePortfolio'
 import {
   removeHolding,
@@ -11,7 +12,7 @@ import {
   type Portfolio,
   type PortfolioHolding,
 } from '@/lib/api/portfolio'
-import { plural } from '../format'
+import { asOf, plural } from '../format'
 import { HoldingModal, type HoldingModalState } from './HoldingModal'
 import { HoldingsList, HoldingsTable } from './holdings'
 import {
@@ -28,6 +29,7 @@ import { TickerLogo } from './ui'
 
 export default function PortfolioDashboard({ initialData }: { initialData: Portfolio }) {
   const { data, refresh } = usePortfolio(initialData)
+  const isClient = useIsClient()
   const [modal, setModal] = useState<HoldingModalState | null>(null)
 
   // Mutations resolve (and the dialog closes) as soon as the write succeeds;
@@ -63,7 +65,9 @@ export default function PortfolioDashboard({ initialData }: { initialData: Portf
           {s.holdings_count > 0 && (
             <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {plural(s.holdings_count, 'holding')} · values in {currency}
-              {s.as_of && ` · prices as of ${s.as_of}`}
+              {/* Local time: the server renders in UTC, so format only after hydration. */}
+              {isClient && s.as_of && ` · prices as of ${asOf(s.as_of)}`}
+              {s.delayed_count > 0 && ` · ${s.delayed_count} delayed`}
             </div>
           )}
         </div>

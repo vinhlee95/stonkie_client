@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import type { PortfolioHolding } from '@/lib/api/portfolio'
 import { money, pct, priceDp, shares, signedMoney, tone, TONE_TEXT } from '../format'
-import { Delta, TickerLogo } from './ui'
+import { DelayedTag, Delta, TickerLogo } from './ui'
 
 export type SortKey =
   | 'ticker'
@@ -106,7 +106,10 @@ export function HoldingsTable({
                   >
                     <TickerLogo ticker={h.ticker} size={30} />
                     <span className="flex flex-col leading-tight">
-                      <b className="text-sm">{h.ticker}</b>
+                      <span className="flex items-center gap-1.5">
+                        <b className="text-sm">{h.ticker}</b>
+                        {h.delayed && <DelayedTag />}
+                      </span>
                       {h.name && (
                         <span className="max-w-[170px] truncate text-xs text-gray-500 dark:text-gray-400">
                           {h.name}
@@ -216,7 +219,10 @@ export function HoldingsList({
             >
               <TickerLogo ticker={h.ticker} size={34} />
               <span className="flex min-w-0 flex-1 flex-col leading-snug">
-                <b className="text-base">{h.ticker}</b>
+                <span className="flex items-center gap-1.5">
+                  <b className="text-base">{h.ticker}</b>
+                  {h.delayed && <DelayedTag />}
+                </span>
                 <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
                   {shares(h.shares)} ×{' '}
                   {h.price === null ? '—' : money(h.price, h.currency, priceDp(h.price))}

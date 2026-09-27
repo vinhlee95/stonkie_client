@@ -18,6 +18,7 @@ function portfolio(total_value: number): Portfolio {
       day_change: 0,
       day_change_percent: 0,
       as_of: null,
+      delayed_count: 0,
     },
     holdings: [],
   }
