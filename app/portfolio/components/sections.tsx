@@ -253,7 +253,8 @@ export function Allocation({
   const groups = useMemo(() => {
     const m: Record<string, number> = {}
     for (const h of pricedHoldings(holdings)) {
-      const k = h[key]
+      // 'Other' matches the backend's unknown value; guards a frontend deployed before the backend.
+      const k = h[key] || 'Other'
       m[k] = (m[k] || 0) + h.weight
     }
     return Object.entries(m)

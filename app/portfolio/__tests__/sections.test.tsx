@@ -96,6 +96,13 @@ describe('Allocation', () => {
     expect(items).toEqual(['Stock70.0%', 'ETF30.0%'])
   })
 
+  it('groups holdings missing metadata under Other', () => {
+    const legacy = { ...HOLDINGS[1], sector: undefined } as unknown as PortfolioHolding
+    render(<Allocation holdings={[legacy, HOLDINGS[2]]} variant="bars" />)
+    const items = screen.getAllByRole('listitem').map((li) => li.textContent)
+    expect(items).toEqual(['Other60.0%', 'Financial Services30.0%'])
+  })
+
   it('renders nothing without priced holdings', () => {
     const { container } = render(<Allocation holdings={[HOLDINGS[3]]} />)
     expect(container).toBeEmptyDOMElement()
