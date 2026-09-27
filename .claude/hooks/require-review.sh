@@ -153,12 +153,51 @@ cd_re='^(cd|pushd)([[:space:]]+(-[LPe@]+[[:space:]]+)*(.*[^[:space:]]))?[[:space
 dyn_name_re='^(\$[^[:space:]]*[[:space:]]+([^[:space:]]+[[:space:]]+)*)?pr[[:space:]]+(create|new)([[:space:]]|$)'
 graphql_create_re="${gh_head}api[[:space:]]+graphql[[:space:]].*createPullRequest"
 
+# Bash brace expansion ({gh,pr,create}, g{h,}, nested {{a,b},c}) builds words before a command runs:
+# expand it the same way so the result is what gets matched. Prints one expansion per line.
+brace_expand() {
+  local w=$1 n=${#1} i c depth=0 start=-1 end=-1 comma=0
+  for ((i = 0; i < n; i++)); do
+    c=${w:i:1}
+    if [[ $c == "{" ]]; then
+      (( depth == 0 )) && { start=$i; comma=0; }
+      depth=$((depth + 1))
+    elif [[ $c == "}" && $depth -gt 0 ]]; then
+      depth=$((depth - 1))
+      if (( depth == 0 )); then
+        if (( comma )); then end=$i; break; fi
+        start=-1
+      fi
+    elif [[ $c == "," && $depth -eq 1 ]]; then
+      comma=1
+    fi
+  done
+  if (( end < 0 )); then printf '%s\n' "$w"; return; fi
+  local pre=${w:0:start} body=${w:start+1:end-start-1} post=${w:end+1} alt="" d=0
+  for ((i = 0; i < ${#body}; i++)); do
+    c=${body:i:1}
+    [[ $c == "{" ]] && d=$((d + 1))
+    [[ $c == "}" ]] && d=$((d - 1))
+    if [[ $c == "," && $d -eq 0 ]]; then brace_expand "$pre$alt$post"; alt=""; else alt+=$c; fi
+  done
+  brace_expand "$pre$alt$post"
+}
+expand_segment() {
+  local out="" word
+  for word in $1; do
+    if [[ $word == *\{*,*\}* ]]; then word=$(brace_expand "$word" | tr '\n' ' '); word=${word% }; fi
+    out+="$word "
+  done
+  printf '%s' "${out% }"
+}
+
 is_pr_create=false
 pr_seg=""
 cd_target=""
 while IFS= read -r seg; do
   seg=$(printf '%s' "$seg" | tr -d "\"'\\\\")
   seg="${seg#"${seg%%[![:space:]]*}"}"
+  [[ "$seg" == *\{*,*\}* ]] && seg=$(set -f; expand_segment "$seg")
   wrapped=false
   while [[ "$seg" =~ $wrapper_re ]]; do seg="${seg:${#BASH_REMATCH[0]}}"; wrapped=true; done
   if $wrapped && ! [[ "$seg" =~ ^([^[:space:]]*/)?gh[[:space:]] ]] && [[ "$seg" =~ $wrapped_gh_re ]]; then

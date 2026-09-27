@@ -345,6 +345,13 @@ expect "--base other branch blocks" 2 "$(run_hook 'gh pr create --base develop -
 expect "-B other branch blocks" 2 "$(run_hook 'gh pr create -B develop --fill' "$R")"
 expect "gh api base other branch blocks" 2 "$(run_hook 'gh api repos/me/r48/pulls -f base=develop -f title=x' "$R")"
 
+# 49. brace expansion builds command words
+R=$(new_repo r49)
+for c in '{gh,pr,create}' '{gh,pr,create} --fill' '{gh,} pr create' 'gh pr {create,}' '{{gh,pr},create}'; do
+  expect "brace expansion blocks: $c" 2 "$(run_hook "$c" "$R")"
+done
+expect "brace in unrelated command passes" 0 "$(run_hook 'echo {a,b}' "$R")"
+
 echo
 echo "passed: $PASSED  failed: $FAILED"
 [ "$FAILED" -eq 0 ]
