@@ -41,8 +41,9 @@ export function HoldingModal({
   const [selected, setSelected] = useState<Selected | null>(
     editing
       ? { ticker: editing.ticker, name: editing.name }
-      : 'preset' in state
-        ? state.preset
+      : 'preset' in state && state.preset
+        ? // Favourites store Finnhub symbols (BRK.B); holdings are priced by Yahoo (BRK-B).
+          { ...state.preset, ticker: toYahooSymbol(state.preset.ticker) }
         : null,
   )
   const [sharesIn, setSharesIn] = useState(editing ? String(editing.shares) : '')
@@ -265,7 +266,7 @@ function TickerSearch({
   const { results: found, isLoading: loading } = useTickerSearch(query)
   const results = found.slice(0, 6).map((r) => ({ ...r, symbol: toYahooSymbol(r.symbol) }))
 
-  const raw = query.toUpperCase()
+  const raw = toYahooSymbol(query.toUpperCase())
   const showRaw = TICKER_RE.test(raw) && !results.some((r) => r.symbol === raw)
 
   return (

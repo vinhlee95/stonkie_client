@@ -17,7 +17,7 @@ import {
 } from '../sampleData'
 import { Card, Delta, Label, SampleBadge, Seg, TickerLogo } from './ui'
 
-type Priced = PortfolioHolding & { value: number; weight: number; day_change: number }
+type Priced = PortfolioHolding & { value: number; weight: number }
 
 export function pricedHoldings(holdings: PortfolioHolding[]): Priced[] {
   return holdings.filter((h): h is Priced => h.value !== null && h.weight !== null)
@@ -427,7 +427,9 @@ export function Movers({
   currency: string
   limit?: number
 }) {
+  // No previous close means no daily move: leave it out rather than show +€0.
   const ms = pricedHoldings(holdings)
+    .filter((h): h is Priced & { day_change: number } => h.day_change !== null)
     .sort((a, b) => Math.abs(b.day_change) - Math.abs(a.day_change))
     .slice(0, limit)
   if (!ms.length) return null

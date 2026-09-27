@@ -101,6 +101,20 @@ describe('Movers', () => {
     ])
     expect(within(rows[0]).getByText('−€300')).toBeInTheDocument()
   })
+
+  it('leaves out priced holdings without a daily change', () => {
+    const noClose = holding({ ticker: 'NEW', value: 50, weight: 5, day_change: null })
+    render(<Movers holdings={[...HOLDINGS, noClose]} currency="EUR" />)
+    expect(screen.getAllByRole('listitem')).toHaveLength(3)
+    expect(screen.queryByText('NEW')).not.toBeInTheDocument()
+    expect(screen.queryByText('+€0')).not.toBeInTheDocument()
+  })
+
+  it('renders nothing when no holding has a daily change', () => {
+    const noClose = holding({ ticker: 'NEW', value: 50, weight: 5, day_change: null })
+    const { container } = render(<Movers holdings={[noClose]} currency="EUR" />)
+    expect(container).toBeEmptyDOMElement()
+  })
 })
 
 describe('PortfolioSummary', () => {

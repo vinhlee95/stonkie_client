@@ -30,10 +30,13 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllGlobals())
 
-function renderModal(onSave = vi.fn().mockResolvedValue(undefined)) {
+function renderModal(
+  onSave = vi.fn().mockResolvedValue(undefined),
+  preset: { ticker: string; name: string | null } | null = null,
+) {
   render(
     <HoldingModal
-      state={{ preset: null }}
+      state={{ preset }}
       heldTickers={new Set(['AAPL'])}
       holdings={[AAPL]}
       onClose={() => {}}
@@ -90,5 +93,31 @@ describe('HoldingModal', () => {
       avg_cost: Number(input.replace(',', '.')),
       name: null,
     })
+  })
+
+  it('saves a Finnhub-style favourite preset under its Yahoo symbol', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    const dialog = renderModal(onSave, { ticker: 'BRK.B', name: 'Berkshire Hathaway B' })
+    expect(within(dialog).getByText('BRK-B')).toBeInTheDocument()
+    await userEvent.type(within(dialog).getByLabelText('Shares'), '1')
+    await userEvent.type(within(dialog).getByLabelText(/Average cost/), '400')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add to portfolio' }))
+    expect(onSave).toHaveBeenCalledWith('BRK-B', {
+      shares: 1,
+      avg_cost: 400,
+      name: 'Berkshire Hathaway B',
+    })
+  })
+
+  it('maps a typed raw class symbol to its Yahoo form', async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    const dialog = renderModal(onSave)
+    await userEvent.type(within(dialog).getByLabelText('Search ticker or company'), 'brk.b')
+    await userEvent.click(await within(dialog).findByRole('button', { name: /^BRK-B/ }))
+    expect(within(dialog).queryByRole('button', { name: /^BRK\.B/ })).not.toBeInTheDocument()
+    await userEvent.type(within(dialog).getByLabelText('Shares'), '1')
+    await userEvent.type(within(dialog).getByLabelText(/Average cost/), '400')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add to portfolio' }))
+    expect(onSave).toHaveBeenCalledWith('BRK-B', { shares: 1, avg_cost: 400, name: null })
   })
 })
