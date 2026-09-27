@@ -63,6 +63,27 @@ describe('usePortfolio', () => {
     await waitFor(() => expect(result.current.data.summary.total_value).toBe(250))
   })
 
+  it('refetches every 5 minutes to follow the live-quote cache', async () => {
+    vi.useFakeTimers()
+    try {
+      fetchMock.mockImplementation(() =>
+        Promise.resolve(new Response(JSON.stringify(portfolio(250)))),
+      )
+      const { result } = renderHook(() => usePortfolio(portfolio(100)), { wrapper })
+
+      await act(() => vi.advanceTimersByTimeAsync(5 * 60 * 1000 - 1000))
+      expect(fetchMock).not.toHaveBeenCalled()
+
+      await act(() => vi.advanceTimersByTimeAsync(1000))
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      // React Query notifies subscribers via setTimeout, so flush it under fake timers too.
+      await act(() => vi.advanceTimersByTimeAsync(10))
+      expect(result.current.data.summary.total_value).toBe(250)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('keeps the last good data when a refresh fails', async () => {
     fetchMock.mockResolvedValue(new Response('oops', { status: 500 }))
     const { result } = renderHook(() => usePortfolio(portfolio(100)), { wrapper })
