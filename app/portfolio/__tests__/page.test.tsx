@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen } from '@/tests/test-utils'
+import type { Portfolio } from '@/lib/api/portfolio'
 
 vi.mock('next/navigation', () => ({
   redirect: vi.fn(() => {
@@ -13,44 +14,47 @@ import { authedBackendFetch } from '@/lib/auth/server'
 import { UnauthenticatedError } from '@/lib/auth/shared'
 import PortfolioPage from '../page'
 
-const fetchMe = authedBackendFetch as unknown as ReturnType<typeof vi.fn>
+const fetchPortfolio = authedBackendFetch as unknown as ReturnType<typeof vi.fn>
+
+const EMPTY: Portfolio = {
+  base_currency: 'EUR',
+  summary: {
+    holdings_count: 0,
+    priced_count: 0,
+    total_value: 0,
+    total_cost: 0,
+    total_return: 0,
+    total_return_percent: 0,
+    day_change: 0,
+    day_change_percent: 0,
+    as_of: null,
+  },
+  holdings: [],
+}
 
 beforeEach(() => vi.clearAllMocks())
 
 describe('PortfolioPage', () => {
-  it('greets the signed-in user', async () => {
-    fetchMe.mockResolvedValue(
-      new Response(
-        JSON.stringify({ id: 'u1', email: 'a@example.com', name: 'Ann', avatar_url: null }),
-      ),
-    )
+  it('fetches the portfolio from the backend', async () => {
+    fetchPortfolio.mockResolvedValue(new Response(JSON.stringify(EMPTY)))
     render(await PortfolioPage())
-    expect(screen.getByText(/Hi Ann/)).toHaveClass('text-base', 'md:text-lg')
-  })
-
-  it('falls back to email when name is null', async () => {
-    fetchMe.mockResolvedValue(
-      new Response(
-        JSON.stringify({ id: 'u1', email: 'a@example.com', name: null, avatar_url: null }),
-      ),
-    )
-    render(await PortfolioPage())
-    expect(screen.getByText(/Hi a@example.com/)).toBeInTheDocument()
+    expect(fetchPortfolio).toHaveBeenCalledWith('/api/me/portfolio')
+    expect(screen.getByRole('heading', { name: 'Track what you own' })).toBeInTheDocument()
   })
 
   it('redirects to login when no session', async () => {
-    fetchMe.mockRejectedValue(new UnauthenticatedError())
+    fetchPortfolio.mockRejectedValue(new UnauthenticatedError())
     await expect(PortfolioPage()).rejects.toThrow('NEXT_REDIRECT')
     expect(redirect).toHaveBeenCalledWith('/login?callbackUrl=%2Fportfolio')
   })
 
   it.each([
-    ['backend 401', () => fetchMe.mockResolvedValue(new Response('', { status: 401 }))],
-    ['network error', () => fetchMe.mockRejectedValue(new TypeError('fetch failed'))],
+    ['backend 500', () => fetchPortfolio.mockResolvedValue(new Response('', { status: 500 }))],
+    ['network error', () => fetchPortfolio.mockRejectedValue(new TypeError('fetch failed'))],
   ])('shows error state without redirect on %s', async (_label, arrange) => {
     arrange()
     render(await PortfolioPage())
-    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't load your account")
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't load your portfolio")
     expect(redirect).not.toHaveBeenCalled()
   })
 })
