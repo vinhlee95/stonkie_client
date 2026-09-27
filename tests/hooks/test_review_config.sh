@@ -37,6 +37,7 @@ c=.claude/skills/multi-review/reviewer-contract.md
 check "contract grants no shell" bash -c "! grep -q 'Run \`git diff' '$c'"
 check "contract refers to guidelines" grep -q '.github/instructions/review-guidelines.instructions.md' "$c"
 check "contract has no rubric" bash -c "! grep -q '^- \`critical\`' '$c'"
+check "guidelines require an angle label on every comment" grep -qF '[<severity> · <angle>]' .github/instructions/review-guidelines.instructions.md
 check "guidelines has rubric" grep -q '^- `critical`' .github/instructions/review-guidelines.instructions.md
 
 echo
