@@ -1,36 +1,8 @@
 /**
  * Placeholder data for dashboard sections that have no backend source yet
- * (performance history, sector metadata, risk, news, events, dividends).
+ * (performance history, risk, news, events, dividends).
  * Every card that renders this data shows a "Sample data" badge.
  */
-
-export interface TickerMeta {
-  sector: string
-  country: string
-  type: 'Stock' | 'ETF'
-}
-
-const META: Record<string, TickerMeta> = {
-  AAPL: { sector: 'Technology', country: 'United States', type: 'Stock' },
-  NVDA: { sector: 'Technology', country: 'United States', type: 'Stock' },
-  MSFT: { sector: 'Technology', country: 'United States', type: 'Stock' },
-  GOOGL: { sector: 'Technology', country: 'United States', type: 'Stock' },
-  META: { sector: 'Technology', country: 'United States', type: 'Stock' },
-  DELL: { sector: 'Technology', country: 'United States', type: 'Stock' },
-  AMZN: { sector: 'Consumer Cyclical', country: 'United States', type: 'Stock' },
-  TSLA: { sector: 'Consumer Cyclical', country: 'United States', type: 'Stock' },
-  JPM: { sector: 'Financial', country: 'United States', type: 'Stock' },
-  VOO: { sector: 'Diversified', country: 'United States', type: 'ETF' },
-  QQQ: { sector: 'Diversified', country: 'United States', type: 'ETF' },
-  SPY: { sector: 'Diversified', country: 'United States', type: 'ETF' },
-  'NOKIA.HE': { sector: 'Technology', country: 'Finland', type: 'Stock' },
-  'NDA-FI.HE': { sector: 'Financial', country: 'Finland', type: 'Stock' },
-  'KNEBV.HE': { sector: 'Industrials', country: 'Finland', type: 'Stock' },
-}
-
-export function tickerMeta(ticker: string): TickerMeta {
-  return META[ticker] ?? { sector: 'Other', country: 'Other', type: 'Stock' }
-}
 
 function rng(seed: number) {
   let s = seed

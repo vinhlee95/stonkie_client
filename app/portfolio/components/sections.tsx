@@ -12,7 +12,6 @@ import {
   SAMPLE_NEWS,
   SAMPLE_RISK,
   sampleSeries,
-  tickerMeta,
   type RangeKey,
 } from '../sampleData'
 import { Card, Delta, Label, SampleBadge, Seg, TickerLogo } from './ui'
@@ -237,7 +236,7 @@ export function PerformanceChart({
   )
 }
 
-/* ── Allocation (weights real, sectors sample) ── */
+/* ── Allocation (real) ───────────────────── */
 const ALLOC_COLORS = ['#286956', '#5a9c86', '#94c4b2', '#c9e0d7', '#a3aaa6', '#d9dbd8']
 const ALLOC_BY = ['Sector', 'Country', 'Type'] as const
 type AllocBy = (typeof ALLOC_BY)[number]
@@ -250,11 +249,11 @@ export function Allocation({
   variant?: 'donut' | 'bars'
 }) {
   const [by, setBy] = useState<AllocBy>('Sector')
-  const key = ({ Sector: 'sector', Country: 'country', Type: 'type' } as const)[by]
+  const key = ({ Sector: 'sector', Country: 'country', Type: 'asset_type' } as const)[by]
   const groups = useMemo(() => {
     const m: Record<string, number> = {}
     for (const h of pricedHoldings(holdings)) {
-      const k = tickerMeta(h.ticker)[key]
+      const k = h[key]
       m[k] = (m[k] || 0) + h.weight
     }
     return Object.entries(m)
@@ -267,11 +266,7 @@ export function Allocation({
   const C = 2 * Math.PI * R
   return (
     <Card
-      title={
-        <span className="inline-flex items-center gap-2">
-          Allocation <SampleBadge />
-        </span>
-      }
+      title="Allocation"
       right={
         <Seg small label="Group allocation by" options={ALLOC_BY} value={by} onChange={setBy} />
       }
@@ -341,9 +336,7 @@ export function Risk({ holdings }: { holdings: PortfolioHolding[] }) {
   const top = priced[0]
   const top3 = priced.slice(0, 3).reduce((a, h) => a + h.weight, 0)
   const nonEur = priced.filter((h) => h.currency !== 'EUR').reduce((a, h) => a + h.weight, 0)
-  const tech = priced
-    .filter((h) => tickerMeta(h.ticker).sector === 'Technology')
-    .reduce((a, h) => a + h.weight, 0)
+  const tech = priced.filter((h) => h.sector === 'Technology').reduce((a, h) => a + h.weight, 0)
   const lvl = (v: number, a: number, b: number) =>
     v >= b
       ? (['High', 'down'] as const)
@@ -375,7 +368,7 @@ export function Risk({ holdings }: { holdings: PortfolioHolding[] }) {
       n: top ? `${top.ticker} · top 3 = ${top3.toFixed(0)}%` : '',
       l: lvl(top?.weight ?? 0, 15, 25),
     },
-    { k: 'Technology exposure', v: `${tech.toFixed(0)}%`, l: lvl(tech, 40, 55), sample: true },
+    { k: 'Technology exposure', v: `${tech.toFixed(0)}%`, l: lvl(tech, 40, 55) },
     { k: 'Non-EUR exposure', v: `${nonEur.toFixed(0)}%`, l: lvl(nonEur, 60, 80) },
   ]
   const lvlClass = {
