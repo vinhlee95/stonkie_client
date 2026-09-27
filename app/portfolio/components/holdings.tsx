@@ -5,7 +5,7 @@ import type { PortfolioHolding } from '@/lib/api/portfolio'
 import { money, pct, priceDp, shares, signedMoney, tone, TONE_TEXT } from '../format'
 import { Delta, TickerLogo } from './ui'
 
-type SortKey =
+export type SortKey =
   | 'ticker'
   | 'shares'
   | 'avg_cost'
@@ -28,11 +28,12 @@ const COLS: { k: SortKey; l: string; r?: boolean }[] = [
 
 const DASH = <span className="text-gray-400">—</span>
 
-function sortRows(rows: PortfolioHolding[], k: SortKey, d: 1 | -1) {
+/** Sorts by column; unpriced (null) values go last in either direction. */
+export function sortRows(rows: PortfolioHolding[], k: SortKey, d: 1 | -1) {
   return [...rows].sort((a, b) => {
     const x = a[k]
     const y = b[k]
-    if (x === null) return 1
+    if (x === null) return y === null ? 0 : 1
     if (y === null) return -1
     return (
       (typeof x === 'string' ? x.localeCompare(y as string) : (x as number) - (y as number)) * d

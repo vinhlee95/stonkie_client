@@ -3,7 +3,13 @@
 import { useEffect, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { useTickerSearch } from '@/app/components/hooks/useTickerSearch'
-import { parseDecimal, TICKER_RE, toYahooSymbol, type PortfolioHolding } from '@/lib/api/portfolio'
+import {
+  isAmbiguousDecimal,
+  parseDecimal,
+  TICKER_RE,
+  toYahooSymbol,
+  type PortfolioHolding,
+} from '@/lib/api/portfolio'
 import { money, priceDp } from '../format'
 import { TickerLogo } from './ui'
 
@@ -54,10 +60,9 @@ export function HoldingModal({
     setSelected(s)
     setError(null)
     const existing = holdings.find((h) => h.ticker === s.ticker)
-    if (existing) {
-      setSharesIn(String(existing.shares))
-      setCostIn(String(existing.avg_cost))
-    }
+    // Prefill a held position; otherwise don't carry the previous ticker's numbers over.
+    setSharesIn(existing ? String(existing.shares) : '')
+    setCostIn(existing ? String(existing.avg_cost) : '')
   }
 
   const sh = parseDecimal(sharesIn)
@@ -65,6 +70,7 @@ export function HoldingModal({
   const ok = !!selected && sh > 0 && cost > 0
   const invalidInput =
     (sharesIn.trim() !== '' && !(sh > 0)) || (costIn.trim() !== '' && !(cost > 0))
+  const ambiguous = [sharesIn, costIn].find(isAmbiguousDecimal)
   const currency =
     editing?.currency ?? holdings.find((h) => h.ticker === selected?.ticker)?.currency ?? null
 
@@ -186,7 +192,9 @@ export function HoldingModal({
             )}
             {invalidInput && (
               <p className="m-0 text-sm text-[var(--accent-down)] dark:text-red-400">
-                Enter positive numbers, e.g. 12 or 12.5
+                {ambiguous
+                  ? `Ambiguous — type ${Number(ambiguous.trim().replace(',', ''))} or ${ambiguous.trim().replace(',', '.')}`
+                  : 'Enter positive numbers, e.g. 12 or 12.5'}
               </p>
             )}
             <div className="flex justify-between border-t border-dashed border-[var(--accent-active-border)] pt-3 text-sm">

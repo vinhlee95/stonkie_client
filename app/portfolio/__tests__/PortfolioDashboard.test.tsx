@@ -88,6 +88,17 @@ describe('PortfolioDashboard', () => {
     expect(within(table).getByText('€1,680')).toBeInTheDocument()
   })
 
+  it('uses the singular for one holding', () => {
+    const one = {
+      ...FILLED,
+      summary: { ...FILLED.summary, holdings_count: 1 },
+      holdings: FILLED.holdings.slice(0, 1),
+    }
+    render(<PortfolioDashboard initialData={one} />)
+    expect(screen.getByText(/^1 holding · values in EUR/)).toBeInTheDocument()
+    expect(screen.getByText('1 holding')).toBeInTheDocument() // summary card
+  })
+
   it('sorts holdings table by column', async () => {
     render(<PortfolioDashboard initialData={FILLED} />)
     const table = screen.getByRole('table')
@@ -201,7 +212,7 @@ describe('PortfolioDashboard', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Berkshire Hathaway B/ }))
     const dialog = screen.getByRole('dialog', { name: 'Add holding' })
     expect(within(dialog).getByText('BRK-B')).toBeInTheDocument()
-    await userEvent.type(within(dialog).getByLabelText('Shares'), '1,000')
+    await userEvent.type(within(dialog).getByLabelText('Shares'), '1,000.5')
     await userEvent.type(within(dialog).getByLabelText(/Average cost/), '410')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Add to portfolio' }))
 
@@ -209,7 +220,7 @@ describe('PortfolioDashboard', () => {
     const put = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT')!
     expect(put[0]).toBe('/api/me/portfolio/holdings/BRK-B')
     expect(JSON.parse(put[1].body)).toEqual({
-      shares: 1000,
+      shares: 1000.5,
       avg_cost: 410,
       name: 'Berkshire Hathaway B',
     })

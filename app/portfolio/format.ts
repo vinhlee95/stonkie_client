@@ -37,6 +37,11 @@ export function priceDp(v: number): number {
   return Math.abs(v) < 20 ? 3 : 2
 }
 
+/** 1 holding / 2 holdings */
+export function plural(n: number, word: string): string {
+  return `${n} ${word}${n === 1 ? '' : 's'}`
+}
+
 export const tone = (v: number): 'up' | 'down' => (v >= 0 ? 'up' : 'down')
 
 export const TONE_TEXT = {

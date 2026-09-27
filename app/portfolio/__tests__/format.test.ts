@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { money, pct, priceDp, shares, signedMoney, tone } from '../format'
-import { parseDecimal, TICKER_RE, toYahooSymbol } from '@/lib/api/portfolio'
+import { money, pct, plural, priceDp, shares, signedMoney, tone } from '../format'
+import { isAmbiguousDecimal, parseDecimal, TICKER_RE, toYahooSymbol } from '@/lib/api/portfolio'
 
 describe('money', () => {
   it('formats known currencies with symbol and grouping', () => {
@@ -47,9 +47,9 @@ describe('parseDecimal', () => {
     ['12.5', 12.5],
     ['2,35', 2.35],
     ['12,5', 12.5],
-    ['1,000', 1000],
-    ['1,200', 1200],
+    ['0,1255', 0.1255],
     ['1,000.5', 1000.5],
+    ['1,000,000', 1000000],
     ['12,345,678', 12345678],
     [' 7 ', 7],
     ['.5', 0.5],
@@ -62,6 +62,22 @@ describe('parseDecimal', () => {
       expect(parseDecimal(input)).toBeNaN()
     },
   )
+  // 4,123 is 4123 on a US keyboard and 4.123 on an EU one: refuse to guess.
+  it.each(['4,123', '0,125', '1,000', ' 1,200 '])('rejects ambiguous %j', (input) => {
+    expect(parseDecimal(input)).toBeNaN()
+    expect(isAmbiguousDecimal(input)).toBe(true)
+  })
+  it.each(['2,35', '1,000.5', '12,345,678', '4123', '4.123'])('%j is not ambiguous', (input) => {
+    expect(isAmbiguousDecimal(input)).toBe(false)
+  })
+})
+
+describe('plural', () => {
+  it('uses the singular only for exactly one', () => {
+    expect(plural(1, 'holding')).toBe('1 holding')
+    expect(plural(0, 'holding')).toBe('0 holdings')
+    expect(plural(2, 'holding')).toBe('2 holdings')
+  })
 })
 
 describe('toYahooSymbol', () => {

@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { PortfolioHolding } from '@/lib/api/portfolio'
-import { Allocation, Movers, pricedHoldings, Risk } from '../components/sections'
+import { pct } from '../format'
+import { RANGES, sampleSeries, type RangeKey } from '../sampleData'
+import {
+  Allocation,
+  Movers,
+  PerformanceChart,
+  PortfolioSummary,
+  pricedHoldings,
+  Risk,
+} from '../components/sections'
 
 function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
   return {
@@ -91,5 +100,90 @@ describe('Movers', () => {
       'NOKIA.HE',
     ])
     expect(within(rows[0]).getByText('−€300')).toBeInTheDocument()
+  })
+})
+
+describe('PortfolioSummary', () => {
+  it('pluralizes the holdings count', () => {
+    const s = {
+      holdings_count: 1,
+      priced_count: 1,
+      total_value: 100,
+      total_cost: 80,
+      total_return: 20,
+      total_return_percent: 25,
+      day_change: 1,
+      day_change_percent: 1,
+      as_of: null,
+    }
+    const { rerender } = render(<PortfolioSummary s={s} currency="EUR" />)
+    expect(screen.getByText('1 holding')).toBeInTheDocument()
+    rerender(<PortfolioSummary s={{ ...s, holdings_count: 3 }} currency="EUR" />)
+    expect(screen.getByText('3 holdings')).toBeInTheDocument()
+  })
+})
+
+describe('PerformanceChart', () => {
+  // sampleSeries() ends on a fixed UTC date, so expected values are deterministic.
+  const series = sampleSeries()
+  function point(range: RangeKey, i: number) {
+    const sl = series.slice(-RANGES[range])
+    const rebase = (v: number, v0: number) => ((1 + v / 100) / (1 + v0 / 100) - 1) * 100
+    const x = sl[i < 0 ? sl.length + i : i]
+    return { p: rebase(x.p, sl[0].p), b: rebase(x.b, sl[0].b), d: x.d, n: sl.length }
+  }
+  const fmtD = (d: Date) =>
+    d.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: '2-digit',
+      timeZone: 'UTC',
+    })
+  const legend = (name: string) => screen.getByText(name).querySelector('b')!.textContent
+  const plot = () => screen.getByRole('img', { name: /Portfolio performance/ }).parentElement!
+
+  function hoverAt(fraction: number) {
+    const el = plot()
+    el.getBoundingClientRect = () => ({ left: 0, width: 1000 }) as DOMRect
+    fireEvent.mouseMove(el, { clientX: fraction * 1000 })
+  }
+
+  it('shows the return over the selected range, 1Y by default', async () => {
+    render(<PerformanceChart />)
+    expect(legend('Portfolio')).toBe(pct(point('1Y', -1).p, 1))
+    expect(legend('S&P 500')).toBe(pct(point('1Y', -1).b, 1))
+
+    await userEvent.click(screen.getByRole('button', { name: '1M' }))
+    expect(screen.getByRole('button', { name: '1M' })).toHaveAttribute('aria-pressed', 'true')
+    expect(legend('Portfolio')).toBe(pct(point('1M', -1).p, 1))
+    expect(legend('S&P 500')).toBe(pct(point('1M', -1).b, 1))
+    expect(pct(point('1M', -1).p, 1)).not.toBe(pct(point('1Y', -1).p, 1))
+  })
+
+  it('shows the hovered point and its date, then restores on mouse leave', () => {
+    render(<PerformanceChart />)
+    const label = screen.getByText(/vs benchmark$/)
+    const mid = point('1Y', Math.round(0.5 * (RANGES['1Y'] - 1)))
+
+    hoverAt(0.5)
+    expect(legend('Portfolio')).toBe(pct(mid.p, 1))
+    expect(legend('S&P 500')).toBe(pct(mid.b, 1))
+    expect(label).toHaveTextContent(fmtD(mid.d))
+
+    hoverAt(0)
+    expect(legend('Portfolio')).toBe('+0.0%')
+    expect(label).toHaveTextContent(fmtD(point('1Y', 0).d))
+
+    fireEvent.mouseLeave(plot())
+    expect(legend('Portfolio')).toBe(pct(point('1Y', -1).p, 1))
+    expect(label).toHaveTextContent(/vs benchmark$/)
+  })
+
+  it('does not crash when the range shrinks while hovering', () => {
+    render(<PerformanceChart />)
+    hoverAt(1) // last index of 1Y, past the end of 1M
+    fireEvent.click(screen.getByRole('button', { name: '1M' }))
+    expect(legend('Portfolio')).toBe(pct(point('1M', -1).p, 1))
+    expect(screen.getByText(/vs benchmark$/)).toBeInTheDocument()
   })
 })

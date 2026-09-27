@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react'
 import type { PortfolioHolding, PortfolioSummary as Summary } from '@/lib/api/portfolio'
-import { money, pct, signedMoney, tone, TONE_TEXT } from '../format'
+import { money, pct, plural, signedMoney, tone, TONE_TEXT } from '../format'
 import {
   RANGES,
   SAMPLE_DIV_MONTHS,
@@ -57,7 +57,7 @@ export function PortfolioSummary({ s, currency }: { s: Summary; currency: string
             {money(s.total_cost, currency, 0)}
           </div>
           <div className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-            {s.holdings_count} holdings
+            {plural(s.holdings_count, 'holding')}
           </div>
         </div>
       </div>
@@ -108,7 +108,8 @@ export function PerformanceChart({
   const y = (v: number) => H - ((v - lo) / (hi - lo)) * H
   const x = (i: number) => (i / (data.length - 1)) * W
   const last = data[data.length - 1]
-  const cur = hover != null ? data[hover] : last
+  // A hover index from a longer range can point past the end of this one.
+  const cur = (hover != null && data[hover]) || last
   const fmtD = (d: Date) =>
     d.toLocaleDateString('en-GB', {
       day: 'numeric',
@@ -153,7 +154,10 @@ export function PerformanceChart({
           label="Range"
           options={Object.keys(RANGES) as RangeKey[]}
           value={range}
-          onChange={setRange}
+          onChange={(r) => {
+            setRange(r)
+            setHover(null)
+          }}
         />
       </div>
       <div

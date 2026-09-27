@@ -56,13 +56,24 @@ export const PORTFOLIO_QUERY_KEY = ['portfolio'] as const
 export const TICKER_RE = /^[A-Z0-9][A-Z0-9.\-=^]{0,19}$/
 
 /**
+ * A lone comma before exactly 3 digits ('4,123', '0,125') is a thousands
+ * separator on US keyboards and a decimal one on EU keyboards; the UI asks
+ * the user to disambiguate instead of guessing.
+ */
+export function isAmbiguousDecimal(input: string): boolean {
+  return /^\d{1,3},\d{3}$/.test(input.trim())
+}
+
+/**
  * Parse a user-typed positive number. Commas in thousands groups are dropped
- * ('1,000' and '1,200.5', matching how the UI renders numbers); a single comma
- * with any other grouping is a decimal separator ('2,35', EU keyboards).
- * Returns NaN for anything else, e.g. '1abc', '1.2.3' or '1,000,5'.
+ * ('1,000.5', '12,345,678', matching how the UI renders numbers); a single
+ * comma with any other grouping is a decimal separator ('2,35', EU keyboards).
+ * Returns NaN for ambiguous input (see isAmbiguousDecimal) and anything else,
+ * e.g. '1abc', '1.2.3' or '1,000,5'.
  */
 export function parseDecimal(input: string): number {
   const s = input.trim()
+  if (isAmbiguousDecimal(s)) return NaN
   if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) return Number(s.replace(/,/g, ''))
   if (/^\d+,\d+$/.test(s)) return Number(s.replace(',', '.'))
   return /^(\d+(\.\d+)?|\.\d+)$/.test(s) ? Number(s) : NaN

@@ -1,18 +1,17 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Search } from 'lucide-react'
 import type { Company } from '@/app/CompanyList'
 import { useFavourites } from '@/app/components/hooks/useFavourites'
+import { usePortfolio } from '@/app/components/hooks/usePortfolio'
 import {
-  fetchPortfolio,
-  PORTFOLIO_QUERY_KEY,
   removeHolding,
   saveHolding,
   type Portfolio,
   type PortfolioHolding,
 } from '@/lib/api/portfolio'
+import { plural } from '../format'
 import { HoldingModal, type HoldingModalState } from './HoldingModal'
 import { HoldingsList, HoldingsTable } from './holdings'
 import {
@@ -28,21 +27,11 @@ import {
 import { TickerLogo } from './ui'
 
 export default function PortfolioDashboard({ initialData }: { initialData: Portfolio }) {
-  const queryClient = useQueryClient()
-  const { data } = useQuery({
-    queryKey: PORTFOLIO_QUERY_KEY,
-    queryFn: fetchPortfolio,
-    initialData,
-    staleTime: 60 * 1000,
-  })
+  const { data, refresh } = usePortfolio(initialData)
   const [modal, setModal] = useState<HoldingModalState | null>(null)
 
   // Mutations resolve (and the dialog closes) as soon as the write succeeds;
   // the revalued portfolio refetches in the background.
-  const refresh = useCallback(
-    () => void queryClient.invalidateQueries({ queryKey: PORTFOLIO_QUERY_KEY }),
-    [queryClient],
-  )
   const onSave = useCallback(
     async (ticker: string, input: { shares: number; avg_cost: number; name: string | null }) => {
       await saveHolding(ticker, input)
@@ -73,7 +62,7 @@ export default function PortfolioDashboard({ initialData }: { initialData: Portf
           <h1 className="m-0 text-2xl font-extrabold tracking-tight md:text-[28px]">Portfolio</h1>
           {s.holdings_count > 0 && (
             <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {s.holdings_count} holdings · values in {currency}
+              {plural(s.holdings_count, 'holding')} · values in {currency}
               {s.as_of && ` · prices as of ${s.as_of}`}
             </div>
           )}
