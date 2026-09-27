@@ -60,7 +60,10 @@ export interface SeriesPoint {
 }
 
 /** ~2y of cumulative % returns: portfolio (p) vs S&P 500 (b). */
-export function sampleSeries(end: Date = new Date()): SeriesPoint[] {
+// Fixed end date so SSR and hydration build identical series (no new Date()).
+const SAMPLE_SERIES_END = new Date(Date.UTC(2026, 8, 25))
+
+export function sampleSeries(end: Date = SAMPLE_SERIES_END): SeriesPoint[] {
   const n = 504
   const p = walk(n, 7, 61, 3.2)
   const b = walk(n, 19, 29, 1.6)

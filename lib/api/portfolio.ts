@@ -52,6 +52,18 @@ export interface HoldingInput {
 
 export const PORTFOLIO_QUERY_KEY = ['portfolio'] as const
 
+/** Yahoo symbols the backend accepts: AAPL, BRK-B, NOKIA.HE, EURUSD=X. Match the backend's TICKER_RE. */
+export const TICKER_RE = /^[A-Z0-9][A-Z0-9.\-=^]{0,19}$/
+
+/**
+ * Parse a user-typed positive decimal, accepting ',' as the decimal separator
+ * (EU keyboards). Returns NaN for anything else, e.g. '1abc' or '1.2.3'.
+ */
+export function parseDecimal(input: string): number {
+  const s = input.trim().replace(',', '.')
+  return /^\d+(\.\d+)?$/.test(s) || /^\.\d+$/.test(s) ? Number(s) : NaN
+}
+
 async function errorDetail(res: Response): Promise<string> {
   try {
     const body = (await res.json()) as { detail?: unknown; error?: unknown }

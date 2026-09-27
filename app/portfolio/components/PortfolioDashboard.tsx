@@ -37,21 +37,23 @@ export default function PortfolioDashboard({ initialData }: { initialData: Portf
   })
   const [modal, setModal] = useState<HoldingModalState | null>(null)
 
+  // Mutations resolve (and the dialog closes) as soon as the write succeeds;
+  // the revalued portfolio refetches in the background.
   const refresh = useCallback(
-    () => queryClient.invalidateQueries({ queryKey: PORTFOLIO_QUERY_KEY }),
+    () => void queryClient.invalidateQueries({ queryKey: PORTFOLIO_QUERY_KEY }),
     [queryClient],
   )
   const onSave = useCallback(
     async (ticker: string, input: { shares: number; avg_cost: number; name: string | null }) => {
       await saveHolding(ticker, input)
-      await refresh()
+      refresh()
     },
     [refresh],
   )
   const onRemove = useCallback(
     async (ticker: string) => {
       await removeHolding(ticker)
-      await refresh()
+      refresh()
     },
     [refresh],
   )

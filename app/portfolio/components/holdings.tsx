@@ -205,7 +205,7 @@ export function HoldingsList({
         </span>
       </header>
       <ul className="m-0 list-none px-3.5 pb-2 pt-1.5">
-        {holdings.map((h, i) => (
+        {sortRows(holdings, 'value', -1).map((h, i) => (
           <li key={h.ticker} className={i ? 'border-t border-gray-100 dark:border-white/10' : ''}>
             <button
               type="button"

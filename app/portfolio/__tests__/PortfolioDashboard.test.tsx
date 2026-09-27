@@ -159,6 +159,33 @@ describe('PortfolioDashboard', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
+  it('accepts comma decimals and blocks invalid numbers', async () => {
+    fetchMock.mockImplementation(async (_url: string, init?: RequestInit) =>
+      init?.method === 'PUT' ? new Response('{}') : new Response(JSON.stringify(FILLED)),
+    )
+    render(<PortfolioDashboard initialData={FILLED} />)
+
+    await userEvent.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    const shares = within(dialog).getByLabelText('Shares')
+    const save = within(dialog).getByRole('button', { name: 'Save' })
+
+    await userEvent.clear(shares)
+    await userEvent.type(shares, '1abc')
+    expect(save).toBeDisabled()
+    expect(within(dialog).getByText(/Enter positive numbers/)).toBeInTheDocument()
+
+    await userEvent.clear(shares)
+    await userEvent.type(shares, '2,35')
+    await userEvent.click(save)
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    const put = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT')!
+    expect(JSON.parse(put[1].body)).toMatchObject({ shares: 2.35, avg_cost: 100 })
+  })
+
   it('removes a holding from the edit dialog', async () => {
     fetchMock.mockImplementation(async (_url: string, init?: RequestInit) =>
       init?.method === 'DELETE'

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Search, X } from 'lucide-react'
-import type { PortfolioHolding } from '@/lib/api/portfolio'
+import { useTickerSearch } from '@/app/components/hooks/useTickerSearch'
+import { parseDecimal, TICKER_RE, type PortfolioHolding } from '@/lib/api/portfolio'
 import { money, priceDp } from '../format'
 import { TickerLogo } from './ui'
 
@@ -11,9 +12,6 @@ export type HoldingModalState =
   | { preset: { ticker: string; name: string | null } | null }
 
 type Selected = { ticker: string; name: string | null }
-type SearchResult = { symbol: string; name: string }
-
-const SEARCH_DEBOUNCE_MS = 300
 
 export function HoldingModal({
   state,
@@ -62,9 +60,11 @@ export function HoldingModal({
     }
   }
 
-  const sh = parseFloat(sharesIn)
-  const cost = parseFloat(costIn)
+  const sh = parseDecimal(sharesIn)
+  const cost = parseDecimal(costIn)
   const ok = !!selected && sh > 0 && cost > 0
+  const invalidInput =
+    (sharesIn.trim() !== '' && !(sh > 0)) || (costIn.trim() !== '' && !(cost > 0))
   const currency =
     editing?.currency ?? holdings.find((h) => h.ticker === selected?.ticker)?.currency ?? null
 
@@ -184,6 +184,11 @@ export function HoldingModal({
                 Helsinki).
               </p>
             )}
+            {invalidInput && (
+              <p className="m-0 text-sm text-[var(--accent-down)] dark:text-red-400">
+                Enter positive numbers, e.g. 12 or 12.5
+              </p>
+            )}
             <div className="flex justify-between border-t border-dashed border-[var(--accent-active-border)] pt-3 text-sm">
               <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                 Cost basis
@@ -248,38 +253,12 @@ function TickerSearch({
   onSelect: (s: Selected) => void
 }) {
   const [q, setQ] = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [loading, setLoading] = useState(false)
   const query = q.trim()
-
-  useEffect(() => {
-    if (!query) {
-      setResults([])
-      return
-    }
-    const controller = new AbortController()
-    const t = setTimeout(async () => {
-      setLoading(true)
-      try {
-        const res = await fetch(`/api/tickers?${new URLSearchParams({ q: query })}`, {
-          signal: controller.signal,
-        })
-        setResults(res.ok ? ((await res.json()) as SearchResult[]).slice(0, 6) : [])
-      } catch {
-        if (!controller.signal.aborted) setResults([])
-      } finally {
-        if (!controller.signal.aborted) setLoading(false)
-      }
-    }, SEARCH_DEBOUNCE_MS)
-    return () => {
-      clearTimeout(t)
-      controller.abort()
-    }
-  }, [query])
+  const { results: found, isLoading: loading } = useTickerSearch(query)
+  const results = found.slice(0, 6)
 
   const raw = query.toUpperCase()
-  const showRaw =
-    /^[A-Z0-9][A-Z0-9.\-=^]{0,19}$/.test(raw) && !results.some((r) => r.symbol === raw)
+  const showRaw = TICKER_RE.test(raw) && !results.some((r) => r.symbol === raw)
 
   return (
     <div className="flex flex-col gap-3.5 px-5 py-4">

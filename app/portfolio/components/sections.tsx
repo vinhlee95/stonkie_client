@@ -110,6 +110,7 @@ export function PerformanceChart({
       day: 'numeric',
       month: 'short',
       year: range === 'All' || range === '1Y' ? '2-digit' : undefined,
+      timeZone: 'UTC',
     })
   const onMove = (e: React.MouseEvent) => {
     const r = ref.current!.getBoundingClientRect()
