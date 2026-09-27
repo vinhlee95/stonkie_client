@@ -19,6 +19,11 @@ new_repo() {
   echo "$repo"
 }
 
+new_repo_at() {
+  mkdir -p "$1" && git -C "$1" init -q && echo a > "$1/f.txt" && git -C "$1" add f.txt \
+    && git -C "$1" -c user.email=t@t -c user.name=t commit -qm init && echo "$1"
+}
+
 head_sha() { git -C "$1" rev-parse HEAD; }
 
 # write_state <repo> <sha> <angles-json> <findings-json> <waivers-json>
@@ -232,7 +237,8 @@ expect "continued non-gh command passes" 0 "$(run_hook "$(printf 'git commit \\\
 # 34. JSON \u escapes can't hide gh from the pre-filter
 R=$(new_repo r34)
 raw() { printf '%s' "$1" | bash "$HOOK" >/dev/null 2>&1; echo $?; }
-expect "unicode-escaped gh blocks" 2 "$(raw '{"tool_input":{"command":"gh pr create"},"cwd":"'"$R"'"}')"
+NOGH="$TMP/plain-$$"; R=$(new_repo_at "$NOGH/repo")
+expect "unicode-escaped gh blocks" 2 "$(raw '{"tool_input":{"command":"\u0067\u0068 pr create"},"cwd":"'"$R"'"}')"
 
 # 35. command substitutions nested in double quotes are commands
 R=$(new_repo r35)
@@ -271,6 +277,40 @@ expect "--head current branch allows" 0 "$(run_hook "gh pr create --head $BR --f
 expect "--head owner:current allows" 0 "$(run_hook "gh pr create --head me:$BR --fill" "$R")"
 expect "--head other branch blocks" 2 "$(run_hook 'gh pr create --head other-branch --fill' "$R")"
 expect "-H other branch blocks" 2 "$(run_hook 'gh pr create -H other-branch' "$R")"
+
+# 40. ANSI-C quoted command names are decoded
+R=$(new_repo r40)
+expect "ansi-c hex gh blocks" 2 "$(run_hook "\$'\\x67\\x68' pr create --fill" "$R")"
+expect "ansi-c octal gh blocks" 2 "$(run_hook "\$'\\147\\150' pr create" "$R")"
+expect "ansi-c unicode gh blocks" 2 "$(run_hook "\$'\\u0067h' pr create" "$R")"
+expect "ansi-c string as echo arg passes" 0 "$(run_hook "echo \$'gh pr create'" "$R")"
+
+# 41. heredoc bodies: unquoted delimiter runs $( ), quoted delimiter is literal
+R=$(new_repo r41)
+expect "heredoc body \$() blocks" 2 "$(run_hook "$(printf 'cat <<EOF\n$(gh pr create --fill)\nEOF')" "$R")"
+expect "heredoc body backtick blocks" 2 "$(run_hook "$(printf 'cat <<EOF\nx `gh pr create` y\nEOF')" "$R")"
+expect "quoted-delimiter heredoc body is literal" 0 "$(run_hook "$(printf "cat <<'EOF'\n\$(gh pr create --fill)\nEOF")" "$R")"
+
+# 42. redirections anywhere in the command
+R=$(new_repo r42)
+expect "leading redirect blocks" 2 "$(run_hook '>out gh pr create --fill' "$R")"
+expect "leading fd redirect blocks" 2 "$(run_hook '2>/dev/null gh pr create --fill' "$R")"
+expect "trailing redirect blocks" 2 "$(run_hook 'gh pr create --fill > out.txt 2>&1' "$R")"
+expect "process substitution blocks" 2 "$(run_hook 'cat <(gh pr create --fill)' "$R")"
+expect "redirect target text passes" 0 "$(run_hook 'echo hi > "gh pr create.txt"' "$R")"
+
+# 43. dynamic gh api method/endpoint fail closed
+R=$(new_repo r43)
+expect "gh api dynamic method on pulls blocks" 2 "$(run_hook 'METHOD=POST; gh api --method "$METHOD" repos/o/r/pulls' "$R")"
+expect "gh api dynamic endpoint write blocks" 2 "$(run_hook 'gh api "$URL" -f title=x' "$R")"
+expect "gh api lowercase post blocks" 2 "$(run_hook 'gh api --method post repos/o/r/pulls' "$R")"
+expect "gh api dynamic GET passes" 0 "$(run_hook 'gh api "$URL"' "$R")"
+
+# 44. wrapper options that take a value
+R=$(new_repo r44)
+for c in 'sudo -u build-user gh pr create --fill' 'timeout -s KILL 5 gh pr create' 'xargs -I {} gh pr create' 'env -u FOO gh pr create'; do
+  expect "wrapper with operand blocks: $c" 2 "$(run_hook "$c" "$R")"
+done
 
 echo
 echo "passed: $PASSED  failed: $FAILED"
