@@ -146,12 +146,13 @@ api_dynamic_re="${gh_head}api[[:space:]]+([^[:space:]]+[[:space:]]+)*[^-[:space:
 # commands/keywords (incl. any shell's -c: sh/bash/dash/ksh/zsh/fish/busybox sh) that run (part of)
 # the rest of the segment as a command; after one, the
 # command is the first gh word that follows, whatever options/operands sit in between
-wrapper_re='^(([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*)|command|sudo|env|exec|eval|time|nohup|nice|timeout|xargs|if|then|else|elif|do|while|until|!|\{|([^[:space:]]*/)?(busybox[[:space:]]+)?([a-z]*sh|fish)([[:space:]]+-[^[:space:]]+)*[[:space:]]+-[A-Za-z]*c[A-Za-z]*)[[:space:]]+'
+wrapper_re='^(([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*)|([^[:space:]]*/)?(command|sudo|env|exec|eval|time|nohup|nice|timeout|xargs)|if|then|else|elif|do|while|until|!|\{|([^[:space:]]*/)?(busybox[[:space:]]+)?([a-z]*sh|fish)([[:space:]]+-[^[:space:]]+)*[[:space:]]+-[A-Za-z]*c[A-Za-z]*)[[:space:]]+'
 wrapped_gh_re='(^|[[:space:]])(([^[:space:]]*/)?gh([[:space:]].*)?)$'
 cd_re='^(cd|pushd)([[:space:]]+(-[LPe@]+[[:space:]]+)*(.*[^[:space:]]))?[[:space:]]*$'
 # a command name built from an expansion ($G, g${X}h, $(echo gh), leftover "pr create") can't be checked
 dyn_name_re='^([^[:space:]]*\$[^[:space:]]*[[:space:]]+([^[:space:]]+[[:space:]]+)*)?pr[[:space:]]+(create|new)([[:space:]]|$)'
-graphql_create_re="${gh_head}api[[:space:]]+graphql[[:space:]].*createPullRequest"
+# gh api graphql can create PRs; a mutation, --input file, @file field or $ expansion can't be inspected
+graphql_create_re="${gh_head}api[[:space:]]+graphql([[:space:]]|\$).*(createPullRequest|mutation|--input|=@|\\$)"
 
 # Bash brace expansion ({gh,pr,create}, g{h,}, nested {{a,b},c}) builds words before a command runs:
 # expand it the same way so the result is what gets matched. Prints one expansion per line.
@@ -256,7 +257,7 @@ check_base() {  # check_base <branch>
   [ "$1" = "${def:-main}" ] || block "base $1 differs from the reviewed base (${def:-main}); /multi-review reviews origin/${def:-main}...HEAD."
 }
 if [[ "$pr_seg" =~ $graphql_create_re ]]; then
-  block "PR creation through gh api graphql can't be checked. Use gh pr create from the reviewed repo."
+  block "gh api graphql writes (mutations, --input, @file or variable queries) can't be checked. Use gh pr create from the reviewed repo."
 fi
 if [[ "$pr_seg" =~ $api_re ]]; then
   [[ "$pr_seg" =~ repos/([^/[:space:]]+)/([^/[:space:]?]+)/pulls ]] \
