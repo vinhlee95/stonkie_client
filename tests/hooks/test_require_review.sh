@@ -312,6 +312,14 @@ for c in 'sudo -u build-user gh pr create --fill' 'timeout -s KILL 5 gh pr creat
   expect "wrapper with operand blocks: $c" 2 "$(run_hook "$c" "$R")"
 done
 
+# 45. any shell's -c runs its argument as a command
+R=$(new_repo r45)
+for c in "dash -c 'gh pr create'" "/bin/dash -c 'gh pr create'" "ksh -c 'gh pr create'" "bash -e -c 'gh pr create'" \
+         "sh -xc 'gh pr create'" "fish -c 'gh pr create'" "busybox sh -c 'gh pr create'"; do
+  expect "shell -c blocks: $c" 2 "$(run_hook "$c" "$R")"
+done
+expect "shell script arg passes" 0 "$(run_hook "dash ./build.sh" "$R")"
+
 echo
 echo "passed: $PASSED  failed: $FAILED"
 [ "$FAILED" -eq 0 ]

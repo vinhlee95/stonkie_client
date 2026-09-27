@@ -142,9 +142,10 @@ pulls_re='/pulls([?[:space:]]|$)'
 api_write_re='(-X|--method)[[:space:]=]*([Pp][Oo][Ss][Tt]|\$)|[[:space:]](-f|-F|--field|--raw-field|--input)'
 # an endpoint built from a variable can't be checked: treat a write to it as PR creation
 api_dynamic_re="${gh_head}api[[:space:]]+([^[:space:]]+[[:space:]]+)*[^-[:space:]]*\\$"
-# commands/keywords that run (part of) the rest of the segment as a command; after one, the
+# commands/keywords (incl. any shell's -c: sh/bash/dash/ksh/zsh/fish/busybox sh) that run (part of)
+# the rest of the segment as a command; after one, the
 # command is the first gh word that follows, whatever options/operands sit in between
-wrapper_re='^(([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*)|command|sudo|env|exec|eval|time|nohup|nice|timeout|xargs|if|then|else|elif|do|while|until|!|\{|(ba|z)?sh[[:space:]]+-l?c)[[:space:]]+'
+wrapper_re='^(([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*)|command|sudo|env|exec|eval|time|nohup|nice|timeout|xargs|if|then|else|elif|do|while|until|!|\{|([^[:space:]]*/)?(busybox[[:space:]]+)?([a-z]*sh|fish)([[:space:]]+-[^[:space:]]+)*[[:space:]]+-[A-Za-z]*c[A-Za-z]*)[[:space:]]+'
 wrapped_gh_re='(^|[[:space:]])(([^[:space:]]*/)?gh([[:space:]].*)?)$'
 cd_re='^(cd|pushd)([[:space:]]+([^[:space:]]+))?[[:space:]]*$'
 
