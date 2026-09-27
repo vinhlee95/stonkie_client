@@ -6,6 +6,9 @@
  * All aggregate values are in `base_currency` (EUR). `price` and `avg_cost`
  * are in the holding's native `currency`. Holdings Yahoo can't price have
  * null values and are excluded from totals.
+ *
+ * Prices are live regular-session quotes, at most 5 min old. A holding without
+ * a live quote is priced at its last daily close and flagged `delayed`.
  */
 
 export interface PortfolioHolding {
@@ -17,6 +20,9 @@ export interface PortfolioHolding {
   price: number | null
   day_change_percent: number | null
   trading_date: string | null
+  /** Live quote time (ISO UTC); null when `delayed` or unpriced. */
+  as_of: string | null
+  delayed: boolean
   fx_rate: number | null
   value: number | null
   cost_basis: number | null
@@ -35,7 +41,9 @@ export interface PortfolioSummary {
   total_return_percent: number
   day_change: number
   day_change_percent: number
+  /** Newest live quote time (ISO UTC); null when no holding has a live quote. */
   as_of: string | null
+  delayed_count: number
 }
 
 export interface Portfolio {

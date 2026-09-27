@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { PortfolioHolding } from '@/lib/api/portfolio'
-import { HoldingsList, sortRows } from '../components/holdings'
+import { HoldingsList, HoldingsTable, sortRows } from '../components/holdings'
 
 function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
   return {
@@ -14,6 +14,8 @@ function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
     price: 200,
     day_change_percent: 1,
     trading_date: '2026-09-25',
+    as_of: null,
+    delayed: false,
     fx_rate: 1,
     value: 400,
     cost_basis: 200,
@@ -96,5 +98,37 @@ describe('HoldingsList', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Edit BRK-B' }))
     expect(onEdit).toHaveBeenCalledTimes(1)
     expect(onEdit).toHaveBeenCalledWith(ROWS[3])
+  })
+})
+
+describe('delayed rows', () => {
+  it('tags holdings priced at the last close instead of a live quote', () => {
+    render(
+      <HoldingsList
+        holdings={[holding({ ticker: 'LIVE' }), holding({ ticker: 'SLOW', delayed: true })]}
+        currency="EUR"
+        onEdit={vi.fn()}
+      />,
+    )
+
+    const tags = screen.getAllByText('delayed')
+    expect(tags).toHaveLength(1)
+    expect(tags[0]).toHaveAttribute('title', 'Live price unavailable — showing last close')
+    expect(tags[0].closest('li')).toHaveTextContent('SLOW')
+  })
+
+  it('tags only the delayed row in the desktop table', () => {
+    render(
+      <HoldingsTable
+        holdings={[holding({ ticker: 'LIVE' }), holding({ ticker: 'SLOW', delayed: true })]}
+        currency="EUR"
+        onEdit={vi.fn()}
+      />,
+    )
+
+    const table = screen.getByRole('table')
+    const tags = within(table).getAllByText('delayed')
+    expect(tags).toHaveLength(1)
+    expect(tags[0].closest('tr')).toHaveTextContent('SLOW')
   })
 })

@@ -23,6 +23,8 @@ function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
     price: 1,
     day_change_percent: 0,
     trading_date: '2026-09-25',
+    as_of: null,
+    delayed: false,
     fx_rate: 1,
     value: 0,
     cost_basis: 0,
@@ -143,6 +145,7 @@ describe('PortfolioSummary', () => {
       day_change: 1,
       day_change_percent: 1,
       as_of: null,
+      delayed_count: 0,
     }
     const { rerender } = render(<PortfolioSummary s={s} currency="EUR" />)
     expect(screen.getByText('1 holding')).toBeInTheDocument()

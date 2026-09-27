@@ -37,6 +37,19 @@ export function priceDp(v: number): number {
   return Math.abs(v) < 20 ? 3 : 2
 }
 
+const WEEK_MS = 6 * 24 * 60 * 60 * 1000
+
+/** Quote time in local time: 14:32 today, Fri 22:00 this week, 10 Sep older. */
+export function asOf(iso: string, now: Date = new Date()): string {
+  const d = new Date(iso)
+  const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  if (d.toDateString() === now.toDateString()) return time
+  if (now.getTime() - d.getTime() < WEEK_MS) {
+    return `${d.toLocaleDateString('en-GB', { weekday: 'short' })} ${time}`
+  }
+  return `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'short' })}`
+}
+
 /** 1 holding / 2 holdings */
 export function plural(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? '' : 's'}`

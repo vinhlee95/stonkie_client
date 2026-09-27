@@ -3,6 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@/tests/test-utils'
 import type { Portfolio, PortfolioHolding } from '@/lib/api/portfolio'
 import PortfolioDashboard from '../components/PortfolioDashboard'
+import { asOf } from '../format'
+
+const AS_OF = new Date(2026, 8, 25, 18, 30).toISOString()
 
 function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
   return {
@@ -14,6 +17,8 @@ function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
     price: 210,
     day_change_percent: 5,
     trading_date: '2026-09-25',
+    as_of: null,
+    delayed: false,
     fx_rate: 0.8,
     value: 1680,
     cost_basis: 800,
@@ -36,10 +41,11 @@ const FILLED: Portfolio = {
     total_return_percent: 108,
     day_change: -20,
     day_change_percent: -0.95,
-    as_of: '2026-09-25',
+    as_of: AS_OF,
+    delayed_count: 1,
   },
   holdings: [
-    holding({}),
+    holding({ as_of: AS_OF }),
     holding({
       ticker: 'NOKIA.HE',
       name: 'Nokia',
@@ -48,6 +54,7 @@ const FILLED: Portfolio = {
       currency: 'EUR',
       price: 4,
       day_change_percent: -20,
+      delayed: true,
       fx_rate: 1,
       value: 400,
       cost_basis: 200,
@@ -81,7 +88,7 @@ describe('PortfolioDashboard', () => {
     expect(screen.getByText('€2,080.00')).toBeInTheDocument()
     expect(screen.getByText(/−€20.00 \(−0.95%\)/)).toBeInTheDocument()
     expect(
-      screen.getByText(/2 holdings · values in EUR · prices as of 2026-09-25/),
+      screen.getByText(`2 holdings · values in EUR · prices as of ${asOf(AS_OF)} · 1 delayed`),
     ).toBeInTheDocument()
     const table = screen.getByRole('table')
     expect(within(table).getByText('$210.00')).toBeInTheDocument()

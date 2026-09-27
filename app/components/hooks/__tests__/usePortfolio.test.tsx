@@ -18,6 +18,7 @@ function portfolio(total_value: number): Portfolio {
       day_change: 0,
       day_change_percent: 0,
       as_of: null,
+      delayed_count: 0,
     },
     holdings: [],
   }
@@ -60,6 +61,27 @@ describe('usePortfolio', () => {
 
     resolve(new Response(JSON.stringify(portfolio(250))))
     await waitFor(() => expect(result.current.data.summary.total_value).toBe(250))
+  })
+
+  it('refetches every 5 minutes to follow the live-quote cache', async () => {
+    vi.useFakeTimers()
+    try {
+      fetchMock.mockImplementation(() =>
+        Promise.resolve(new Response(JSON.stringify(portfolio(250)))),
+      )
+      const { result } = renderHook(() => usePortfolio(portfolio(100)), { wrapper })
+
+      await act(() => vi.advanceTimersByTimeAsync(5 * 60 * 1000 - 1000))
+      expect(fetchMock).not.toHaveBeenCalled()
+
+      await act(() => vi.advanceTimersByTimeAsync(1000))
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      // React Query notifies subscribers via setTimeout, so flush it under fake timers too.
+      await act(() => vi.advanceTimersByTimeAsync(10))
+      expect(result.current.data.summary.total_value).toBe(250)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('keeps the last good data when a refresh fails', async () => {
