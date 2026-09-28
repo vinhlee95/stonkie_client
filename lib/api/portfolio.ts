@@ -94,12 +94,18 @@ export function parseDecimal(input: string): number {
 }
 
 /**
- * Finnhub writes US share classes with a dot (BRK.B); Yahoo, which prices
- * holdings, uses a dash (BRK-B). Only class letters A-C are mapped so
- * single-letter exchange suffixes like VOD.L keep their dot.
+ * Finnhub writes US share classes with a dot (BRK.B) and Nordic listings with
+ * a space (NDA FI.HE, VOLV B.ST); Yahoo, which prices holdings, uses a dash
+ * for both (BRK-B, NDA-FI.HE). Only class letters A-C are mapped from dots so
+ * single-letter exchange suffixes like VOD.L keep their dot. Only a single
+ * space before an exchange-suffixed part is mapped, so company-name searches
+ * (APPLE INC) don't turn into ticker-like strings.
  */
 export function toYahooSymbol(symbol: string): string {
-  return symbol.replace(/^([A-Z]+)\.([ABC])$/, '$1-$2')
+  return symbol
+    .trim()
+    .replace(/^([A-Z0-9]+) ([A-Z0-9]+\.[A-Z]+)$/, '$1-$2')
+    .replace(/^([A-Z]+)\.([ABC])$/, '$1-$2')
 }
 
 async function errorDetail(res: Response): Promise<string> {
