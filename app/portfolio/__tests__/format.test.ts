@@ -86,6 +86,8 @@ describe('toYahooSymbol', () => {
     ['BF.A', 'BF-A'],
     ['AAPL', 'AAPL'],
     ['VOD.L', 'VOD.L'],
+    ['NDA FI.HE', 'NDA-FI.HE'],
+    ['VOLV B.ST', 'VOLV-B.ST'],
     ['NOKIA.HE', 'NOKIA.HE'],
   ])('%s -> %s', (input, expected) => {
     expect(toYahooSymbol(input)).toBe(expected)
