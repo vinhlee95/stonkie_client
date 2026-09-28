@@ -263,8 +263,9 @@ function TickerSearch({
 }) {
   const [q, setQ] = useState('')
   const query = q.trim()
-  const { results: found, isLoading: loading } = useTickerSearch(query)
-  const results = found.slice(0, 6).map((r) => ({ ...r, symbol: toYahooSymbol(r.symbol) }))
+  // Yahoo search: holdings are priced by Yahoo, and it returns ETFs / non-US listings with suffixes.
+  const { results: found, isLoading: loading } = useTickerSearch(query, 300, 'yahoo')
+  const results = found.slice(0, 6)
 
   const raw = toYahooSymbol(query.toUpperCase())
   const showRaw = TICKER_RE.test(raw) && !results.some((r) => r.symbol === raw)
@@ -287,7 +288,7 @@ function TickerSearch({
           <li key={r.symbol}>
             <ResultRow
               ticker={r.symbol}
-              sub={r.name}
+              sub={r.exchange ? `${r.name} · ${r.exchange}` : r.name}
               held={heldTickers.has(r.symbol)}
               onClick={() => onSelect({ ticker: r.symbol, name: r.name })}
             />

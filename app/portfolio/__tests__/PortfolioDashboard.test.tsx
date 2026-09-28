@@ -209,8 +209,10 @@ describe('PortfolioDashboard', () => {
 
   it('adds a searched ticker using its Yahoo symbol', async () => {
     fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
-      if (url.startsWith('/api/tickers')) {
-        return new Response(JSON.stringify([{ symbol: 'BRK.B', name: 'Berkshire Hathaway B' }]))
+      if (url.startsWith('/api/tickers/yahoo')) {
+        return new Response(
+          JSON.stringify([{ symbol: 'BRK-B', name: 'Berkshire Hathaway B', exchange: 'NYSE' }]),
+        )
       }
       if (init?.method === 'PUT') return new Response('{}')
       return new Response(JSON.stringify(FILLED))
