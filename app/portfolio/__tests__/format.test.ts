@@ -88,6 +88,8 @@ describe('toYahooSymbol', () => {
     ['VOD.L', 'VOD.L'],
     ['NDA FI.HE', 'NDA-FI.HE'],
     ['VOLV B.ST', 'VOLV-B.ST'],
+    ['APPLE INC', 'APPLE INC'],
+    ['BANK OF AMERICA', 'BANK OF AMERICA'],
     ['NOKIA.HE', 'NOKIA.HE'],
   ])('%s -> %s', (input, expected) => {
     expect(toYahooSymbol(input)).toBe(expected)
@@ -95,6 +97,9 @@ describe('toYahooSymbol', () => {
 })
 
 describe('TICKER_RE', () => {
+  it('rejects company-name searches after Yahoo mapping', () => {
+    expect(TICKER_RE.test(toYahooSymbol('BANK OF AMERICA'))).toBe(false)
+  })
   it.each(['AAPL', 'BRK-B', 'NOKIA.HE', 'EURUSD=X'])('accepts %s', (t) => {
     expect(TICKER_RE.test(t)).toBe(true)
   })
