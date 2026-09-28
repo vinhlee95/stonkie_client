@@ -22,6 +22,9 @@ const AAPL: PortfolioHolding = {
   total_return: 880,
   total_return_percent: 110,
   weight: 100,
+  sector: 'Technology',
+  country: 'United States',
+  asset_type: 'Stock',
 }
 
 const fetchMock = vi.fn()

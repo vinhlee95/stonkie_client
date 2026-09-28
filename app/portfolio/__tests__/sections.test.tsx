@@ -32,22 +32,34 @@ function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
     total_return: 0,
     total_return_percent: 0,
     weight: 0,
+    sector: 'Technology',
+    country: 'United States',
+    asset_type: 'Stock',
     ...over,
   }
 }
 
-// AAPL + NOKIA.HE are Technology, JPM Financial (sampleData tickerMeta). ZZZ is unpriced.
+// AAPL + NOKIA.HE are Technology, JPM Financial Services. ZZZ is unpriced.
 const HOLDINGS = [
   holding({
     ticker: 'NOKIA.HE',
     currency: 'EUR',
+    country: 'Finland',
     value: 100,
     weight: 10,
     day_change: 10,
     day_change_percent: 1,
   }),
   holding({ ticker: 'AAPL', value: 600, weight: 60, day_change: 200, day_change_percent: 3 }),
-  holding({ ticker: 'JPM', value: 300, weight: 30, day_change: -300, day_change_percent: -2 }),
+  holding({
+    ticker: 'JPM',
+    sector: 'Financial Services',
+    asset_type: 'ETF',
+    value: 300,
+    weight: 30,
+    day_change: -300,
+    day_change_percent: -2,
+  }),
   holding({ ticker: 'ZZZ', value: null, weight: null, day_change: null, price: null }),
 ]
 
@@ -66,7 +78,8 @@ describe('Allocation', () => {
   it('groups weights by sector, largest first, ignoring unpriced holdings', () => {
     render(<Allocation holdings={HOLDINGS} variant="bars" />)
     const items = screen.getAllByRole('listitem').map((li) => li.textContent)
-    expect(items).toEqual(['Technology70.0%', 'Financial30.0%'])
+    expect(items).toEqual(['Technology70.0%', 'Financial Services30.0%'])
+    expect(screen.queryByText('Sample data')).not.toBeInTheDocument()
   })
 
   it('regroups by country when toggled', async () => {
@@ -74,6 +87,20 @@ describe('Allocation', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Country' }))
     const items = screen.getAllByRole('listitem').map((li) => li.textContent)
     expect(items).toEqual(['United States90.0%', 'Finland10.0%'])
+  })
+
+  it('regroups by asset type when toggled', async () => {
+    render(<Allocation holdings={HOLDINGS} variant="bars" />)
+    await userEvent.click(screen.getByRole('button', { name: 'Type' }))
+    const items = screen.getAllByRole('listitem').map((li) => li.textContent)
+    expect(items).toEqual(['Stock70.0%', 'ETF30.0%'])
+  })
+
+  it('groups holdings missing metadata under Other', () => {
+    const legacy = { ...HOLDINGS[1], sector: undefined } as unknown as PortfolioHolding
+    render(<Allocation holdings={[legacy, HOLDINGS[2]]} variant="bars" />)
+    const items = screen.getAllByRole('listitem').map((li) => li.textContent)
+    expect(items).toEqual(['Other60.0%', 'Financial Services30.0%'])
   })
 
   it('renders nothing without priced holdings', () => {
@@ -89,6 +116,7 @@ describe('Risk', () => {
     expect(screen.getByText('AAPL · top 3 = 100%')).toBeInTheDocument()
     expect(rowText('Non-EUR exposure')).toContain('90%')
     expect(rowText('Non-EUR exposure')).toContain('High')
+    expect(rowText('Technology exposure')).toBe('Technology exposure70%High')
   })
 })
 

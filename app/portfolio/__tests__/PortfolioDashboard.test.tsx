@@ -26,6 +26,9 @@ function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
     total_return: 880,
     total_return_percent: 110,
     weight: 80.77,
+    sector: 'Technology',
+    country: 'United States',
+    asset_type: 'Stock',
     ...over,
   }
 }

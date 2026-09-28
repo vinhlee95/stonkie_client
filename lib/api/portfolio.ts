@@ -30,7 +30,13 @@ export interface PortfolioHolding {
   total_return: number | null
   total_return_percent: number | null
   weight: number | null
+  /** Classification for allocation; "Other" when unknown. */
+  sector: string
+  country: string
+  asset_type: AssetType
 }
+
+export type AssetType = 'Stock' | 'ETF' | 'Other'
 
 export interface PortfolioSummary {
   holdings_count: number
