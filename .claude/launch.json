@@ -13,9 +13,10 @@
       "runtimeExecutable": "bash",
       "runtimeArgs": [
         "-c",
-        "cd ../backend && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload"
+        "d=$PWD; while [ ! -d \"$d/../backend\" ] && [ \"$d\" != / ]; do d=$(dirname \"$d\"); done; cd \"$d/../backend\" && source venv/bin/activate && hypercorn main:app --bind localhost:8080 --reload"
       ],
-      "port": 8080
+      "port": 8080,
+      "autoPort": false
     }
   ]
 }
