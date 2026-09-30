@@ -81,11 +81,13 @@ function LotRow({
   return (
     <div className="flex flex-col gap-1 py-2.5">
       <div className="flex items-center gap-3 text-sm">
-        <span className="w-24 shrink-0 text-gray-500 dark:text-gray-400">
-          {lot.purchased_on ? purchaseDate(lot.purchased_on) : 'No date'}
-        </span>
-        <span className="min-w-0 flex-1 truncate font-mono">
-          {shares(lot.shares)} × {money(lot.price, currency, priceDp(lot.price))}
+        <span className="flex min-w-0 flex-1 flex-col leading-snug">
+          <span className="font-mono">
+            {shares(lot.shares)} × {money(lot.price, currency, priceDp(lot.price))}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {lot.purchased_on ? purchaseDate(lot.purchased_on) : 'No date'}
+          </span>
         </span>
         <b className="font-mono">{money(lot.shares * lot.price, currency, 2)}</b>
         {confirming ? (
