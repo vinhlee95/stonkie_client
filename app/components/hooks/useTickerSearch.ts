@@ -1,19 +1,34 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import type { TickerSearchResult } from '@/app/types'
 
-export type TickerSearchResult = { symbol: string; name: string }
+/** finnhub: common stocks, Finnhub symbols (BRK.B). yahoo: stocks + ETFs, Yahoo symbols (SXR8.DE). */
+export type TickerSearchSource = 'finnhub' | 'yahoo'
 
-async function fetchTickers(query: string, signal: AbortSignal): Promise<TickerSearchResult[]> {
-  const res = await fetch(`/api/tickers?${new URLSearchParams({ q: query })}`, { signal })
+const ENDPOINTS: Record<TickerSearchSource, string> = {
+  finnhub: '/api/tickers',
+  yahoo: '/api/tickers/yahoo',
+}
+
+async function fetchTickers(
+  source: TickerSearchSource,
+  query: string,
+  signal: AbortSignal,
+): Promise<TickerSearchResult[]> {
+  const res = await fetch(`${ENDPOINTS[source]}?${new URLSearchParams({ q: query })}`, { signal })
   if (!res.ok) throw new Error(`Ticker search failed (${res.status})`)
   return (await res.json()) as TickerSearchResult[]
 }
 
 /**
- * Debounced Finnhub ticker search via /api/tickers (common stocks only).
+ * Debounced ticker search (Finnhub by default, or Yahoo).
  * Empty results while the query is blank, debouncing, or on error.
  */
-export function useTickerSearch(query: string, debounceMs = 300) {
+export function useTickerSearch(
+  query: string,
+  debounceMs = 300,
+  source: TickerSearchSource = 'finnhub',
+) {
   const trimmed = query.trim()
   const [debounced, setDebounced] = useState(trimmed)
 
@@ -23,8 +38,8 @@ export function useTickerSearch(query: string, debounceMs = 300) {
   }, [trimmed, debounceMs])
 
   const { data, isFetching } = useQuery({
-    queryKey: ['ticker-search', debounced.toLowerCase()],
-    queryFn: ({ signal }) => fetchTickers(debounced, signal),
+    queryKey: ['ticker-search', source, debounced.toLowerCase()],
+    queryFn: ({ signal }) => fetchTickers(source, debounced, signal),
     enabled: debounced.length > 0,
     staleTime: 10 * 60 * 1000,
     retry: false,

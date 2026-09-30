@@ -263,11 +263,13 @@ function TickerSearch({
 }) {
   const [q, setQ] = useState('')
   const query = q.trim()
-  const { results: found, isLoading: loading } = useTickerSearch(query)
-  const results = found.slice(0, 6).map((r) => ({ ...r, symbol: toYahooSymbol(r.symbol) }))
+  // Yahoo search: holdings are priced by Yahoo, and it returns ETFs / non-US listings with suffixes.
+  const { results: found, isLoading: loading } = useTickerSearch(query, 300, 'yahoo')
+  const results = found.slice(0, 6)
 
   const raw = toYahooSymbol(query.toUpperCase())
-  const showRaw = TICKER_RE.test(raw) && !results.some((r) => r.symbol === raw)
+  // Hidden until the search settles, so a quick click can't pick bare SXR8 before SXR8.DE arrives.
+  const showRaw = !loading && TICKER_RE.test(raw) && !results.some((r) => r.symbol === raw)
 
   return (
     <div className="flex flex-col gap-3.5 px-5 py-4">
@@ -287,17 +289,22 @@ function TickerSearch({
           <li key={r.symbol}>
             <ResultRow
               ticker={r.symbol}
-              sub={r.name}
+              sub={r.exchange ? `${r.name} · ${r.exchange}` : r.name}
               held={heldTickers.has(r.symbol)}
               onClick={() => onSelect({ ticker: r.symbol, name: r.name })}
             />
           </li>
         ))}
+        {loading && results.length === 0 && (
+          <li className="px-1 py-2 text-sm text-gray-500" aria-live="polite">
+            Searching…
+          </li>
+        )}
         {showRaw && (
           <li>
             <ResultRow
               ticker={raw}
-              sub={loading ? 'Searching…' : 'Use this Yahoo Finance symbol (ETFs, non-US listings)'}
+              sub="Use this Yahoo Finance symbol (ETFs, non-US listings)"
               held={heldTickers.has(raw)}
               onClick={() => onSelect({ ticker: raw, name: null })}
             />
