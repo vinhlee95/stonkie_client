@@ -9,6 +9,7 @@ const AAPL: PortfolioHolding = {
   name: 'Apple Inc',
   shares: 10,
   avg_cost: 100,
+  lots: [{ id: 'lot-aapl', shares: 10, price: 100, purchased_on: '2025-01-02' }],
   currency: 'USD',
   price: 210,
   day_change_percent: 1,

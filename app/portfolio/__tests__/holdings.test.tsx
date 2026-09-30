@@ -10,6 +10,7 @@ function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
     name: null,
     shares: 2,
     avg_cost: 100,
+    lots: [{ id: 'lot-1', shares: 2, price: 100, purchased_on: null }],
     currency: 'USD',
     price: 200,
     day_change_percent: 1,

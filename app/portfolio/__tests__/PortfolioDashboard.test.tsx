@@ -13,6 +13,9 @@ function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
     name: 'Apple Inc',
     shares: 10,
     avg_cost: 100,
+    lots: [
+      { id: '0b8a3f1e-5d2c-4c3a-9f1e-2b7d8c9a0e11', shares: 10, price: 100, purchased_on: '2025-01-02' },
+    ],
     currency: 'USD',
     price: 210,
     day_change_percent: 5,
@@ -54,6 +57,9 @@ const FILLED: Portfolio = {
       name: 'Nokia',
       shares: 100,
       avg_cost: 2,
+      lots: [
+        { id: '1c9b4a2f-6e3d-4d4b-8a2f-3c8e9d0b1f22', shares: 100, price: 2, purchased_on: null },
+      ],
       currency: 'EUR',
       price: 4,
       day_change_percent: -20,
