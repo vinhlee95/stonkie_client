@@ -36,6 +36,15 @@ describe('GET /api/tickers/yahoo', () => {
     expect(res.headers.get('cache-control')).toContain('s-maxage')
   })
 
+  it('truncates q to the backend 64-char limit', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ data: [] })))
+
+    await GET(req('a'.repeat(70)))
+
+    const url = new URL(fetchMock.mock.calls[0][0])
+    expect(url.searchParams.get('q')).toBe('a'.repeat(64))
+  })
+
   it('returns 502 when the backend errors', async () => {
     fetchMock.mockResolvedValue(new Response('{}', { status: 502 }))
     expect((await GET(req('SXR8'))).status).toBe(502)

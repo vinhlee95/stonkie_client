@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-
-export type TickerSearchResult = { symbol: string; name: string; exchange?: string | null }
+import type { TickerSearchResult } from '@/app/types'
 
 /** finnhub: common stocks, Finnhub symbols (BRK.B). yahoo: stocks + ETFs, Yahoo symbols (SXR8.DE). */
 export type TickerSearchSource = 'finnhub' | 'yahoo'

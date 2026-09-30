@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { TickerSearchResult } from '@/app/components/hooks/useTickerSearch'
+import type { TickerSearchResult } from '@/app/types'
 
 const BACKEND_URL =
   process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
