@@ -150,7 +150,7 @@ describe('PortfolioDashboard', () => {
       key === 'stonkie_favourites' ? JSON.stringify([{ ticker: 'MSFT', name: 'Microsoft' }]) : null,
     )
     fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
-      if (init?.method === 'PUT') return new Response(JSON.stringify({ ticker: 'MSFT' }))
+      if (init?.method === 'POST') return new Response(JSON.stringify({ ticker: 'MSFT' }))
       if (url === '/api/me/portfolio') return new Response(JSON.stringify(FILLED))
       return new Response('[]')
     })
@@ -159,13 +159,18 @@ describe('PortfolioDashboard', () => {
     await userEvent.click(await screen.findByRole('button', { name: /MSFT/ }))
     const dialog = screen.getByRole('dialog', { name: 'Add holding' })
     await userEvent.type(within(dialog).getByLabelText('Shares'), '5')
-    await userEvent.type(within(dialog).getByLabelText(/Average cost/), '400')
+    await userEvent.type(within(dialog).getByLabelText(/Price per share/), '400')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Add to portfolio' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    const put = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT')!
-    expect(put[0]).toBe('/api/me/portfolio/holdings/MSFT')
-    expect(JSON.parse(put[1].body)).toEqual({ shares: 5, avg_cost: 400, name: 'Microsoft' })
+    const post = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')!
+    expect(post[0]).toBe('/api/me/portfolio/holdings/MSFT/lots')
+    expect(JSON.parse(post[1].body)).toEqual({
+      shares: 5,
+      price: 400,
+      purchased_on: null,
+      name: 'Microsoft',
+    })
     expect(await screen.findByText('€2,080.00')).toBeInTheDocument()
   })
 
@@ -179,16 +184,16 @@ describe('PortfolioDashboard', () => {
     await userEvent.type(screen.getByLabelText('Search ticker or company'), 'nope')
     await userEvent.click(await screen.findByRole('button', { name: /^NOPE/ }))
     await userEvent.type(screen.getByLabelText('Shares'), '1')
-    await userEvent.type(screen.getByLabelText(/Average cost/), '1')
+    await userEvent.type(screen.getByLabelText(/Price per share/), '1')
     await userEvent.click(screen.getByRole('button', { name: 'Add to portfolio' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No price data for NOPE')
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('accepts comma decimals and blocks invalid numbers', async () => {
+  it('edits a lot from the position view with comma decimals', async () => {
     fetchMock.mockImplementation(async (_url: string, init?: RequestInit) =>
-      init?.method === 'PUT' ? new Response('{}') : new Response(JSON.stringify(FILLED)),
+      init?.method === 'PATCH' ? new Response('{}') : new Response(JSON.stringify(FILLED)),
     )
     render(<PortfolioDashboard initialData={FILLED} />)
 
@@ -196,21 +201,27 @@ describe('PortfolioDashboard', () => {
       within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
     )
     const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Edit lot' }))
     const shares = within(dialog).getByLabelText('Shares')
-    const save = within(dialog).getByRole('button', { name: 'Save' })
+    const save = within(dialog).getByRole('button', { name: 'Save lot' })
 
     await userEvent.clear(shares)
     await userEvent.type(shares, '1abc')
     expect(save).toBeDisabled()
-    expect(within(dialog).getByText(/Enter positive numbers/)).toBeInTheDocument()
 
     await userEvent.clear(shares)
     await userEvent.type(shares, '2,35')
     await userEvent.click(save)
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    const put = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT')!
-    expect(JSON.parse(put[1].body)).toMatchObject({ shares: 2.35, avg_cost: 100 })
+    await waitFor(() => expect(within(dialog).queryByLabelText('Shares')).not.toBeInTheDocument())
+    const patch = fetchMock.mock.calls.find(([, init]) => init?.method === 'PATCH')!
+    expect(patch[0]).toBe('/api/me/portfolio/lots/0b8a3f1e-5d2c-4c3a-9f1e-2b7d8c9a0e11')
+    expect(JSON.parse(patch[1].body)).toEqual({
+      shares: 2.35,
+      price: 100,
+      purchased_on: '2025-01-02',
+    })
+    expect(screen.getByRole('dialog', { name: 'Edit AAPL' })).toBeInTheDocument()
   })
 
   it('adds a searched ticker using its Yahoo symbol', async () => {
@@ -218,7 +229,7 @@ describe('PortfolioDashboard', () => {
       if (url.startsWith('/api/tickers')) {
         return new Response(JSON.stringify([{ symbol: 'BRK.B', name: 'Berkshire Hathaway B' }]))
       }
-      if (init?.method === 'PUT') return new Response('{}')
+      if (init?.method === 'POST') return new Response('{}')
       return new Response(JSON.stringify(FILLED))
     })
     render(<PortfolioDashboard initialData={EMPTY} />)
@@ -229,20 +240,21 @@ describe('PortfolioDashboard', () => {
     const dialog = screen.getByRole('dialog', { name: 'Add holding' })
     expect(within(dialog).getByText('BRK-B')).toBeInTheDocument()
     await userEvent.type(within(dialog).getByLabelText('Shares'), '1,000.5')
-    await userEvent.type(within(dialog).getByLabelText(/Average cost/), '410')
+    await userEvent.type(within(dialog).getByLabelText(/Price per share/), '410')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Add to portfolio' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    const put = fetchMock.mock.calls.find(([, init]) => init?.method === 'PUT')!
-    expect(put[0]).toBe('/api/me/portfolio/holdings/BRK-B')
-    expect(JSON.parse(put[1].body)).toEqual({
+    const post = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')!
+    expect(post[0]).toBe('/api/me/portfolio/holdings/BRK-B/lots')
+    expect(JSON.parse(post[1].body)).toEqual({
       shares: 1000.5,
-      avg_cost: 410,
+      price: 410,
+      purchased_on: null,
       name: 'Berkshire Hathaway B',
     })
   })
 
-  it('removes a holding from the edit dialog', async () => {
+  it('removes a position from the edit dialog', async () => {
     fetchMock.mockImplementation(async (_url: string, init?: RequestInit) =>
       init?.method === 'DELETE'
         ? new Response(null, { status: 204 })
@@ -254,10 +266,37 @@ describe('PortfolioDashboard', () => {
       within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
     )
     const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
-    expect(within(dialog).getByLabelText('Shares')).toHaveValue('10')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove position' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Yes, remove' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(fetchMock).toHaveBeenCalledWith('/api/me/portfolio/holdings/AAPL', { method: 'DELETE' })
+  })
+
+  it('deleting the last lot closes the position view', async () => {
+    const withoutAapl: Portfolio = {
+      ...FILLED,
+      summary: { ...FILLED.summary, holdings_count: 1 },
+      holdings: [FILLED.holdings[1]],
+    }
+    fetchMock.mockImplementation(async (_url: string, init?: RequestInit) =>
+      init?.method === 'DELETE'
+        ? new Response(null, { status: 204 })
+        : new Response(JSON.stringify(withoutAapl)),
+    )
+    render(<PortfolioDashboard initialData={FILLED} />)
+
+    await userEvent.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete lot' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/me/portfolio/lots/0b8a3f1e-5d2c-4c3a-9f1e-2b7d8c9a0e11',
+      { method: 'DELETE' },
+    )
   })
 })

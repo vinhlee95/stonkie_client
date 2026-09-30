@@ -5,7 +5,6 @@ import {
   deleteLot,
   fetchPortfolio,
   removeHolding,
-  saveHolding,
   updateLot,
 } from '@/lib/api/portfolio'
 
@@ -26,9 +25,9 @@ describe('portfolio API errors', () => {
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ detail: 'No price data for NOPE' }), { status: 422 }),
     )
-    await expect(saveHolding('NOPE', { shares: 1, avg_cost: 1 })).rejects.toThrow(
-      'No price data for NOPE',
-    )
+    await expect(
+      addLot('NOPE', { shares: 1, price: 1, purchased_on: null, name: null }),
+    ).rejects.toThrow('No price data for NOPE')
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 }),
     )

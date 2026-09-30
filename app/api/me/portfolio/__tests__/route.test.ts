@@ -7,7 +7,7 @@ vi.mock('@/lib/auth/server', () => ({ authedBackendFetch: vi.fn() }))
 import { authedBackendFetch } from '@/lib/auth/server'
 import { UnauthenticatedError } from '@/lib/auth/shared'
 import { GET } from '../route'
-import { DELETE, PUT } from '../holdings/[ticker]/route'
+import * as holdingRoute from '../holdings/[ticker]/route'
 import { POST as POST_LOT } from '../holdings/[ticker]/lots/route'
 import { DELETE as DELETE_LOT, PATCH as PATCH_LOT } from '../lots/[lotId]/route'
 
@@ -37,32 +37,8 @@ describe('portfolio BFF routes', () => {
     expect((await GET()).status).toBe(502)
   })
 
-  it('PUT upper-cases ticker and forwards body + 422', async () => {
-    backend.mockResolvedValue(
-      new Response(JSON.stringify({ detail: 'No price data' }), { status: 422 }),
-    )
-    const req = new NextRequest('http://x/api/me/portfolio/holdings/nokia.he', {
-      method: 'PUT',
-      body: JSON.stringify({ shares: 1, avg_cost: 2 }),
-    })
-    const res = await PUT(req, ctx('nokia.he'))
-    const [path, init] = backend.mock.calls[0]
-    expect(path).toBe('/api/me/portfolio/holdings/NOKIA.HE')
-    expect(init.method).toBe('PUT')
-    expect(JSON.parse(init.body)).toEqual({ shares: 1, avg_cost: 2 })
-    expect(res.status).toBe(422)
-    expect(await res.json()).toEqual({ detail: 'No price data' })
-  })
-
   it('rejects invalid tickers without calling backend', async () => {
-    const res = await DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('../me'))
-    expect(res.status).toBe(400)
-    expect(backend).not.toHaveBeenCalled()
-  })
-
-  it('PUT rejects invalid tickers without reading body or calling backend', async () => {
-    const req = new NextRequest('http://x', { method: 'PUT', body: '{}' })
-    const res = await PUT(req, ctx('../me'))
+    const res = await holdingRoute.DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('../me'))
     expect(res.status).toBe(400)
     expect(backend).not.toHaveBeenCalled()
   })
@@ -76,7 +52,7 @@ describe('portfolio BFF routes', () => {
 
   it('DELETE passes 204 through', async () => {
     backend.mockResolvedValue(new Response(null, { status: 204 }))
-    const res = await DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('AAPL'))
+    const res = await holdingRoute.DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('AAPL'))
     expect(res.status).toBe(204)
     expect(res.headers.get('Cache-Control')).toBe('private, no-store')
   })
@@ -135,4 +111,8 @@ describe('portfolio BFF routes', () => {
       expect(backend).not.toHaveBeenCalled()
     },
   )
+
+  it('no longer exposes PUT for holdings', () => {
+    expect('PUT' in holdingRoute).toBe(false)
+  })
 })

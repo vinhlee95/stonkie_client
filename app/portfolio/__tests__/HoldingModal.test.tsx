@@ -2,14 +2,21 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { render, screen, within } from '@/tests/test-utils'
 import type { PortfolioHolding } from '@/lib/api/portfolio'
-import { HoldingModal } from '../components/HoldingModal'
+import {
+  HoldingModal,
+  type HoldingActions,
+  type HoldingModalState,
+} from '../components/HoldingModal'
 
 const AAPL: PortfolioHolding = {
   ticker: 'AAPL',
   name: 'Apple Inc',
-  shares: 10,
-  avg_cost: 100,
-  lots: [{ id: 'lot-aapl', shares: 10, price: 100, purchased_on: '2025-01-02' }],
+  shares: 15,
+  avg_cost: 120,
+  lots: [
+    { id: 'lot-new', shares: 5, price: 160, purchased_on: '2025-06-01' },
+    { id: 'lot-old', shares: 10, price: 100, purchased_on: null },
+  ],
   currency: 'USD',
   price: 210,
   day_change_percent: 1,
@@ -17,11 +24,11 @@ const AAPL: PortfolioHolding = {
   as_of: null,
   delayed: false,
   fx_rate: 0.8,
-  value: 1680,
-  cost_basis: 800,
+  value: 2520,
+  cost_basis: 1440,
   day_change: 16,
-  total_return: 880,
-  total_return_percent: 110,
+  total_return: 1080,
+  total_return_percent: 75,
   weight: 100,
   sector: 'Technology',
   country: 'United States',
@@ -36,21 +43,23 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllGlobals())
 
-function renderModal(
-  onSave = vi.fn().mockResolvedValue(undefined),
-  preset: { ticker: string; name: string | null } | null = null,
-) {
-  render(
-    <HoldingModal
-      state={{ preset }}
-      heldTickers={new Set(['AAPL'])}
-      holdings={[AAPL]}
-      onClose={() => {}}
-      onSave={onSave}
-      onRemove={vi.fn()}
-    />,
+function makeActions(): HoldingActions {
+  return {
+    addHolding: vi.fn().mockResolvedValue(undefined),
+    addLot: vi.fn().mockResolvedValue(undefined),
+    updateLot: vi.fn().mockResolvedValue(undefined),
+    deleteLot: vi.fn().mockResolvedValue(undefined),
+    removeHolding: vi.fn().mockResolvedValue(undefined),
+  }
+}
+
+function renderModal(state: HoldingModalState, holdings = [AAPL]) {
+  const actions = makeActions()
+  const onClose = vi.fn()
+  const view = render(
+    <HoldingModal state={state} holdings={holdings} actions={actions} onClose={onClose} />,
   )
-  return screen.getByRole('dialog', { name: 'Add holding' })
+  return { actions, onClose, ...view }
 }
 
 async function pick(dialog: HTMLElement, symbol: string) {
@@ -62,68 +71,162 @@ async function pick(dialog: HTMLElement, symbol: string) {
   )
 }
 
-describe('HoldingModal', () => {
-  it('prefills a held ticker and clears the fields when switching to one not held', async () => {
-    const dialog = renderModal()
+describe('HoldingModal — add view', () => {
+  it('adds a new lot to a held ticker without prefilling it', async () => {
+    const { actions, onClose } = renderModal({ preset: null })
+    const dialog = screen.getByRole('dialog', { name: 'Add holding' })
     await pick(dialog, 'AAPL')
-    expect(within(dialog).getByLabelText('Shares')).toHaveValue('10')
-    expect(within(dialog).getByLabelText(/Average cost/)).toHaveValue('100')
 
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Change' }))
-    await pick(dialog, 'NOPE')
+    expect(
+      within(dialog).getByText(/You hold 15 shares @ \$120\.00 avg\. This adds a new lot\./),
+    ).toBeInTheDocument()
+    expect(within(dialog).queryByText(/replace/)).not.toBeInTheDocument()
     expect(within(dialog).getByLabelText('Shares')).toHaveValue('')
-    expect(within(dialog).getByLabelText(/Average cost/)).toHaveValue('')
-    expect(within(dialog).getByRole('button', { name: 'Add to portfolio' })).toBeDisabled()
-  })
 
-  it.each([
-    ['4,123', 'Ambiguous — type 4123 or 4.123'],
-    ['0,125', 'Ambiguous — type 125 or 0.125'],
-  ])('asks to disambiguate %j and blocks saving', async (input, hint) => {
-    const onSave = vi.fn().mockResolvedValue(undefined)
-    const dialog = renderModal(onSave)
-    await pick(dialog, 'NOPE')
     await userEvent.type(within(dialog).getByLabelText('Shares'), '2')
-    await userEvent.type(within(dialog).getByLabelText(/Average cost/), input)
+    await userEvent.type(within(dialog).getByLabelText(/Price per share/), '200')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add to portfolio' }))
 
-    expect(within(dialog).getByText(hint)).toBeInTheDocument()
-    const add = within(dialog).getByRole('button', { name: 'Add to portfolio' })
-    expect(add).toBeDisabled()
-
-    await userEvent.clear(within(dialog).getByLabelText(/Average cost/))
-    await userEvent.type(within(dialog).getByLabelText(/Average cost/), input.replace(',', '.'))
-    expect(within(dialog).queryByText(/Ambiguous/)).not.toBeInTheDocument()
-    await userEvent.click(add)
-    expect(onSave).toHaveBeenCalledWith('NOPE', {
+    expect(actions.addHolding).toHaveBeenCalledWith('AAPL', {
       shares: 2,
-      avg_cost: Number(input.replace(',', '.')),
+      price: 200,
+      purchased_on: null,
       name: null,
     })
+    expect(onClose).toHaveBeenCalled()
   })
 
-  it('saves a Finnhub-style favourite preset under its Yahoo symbol', async () => {
-    const onSave = vi.fn().mockResolvedValue(undefined)
-    const dialog = renderModal(onSave, { ticker: 'BRK.B', name: 'Berkshire Hathaway B' })
+  it('clears typed values when switching ticker', async () => {
+    renderModal({ preset: null })
+    const dialog = screen.getByRole('dialog', { name: 'Add holding' })
+    await pick(dialog, 'NOPE')
+    await userEvent.type(within(dialog).getByLabelText('Shares'), '3')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Change' }))
+    await pick(dialog, 'MSFT')
+    expect(within(dialog).getByLabelText('Shares')).toHaveValue('')
+    expect(within(dialog).queryByText(/You hold/)).not.toBeInTheDocument()
+  })
+
+  it('adds a Finnhub-style favourite preset under its Yahoo symbol', async () => {
+    const { actions } = renderModal({
+      preset: { ticker: 'BRK.B', name: 'Berkshire Hathaway B' },
+    })
+    const dialog = screen.getByRole('dialog', { name: 'Add holding' })
     expect(within(dialog).getByText('BRK-B')).toBeInTheDocument()
     await userEvent.type(within(dialog).getByLabelText('Shares'), '1')
-    await userEvent.type(within(dialog).getByLabelText(/Average cost/), '400')
+    await userEvent.type(within(dialog).getByLabelText(/Price per share/), '400')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Add to portfolio' }))
-    expect(onSave).toHaveBeenCalledWith('BRK-B', {
+    expect(actions.addHolding).toHaveBeenCalledWith('BRK-B', {
       shares: 1,
-      avg_cost: 400,
+      price: 400,
+      purchased_on: null,
       name: 'Berkshire Hathaway B',
     })
   })
 
   it('maps a typed raw class symbol to its Yahoo form', async () => {
-    const onSave = vi.fn().mockResolvedValue(undefined)
-    const dialog = renderModal(onSave)
+    const { actions } = renderModal({ preset: null })
+    const dialog = screen.getByRole('dialog', { name: 'Add holding' })
     await userEvent.type(within(dialog).getByLabelText('Search ticker or company'), 'brk.b')
     await userEvent.click(await within(dialog).findByRole('button', { name: /^BRK-B/ }))
     expect(within(dialog).queryByRole('button', { name: /^BRK\.B/ })).not.toBeInTheDocument()
     await userEvent.type(within(dialog).getByLabelText('Shares'), '1')
-    await userEvent.type(within(dialog).getByLabelText(/Average cost/), '400')
+    await userEvent.type(within(dialog).getByLabelText(/Price per share/), '400')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Add to portfolio' }))
-    expect(onSave).toHaveBeenCalledWith('BRK-B', { shares: 1, avg_cost: 400, name: null })
+    expect(actions.addHolding).toHaveBeenCalledWith('BRK-B', {
+      shares: 1,
+      price: 400,
+      purchased_on: null,
+      name: null,
+    })
+  })
+})
+
+describe('HoldingModal — position view', () => {
+  it('lists lots newest first with an undated fallback', () => {
+    renderModal({ ticker: 'AAPL' })
+    const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    const [first, second] = within(
+      within(dialog).getByRole('list', { name: 'Lots' }),
+    ).getAllByRole('listitem')
+    expect(first).toHaveTextContent('1 Jun 2025')
+    expect(first).toHaveTextContent('5 × $160.00')
+    expect(second).toHaveTextContent('No date')
+    expect(second).toHaveTextContent('$1,000.00')
+    expect(within(dialog).getByText('$1,800.00')).toBeInTheDocument() // position cost basis
+  })
+
+  it('edits a lot inline', async () => {
+    const { actions } = renderModal({ ticker: 'AAPL' })
+    const [first] = within(screen.getByRole('list', { name: 'Lots' })).getAllByRole('listitem')
+    await userEvent.click(within(first).getByRole('button', { name: 'Edit lot' }))
+    const shares = within(first).getByLabelText('Shares')
+    await userEvent.clear(shares)
+    await userEvent.type(shares, '6')
+    await userEvent.click(within(first).getByRole('button', { name: 'Save lot' }))
+
+    expect(actions.updateLot).toHaveBeenCalledWith('lot-new', {
+      shares: 6,
+      price: 160,
+      purchased_on: '2025-06-01',
+    })
+    expect(within(first).queryByLabelText('Shares')).not.toBeInTheDocument()
+  })
+
+  it('deletes a lot only after confirming', async () => {
+    const { actions } = renderModal({ ticker: 'AAPL' })
+    const [, second] = within(screen.getByRole('list', { name: 'Lots' })).getAllByRole('listitem')
+    await userEvent.click(within(second).getByRole('button', { name: 'Delete lot' }))
+    await userEvent.click(within(second).getByRole('button', { name: 'Keep' }))
+    expect(actions.deleteLot).not.toHaveBeenCalled()
+
+    await userEvent.click(within(second).getByRole('button', { name: 'Delete lot' }))
+    await userEvent.click(within(second).getByRole('button', { name: 'Delete' }))
+    expect(actions.deleteLot).toHaveBeenCalledWith('lot-old')
+  })
+
+  it('shows a failed lot delete', async () => {
+    const { actions } = renderModal({ ticker: 'AAPL' })
+    vi.mocked(actions.deleteLot).mockRejectedValue(new Error('Lot not found'))
+    const [first] = within(screen.getByRole('list', { name: 'Lots' })).getAllByRole('listitem')
+    await userEvent.click(within(first).getByRole('button', { name: 'Delete lot' }))
+    await userEvent.click(within(first).getByRole('button', { name: 'Delete' }))
+    expect(await within(first).findByRole('alert')).toHaveTextContent('Lot not found')
+  })
+
+  it('adds a lot to the position', async () => {
+    const { actions } = renderModal({ ticker: 'AAPL' })
+    await userEvent.click(screen.getByRole('button', { name: 'Add lot' }))
+    await userEvent.type(screen.getByLabelText('Shares'), '1')
+    await userEvent.type(screen.getByLabelText(/Price per share/), '210')
+    await userEvent.click(screen.getByRole('button', { name: 'Add lot' }))
+
+    expect(actions.addLot).toHaveBeenCalledWith('AAPL', {
+      shares: 1,
+      price: 210,
+      purchased_on: null,
+      name: 'Apple Inc',
+    })
+    expect(screen.queryByLabelText('Shares')).not.toBeInTheDocument()
+  })
+
+  it('removes the whole position after confirming', async () => {
+    const { actions, onClose } = renderModal({ ticker: 'AAPL' })
+    await userEvent.click(screen.getByRole('button', { name: 'Remove position' }))
+    expect(screen.getByText('Remove AAPL and its 2 lots?')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Yes, remove' }))
+
+    expect(actions.removeHolding).toHaveBeenCalledWith('AAPL')
+    expect(onClose).toHaveBeenCalled()
+  })
+
+  it('closes when the position disappears', () => {
+    const { actions, onClose, rerender } = renderModal({ ticker: 'AAPL' })
+    rerender(
+      <HoldingModal state={{ ticker: 'AAPL' }} holdings={[]} actions={actions} onClose={onClose} />,
+    )
+    expect(onClose).toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

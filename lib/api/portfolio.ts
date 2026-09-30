@@ -70,12 +70,6 @@ export interface Portfolio {
   holdings: PortfolioHolding[]
 }
 
-export interface HoldingInput {
-  shares: number
-  avg_cost: number
-  name?: string | null
-}
-
 export interface LotInput {
   shares: number
   price: number
@@ -144,15 +138,6 @@ export async function fetchPortfolio(): Promise<Portfolio> {
   const res = await fetch('/api/me/portfolio', { cache: 'no-store' })
   if (!res.ok) throw new Error(await errorDetail(res))
   return (await res.json()) as Portfolio
-}
-
-export async function saveHolding(ticker: string, input: HoldingInput): Promise<void> {
-  const res = await fetch(`/api/me/portfolio/holdings/${encodeURIComponent(ticker)}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  })
-  if (!res.ok) throw new Error(await errorDetail(res))
 }
 
 export async function removeHolding(ticker: string): Promise<void> {
