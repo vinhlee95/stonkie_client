@@ -1,5 +1,5 @@
 ---
-name: review-scalability
+name: frontend-review-scalability
 description: Scalability/performance reviewer for /multi-review. Reviews a git diff range for bundle size, rendering, caching and request waterfall problems in the Next.js frontend. Returns JSON findings only. Invoked by the multi-review skill, not directly.
 tools: Read, Grep, Glob
 model: sonnet

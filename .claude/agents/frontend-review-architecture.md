@@ -1,5 +1,5 @@
 ---
-name: review-architecture
+name: frontend-review-architecture
 description: Architecture/conventions reviewer for /multi-review. Reviews a git diff range against the Stonkie frontend's Next.js structure and coding conventions. Returns JSON findings only. Invoked by the multi-review skill, not directly.
 tools: Read, Grep, Glob
 model: sonnet
