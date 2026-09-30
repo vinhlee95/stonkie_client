@@ -136,3 +136,22 @@ describe('delayed rows', () => {
     expect(tags[0].closest('tr')).toHaveTextContent('SLOW')
   })
 })
+
+describe('lot count', () => {
+  const lot = (id: string) => ({ id, shares: 1, price: 100, purchased_on: null })
+  const multi = holding({ ticker: 'MSFT', lots: [lot('a'), lot('b'), lot('c')] })
+  const single = holding({ ticker: 'AAPL' })
+
+  it('shows the number of lots only when there are several', () => {
+    render(<HoldingsTable holdings={[multi, single]} currency="EUR" onEdit={vi.fn()} />)
+    const rows = screen.getAllByRole('row')
+    expect(within(rows[1]).getByText('3 lots')).toBeInTheDocument()
+    expect(within(rows[2]).queryByText(/lots?$/)).not.toBeInTheDocument()
+  })
+
+  it('shows the number of lots in the mobile list', () => {
+    render(<HoldingsList holdings={[multi, single]} currency="EUR" onEdit={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'Edit MSFT' })).toHaveTextContent('· 3 lots')
+    expect(screen.getByRole('button', { name: 'Edit AAPL' })).not.toHaveTextContent('lots')
+  })
+})
