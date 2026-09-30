@@ -63,6 +63,37 @@ describe('usePortfolio', () => {
     await waitFor(() => expect(result.current.data.summary.total_value).toBe(250))
   })
 
+  it('sync resolves only once the refetched portfolio is in', async () => {
+    let resolve!: (r: Response) => void
+    fetchMock.mockReturnValue(new Promise<Response>((r) => (resolve = r)))
+    const { result } = renderHook(() => usePortfolio(portfolio(100)), { wrapper })
+
+    let settled = false
+    let pending!: Promise<void>
+    act(() => {
+      pending = result.current.sync().then(() => {
+        settled = true
+      })
+    })
+    await new Promise((r) => setTimeout(r, 10))
+    expect(settled).toBe(false) // still waiting on the fetch
+
+    resolve(new Response(JSON.stringify(portfolio(250))))
+    await act(() => pending)
+    expect(client.getQueryData<Portfolio>(PORTFOLIO_QUERY_KEY)?.summary.total_value).toBe(250)
+    // Subscribers re-render a tick after the cache update.
+    await waitFor(() => expect(result.current.data.summary.total_value).toBe(250))
+  })
+
+  it('sync resolves and keeps the last good data when the refetch fails', async () => {
+    fetchMock.mockResolvedValue(new Response('oops', { status: 500 }))
+    const { result } = renderHook(() => usePortfolio(portfolio(100)), { wrapper })
+
+    await act(() => result.current.sync())
+
+    expect(result.current.data.summary.total_value).toBe(100)
+  })
+
   it('refetches every 5 minutes to follow the live-quote cache', async () => {
     vi.useFakeTimers()
     try {

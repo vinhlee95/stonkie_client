@@ -61,3 +61,19 @@ export const TONE_TEXT = {
   up: 'text-[var(--tab-active)] dark:text-[var(--accent-active-dark)]',
   down: 'text-[var(--accent-down)] dark:text-red-400',
 } as const
+
+/** Purchase date (YYYY-MM-DD) as 12 Mar 2025; formatted in UTC so it never shifts a day. */
+export function purchaseDate(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
+/** The user's local calendar date as YYYY-MM-DD, the format date inputs use. */
+export function localToday(now: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
