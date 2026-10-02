@@ -178,11 +178,11 @@ describe('HoldingModal — position view', () => {
     const { actions } = renderModal({ ticker: 'AAPL' })
     const [, second] = within(screen.getByRole('list', { name: 'Lots' })).getAllByRole('listitem')
     await userEvent.click(within(second).getByRole('button', { name: /^Delete lot/ }))
-    await userEvent.click(within(second).getByRole('button', { name: 'Keep' }))
+    await userEvent.click(within(second).getByRole('button', { name: /^Keep lot/ }))
     expect(actions.deleteLot).not.toHaveBeenCalled()
 
     await userEvent.click(within(second).getByRole('button', { name: /^Delete lot/ }))
-    await userEvent.click(within(second).getByRole('button', { name: 'Delete' }))
+    await userEvent.click(within(second).getByRole('button', { name: /^Confirm delete lot/ }))
     expect(actions.deleteLot).toHaveBeenCalledWith('lot-old')
   })
 
@@ -191,7 +191,7 @@ describe('HoldingModal — position view', () => {
     vi.mocked(actions.deleteLot).mockRejectedValue(new Error('Lot not found'))
     const [first] = within(screen.getByRole('list', { name: 'Lots' })).getAllByRole('listitem')
     await userEvent.click(within(first).getByRole('button', { name: /^Delete lot/ }))
-    await userEvent.click(within(first).getByRole('button', { name: 'Delete' }))
+    await userEvent.click(within(first).getByRole('button', { name: /^Confirm delete lot/ }))
     expect(await within(first).findByRole('alert')).toHaveTextContent('Lot not found')
   })
 
@@ -243,6 +243,28 @@ describe('HoldingModal — position view', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       "Saved, but the portfolio couldn't refresh. Reload to see the latest.",
     )
+  })
+
+  it("names each row's delete confirmation after its lot", async () => {
+    renderModal({ ticker: 'AAPL' })
+    for (const button of screen.getAllByRole('button', { name: /^Delete lot/ })) {
+      await userEvent.click(button)
+    }
+    expect(
+      screen.getByRole('button', { name: 'Confirm delete lot 5 × $160.00, 1 Jun 2025' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Keep lot 10 × $100.00, no date' })).toBeInTheDocument()
+  })
+
+  it('keeps the position open and shows why when removing it fails', async () => {
+    const { actions, onClose } = renderModal({ ticker: 'AAPL' })
+    vi.mocked(actions.removeHolding).mockRejectedValue(new Error('Holding not found'))
+    await userEvent.click(screen.getByRole('button', { name: 'Remove position' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Yes, remove' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Holding not found')
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Yes, remove' })).toBeEnabled()
   })
 
   it('closes when the position disappears', () => {

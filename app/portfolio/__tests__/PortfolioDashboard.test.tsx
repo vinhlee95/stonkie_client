@@ -349,7 +349,7 @@ describe('PortfolioDashboard', () => {
     )
     const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
     await userEvent.click(within(dialog).getByRole('button', { name: /^Delete lot/ }))
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Confirm delete lot/ }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(fetchMock).toHaveBeenCalledWith(

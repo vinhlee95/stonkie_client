@@ -96,6 +96,7 @@ function LotRow({
             <button
               type="button"
               disabled={busy}
+              aria-label={`Confirm delete lot ${label}`}
               onClick={() => void remove()}
               className="cursor-pointer font-semibold text-[var(--accent-down)] disabled:opacity-50 dark:text-red-400"
             >
@@ -104,6 +105,7 @@ function LotRow({
             <button
               type="button"
               disabled={busy}
+              aria-label={`Keep lot ${label}`}
               onClick={() => setConfirming(false)}
               className="cursor-pointer font-semibold disabled:opacity-50"
             >
