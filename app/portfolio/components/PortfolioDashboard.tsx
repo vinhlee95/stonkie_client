@@ -7,13 +7,15 @@ import { useFavourites } from '@/app/components/hooks/useFavourites'
 import { useIsClient } from '@/app/components/hooks/useIsClient'
 import { usePortfolio } from '@/app/components/hooks/usePortfolio'
 import {
+  addLot,
+  deleteLot,
   removeHolding,
-  saveHolding,
+  updateLot,
   type Portfolio,
   type PortfolioHolding,
 } from '@/lib/api/portfolio'
 import { asOf, plural } from '../format'
-import { HoldingModal, type HoldingModalState } from './HoldingModal'
+import { HoldingModal, type HoldingActions, type HoldingModalState } from './HoldingModal'
 import { HoldingsList, HoldingsTable } from './holdings'
 import {
   Allocation,
@@ -28,33 +30,50 @@ import {
 import { TickerLogo } from './ui'
 
 export default function PortfolioDashboard({ initialData }: { initialData: Portfolio }) {
-  const { data, refresh } = usePortfolio(initialData)
+  const { data, refresh, sync } = usePortfolio(initialData)
   const isClient = useIsClient()
   const [modal, setModal] = useState<HoldingModalState | null>(null)
+  // A position-view write saved but its refetch failed: the open view must not pass old lots off as current.
+  const [stale, setStale] = useState(false)
+  const resync = useCallback(async () => setStale(!(await sync())), [sync])
 
-  // Mutations resolve (and the dialog closes) as soon as the write succeeds;
-  // the revalued portfolio refetches in the background.
-  const onSave = useCallback(
-    async (ticker: string, input: { shares: number; avg_cost: number; name: string | null }) => {
-      await saveHolding(ticker, input)
-      refresh()
-    },
-    [refresh],
+  // Adding a holding and removing a position close the dialog as soon as the
+  // write succeeds and revalue in the background; lot edits keep the position
+  // view open, so they wait for the refetch to show fresh lots.
+  const actions = useMemo<HoldingActions>(
+    () => ({
+      addHolding: async (ticker, input) => {
+        await addLot(ticker, input)
+        refresh()
+      },
+      addLot: async (ticker, input) => {
+        await addLot(ticker, input)
+        await resync()
+      },
+      updateLot: async (id, input) => {
+        await updateLot(id, input)
+        await resync()
+      },
+      deleteLot: async (id) => {
+        await deleteLot(id)
+        await resync()
+      },
+      removeHolding: async (ticker) => {
+        await removeHolding(ticker)
+        refresh()
+      },
+    }),
+    [refresh, resync],
   )
-  const onRemove = useCallback(
-    async (ticker: string) => {
-      await removeHolding(ticker)
-      refresh()
-    },
-    [refresh],
-  )
-  const closeModal = useCallback(() => setModal(null), [])
+  const closeModal = useCallback(() => {
+    setModal(null)
+    setStale(false)
+  }, [])
 
   const { summary: s, holdings, base_currency: currency } = data
-  const heldTickers = useMemo(() => new Set(holdings.map((h) => h.ticker)), [holdings])
   const add = (preset: { ticker: string; name: string | null } | null = null) =>
     setModal({ preset })
-  const edit = (holding: PortfolioHolding) => setModal({ holding })
+  const edit = (holding: PortfolioHolding) => setModal({ ticker: holding.ticker })
   const unpriced = holdings.filter((h) => h.value === null)
 
   return (
@@ -141,11 +160,10 @@ export default function PortfolioDashboard({ initialData }: { initialData: Portf
       {modal && (
         <HoldingModal
           state={modal}
-          heldTickers={heldTickers}
           holdings={holdings}
+          actions={actions}
           onClose={closeModal}
-          onSave={onSave}
-          onRemove={onRemove}
+          stale={stale}
         />
       )}
     </main>

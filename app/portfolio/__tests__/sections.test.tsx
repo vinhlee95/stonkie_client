@@ -19,6 +19,7 @@ function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
     name: null,
     shares: 1,
     avg_cost: 1,
+    lots: [],
     currency: 'USD',
     price: 1,
     day_change_percent: 0,

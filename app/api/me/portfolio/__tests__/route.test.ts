@@ -7,10 +7,13 @@ vi.mock('@/lib/auth/server', () => ({ authedBackendFetch: vi.fn() }))
 import { authedBackendFetch } from '@/lib/auth/server'
 import { UnauthenticatedError } from '@/lib/auth/shared'
 import { GET } from '../route'
-import { DELETE, PUT } from '../holdings/[ticker]/route'
+import * as holdingRoute from '../holdings/[ticker]/route'
+import { POST as POST_LOT } from '../holdings/[ticker]/lots/route'
+import { DELETE as DELETE_LOT, PATCH as PATCH_LOT } from '../lots/[lotId]/route'
 
 const backend = authedBackendFetch as unknown as ReturnType<typeof vi.fn>
 const ctx = (ticker: string) => ({ params: Promise.resolve({ ticker }) })
+const lotCtx = (lotId: string) => ({ params: Promise.resolve({ lotId }) })
 
 beforeEach(() => vi.clearAllMocks())
 
@@ -34,32 +37,8 @@ describe('portfolio BFF routes', () => {
     expect((await GET()).status).toBe(502)
   })
 
-  it('PUT upper-cases ticker and forwards body + 422', async () => {
-    backend.mockResolvedValue(
-      new Response(JSON.stringify({ detail: 'No price data' }), { status: 422 }),
-    )
-    const req = new NextRequest('http://x/api/me/portfolio/holdings/nokia.he', {
-      method: 'PUT',
-      body: JSON.stringify({ shares: 1, avg_cost: 2 }),
-    })
-    const res = await PUT(req, ctx('nokia.he'))
-    const [path, init] = backend.mock.calls[0]
-    expect(path).toBe('/api/me/portfolio/holdings/NOKIA.HE')
-    expect(init.method).toBe('PUT')
-    expect(JSON.parse(init.body)).toEqual({ shares: 1, avg_cost: 2 })
-    expect(res.status).toBe(422)
-    expect(await res.json()).toEqual({ detail: 'No price data' })
-  })
-
   it('rejects invalid tickers without calling backend', async () => {
-    const res = await DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('../me'))
-    expect(res.status).toBe(400)
-    expect(backend).not.toHaveBeenCalled()
-  })
-
-  it('PUT rejects invalid tickers without reading body or calling backend', async () => {
-    const req = new NextRequest('http://x', { method: 'PUT', body: '{}' })
-    const res = await PUT(req, ctx('../me'))
+    const res = await holdingRoute.DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('../me'))
     expect(res.status).toBe(400)
     expect(backend).not.toHaveBeenCalled()
   })
@@ -73,8 +52,67 @@ describe('portfolio BFF routes', () => {
 
   it('DELETE passes 204 through', async () => {
     backend.mockResolvedValue(new Response(null, { status: 204 }))
-    const res = await DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('AAPL'))
+    const res = await holdingRoute.DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('AAPL'))
     expect(res.status).toBe(204)
     expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+  })
+
+  it('POST lots upper-cases ticker and forwards body', async () => {
+    backend.mockResolvedValue(new Response(JSON.stringify({ id: 'x' }), { status: 201 }))
+    const body = { shares: 1, price: 2, purchased_on: null, name: null }
+    const req = new NextRequest('http://x', { method: 'POST', body: JSON.stringify(body) })
+    const res = await POST_LOT(req, ctx('nokia.he'))
+    const [path, init] = backend.mock.calls[0]
+    expect(path).toBe('/api/me/portfolio/holdings/NOKIA.HE/lots')
+    expect(init.method).toBe('POST')
+    expect(init.headers).toEqual({ 'Content-Type': 'application/json' })
+    expect(JSON.parse(init.body)).toEqual(body)
+    expect(res.status).toBe(201)
+  })
+
+  it('POST lots rejects invalid tickers without calling backend', async () => {
+    const res = await POST_LOT(
+      new NextRequest('http://x', { method: 'POST', body: '{}' }),
+      ctx('../me'),
+    )
+    expect(res.status).toBe(400)
+    expect(backend).not.toHaveBeenCalled()
+  })
+
+  it('PATCH and DELETE lot forward to the lot path', async () => {
+    const id = '0B8A3F1E-5D2C-4C3A-9F1E-2B7D8C9A0E11'
+    backend.mockResolvedValueOnce(new Response(JSON.stringify({ id }), { status: 200 }))
+    backend.mockResolvedValueOnce(new Response(null, { status: 204 }))
+
+    const patch = await PATCH_LOT(
+      new NextRequest('http://x', { method: 'PATCH', body: '{"shares":2}' }),
+      lotCtx(id),
+    )
+    const del = await DELETE_LOT(new NextRequest('http://x', { method: 'DELETE' }), lotCtx(id))
+
+    expect(backend.mock.calls[0][0]).toBe(`/api/me/portfolio/lots/${id.toLowerCase()}`)
+    expect(backend.mock.calls[0][1]).toMatchObject({ method: 'PATCH', body: '{"shares":2}' })
+    expect(backend.mock.calls[1]).toEqual([
+      `/api/me/portfolio/lots/${id.toLowerCase()}`,
+      { method: 'DELETE' },
+    ])
+    expect(patch.status).toBe(200)
+    expect(del.status).toBe(204)
+  })
+
+  it.each(['../holdings', 'not-a-uuid', '0b8a3f1e-5d2c-4c3a-9f1e-2b7d8c9a0e1'])(
+    'rejects lot id %j without calling backend',
+    async (lotId) => {
+      const res = await DELETE_LOT(
+        new NextRequest('http://x', { method: 'DELETE' }),
+        lotCtx(lotId),
+      )
+      expect(res.status).toBe(400)
+      expect(backend).not.toHaveBeenCalled()
+    },
+  )
+
+  it('no longer exposes PUT for holdings', () => {
+    expect('PUT' in holdingRoute).toBe(false)
   })
 })

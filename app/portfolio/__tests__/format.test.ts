@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { asOf, money, pct, plural, priceDp, shares, signedMoney, tone } from '../format'
+import {
+  asOf,
+  localToday,
+  money,
+  pct,
+  plural,
+  priceDp,
+  purchaseDate,
+  shares,
+  signedMoney,
+  tone,
+} from '../format'
 import { isAmbiguousDecimal, parseDecimal, TICKER_RE, toYahooSymbol } from '@/lib/api/portfolio'
 
 describe('money', () => {
@@ -121,5 +132,19 @@ describe('asOf', () => {
   })
   it('shows the date for older quotes', () => {
     expect(asOf(iso(new Date(2026, 8, 10, 22, 0)), now)).toBe('10 Sep')
+  })
+})
+
+describe('purchaseDate', () => {
+  it('formats an ISO date without shifting it by the local timezone', () => {
+    expect(purchaseDate('2025-03-12')).toBe('12 Mar 2025')
+    expect(purchaseDate('2025-01-01')).toBe('1 Jan 2025')
+  })
+})
+
+describe('localToday', () => {
+  it('uses the local calendar date', () => {
+    expect(localToday(new Date(2026, 0, 5, 0, 30))).toBe('2026-01-05')
+    expect(localToday(new Date(2026, 11, 31, 23, 59))).toBe('2026-12-31')
   })
 })

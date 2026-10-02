@@ -118,7 +118,14 @@ export function HoldingsTable({
                     </span>
                   </button>
                 </td>
-                <Td>{shares(h.shares)}</Td>
+                <Td>
+                  {shares(h.shares)}
+                  {h.lots.length > 1 && (
+                    <div className="font-sans text-xs text-gray-500 dark:text-gray-400">
+                      {h.lots.length} lots
+                    </div>
+                  )}
+                </Td>
                 <Td muted>{money(h.avg_cost, h.currency, priceDp(h.avg_cost))}</Td>
                 <Td>{h.price === null ? DASH : money(h.price, h.currency, priceDp(h.price))}</Td>
                 <Td>
@@ -226,6 +233,7 @@ export function HoldingsList({
                 <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
                   {shares(h.shares)} ×{' '}
                   {h.price === null ? '—' : money(h.price, h.currency, priceDp(h.price))}
+                  {h.lots.length > 1 && ` · ${h.lots.length} lots`}
                 </span>
               </span>
               <span className="flex flex-col items-end leading-snug">

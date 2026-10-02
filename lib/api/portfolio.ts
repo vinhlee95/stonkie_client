@@ -11,11 +11,23 @@
  * a live quote is priced at its last daily close and flagged `delayed`.
  */
 
+/** One buy of a holding's ticker. */
+export interface PortfolioLot {
+  id: string
+  shares: number
+  /** Price per share in the holding's quote unit, like `avg_cost`. */
+  price: number
+  /** Purchase date (YYYY-MM-DD), or null when not recorded. */
+  purchased_on: string | null
+}
+
 export interface PortfolioHolding {
   ticker: string
   name: string | null
   shares: number
   avg_cost: number
+  /** Buy lots, newest purchase first, undated last; `shares` and `avg_cost` aggregate them. */
+  lots: PortfolioLot[]
   currency: string | null
   price: number | null
   day_change_percent: number | null
@@ -58,11 +70,14 @@ export interface Portfolio {
   holdings: PortfolioHolding[]
 }
 
-export interface HoldingInput {
+export interface LotInput {
   shares: number
-  avg_cost: number
-  name?: string | null
+  price: number
+  purchased_on: string | null
 }
+
+/** A lot to add; `name` labels the holding when the ticker is new (null keeps the stored one). */
+export type NewLot = LotInput & { name: string | null }
 
 export const PORTFOLIO_QUERY_KEY = ['portfolio'] as const
 
@@ -125,18 +140,34 @@ export async function fetchPortfolio(): Promise<Portfolio> {
   return (await res.json()) as Portfolio
 }
 
-export async function saveHolding(ticker: string, input: HoldingInput): Promise<void> {
+export async function removeHolding(ticker: string): Promise<void> {
   const res = await fetch(`/api/me/portfolio/holdings/${encodeURIComponent(ticker)}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'DELETE',
+  })
+  if (!res.ok) throw new Error(await errorDetail(res))
+}
+
+const JSON_HEADERS = { 'Content-Type': 'application/json' }
+
+export async function addLot(ticker: string, input: NewLot): Promise<void> {
+  const res = await fetch(`/api/me/portfolio/holdings/${encodeURIComponent(ticker)}/lots`, {
+    method: 'POST',
+    headers: JSON_HEADERS,
     body: JSON.stringify(input),
   })
   if (!res.ok) throw new Error(await errorDetail(res))
 }
 
-export async function removeHolding(ticker: string): Promise<void> {
-  const res = await fetch(`/api/me/portfolio/holdings/${encodeURIComponent(ticker)}`, {
-    method: 'DELETE',
+export async function updateLot(id: string, input: LotInput): Promise<void> {
+  const res = await fetch(`/api/me/portfolio/lots/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: JSON_HEADERS,
+    body: JSON.stringify(input),
   })
+  if (!res.ok) throw new Error(await errorDetail(res))
+}
+
+export async function deleteLot(id: string): Promise<void> {
+  const res = await fetch(`/api/me/portfolio/lots/${encodeURIComponent(id)}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(await errorDetail(res))
 }
