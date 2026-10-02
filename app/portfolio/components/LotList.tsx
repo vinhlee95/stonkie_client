@@ -63,6 +63,9 @@ function LotRow({
 }) {
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
+  const amount = `${shares(lot.shares)} × ${money(lot.price, currency, priceDp(lot.price))}`
+  // Names each row's controls after its lot, so screen readers can tell them apart.
+  const label = `${amount}, ${lot.purchased_on ? purchaseDate(lot.purchased_on) : 'no date'}`
   const [error, setError] = useState<string | null>(null)
 
   const remove = async () => {
@@ -82,9 +85,7 @@ function LotRow({
     <div className="flex flex-col gap-1 py-2.5">
       <div className="flex items-center gap-3 text-sm">
         <span className="flex min-w-0 flex-1 flex-col leading-snug">
-          <span className="font-mono">
-            {shares(lot.shares)} × {money(lot.price, currency, priceDp(lot.price))}
-          </span>
+          <span className="font-mono">{amount}</span>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             {lot.purchased_on ? purchaseDate(lot.purchased_on) : 'No date'}
           </span>
@@ -111,10 +112,10 @@ function LotRow({
           </span>
         ) : (
           <span className="flex items-center">
-            <IconButton label="Edit lot" onClick={onEdit}>
+            <IconButton label={`Edit lot ${label}`} onClick={onEdit}>
               <Pencil size={15} />
             </IconButton>
-            <IconButton label="Delete lot" onClick={() => setConfirming(true)}>
+            <IconButton label={`Delete lot ${label}`} onClick={() => setConfirming(true)}>
               <Trash2 size={15} />
             </IconButton>
           </span>

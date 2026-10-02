@@ -160,7 +160,7 @@ describe('HoldingModal — position view', () => {
   it('edits a lot inline', async () => {
     const { actions } = renderModal({ ticker: 'AAPL' })
     const [first] = within(screen.getByRole('list', { name: 'Lots' })).getAllByRole('listitem')
-    await userEvent.click(within(first).getByRole('button', { name: 'Edit lot' }))
+    await userEvent.click(within(first).getByRole('button', { name: /^Edit lot/ }))
     const shares = within(first).getByLabelText('Shares')
     await userEvent.clear(shares)
     await userEvent.type(shares, '6')
@@ -177,11 +177,11 @@ describe('HoldingModal — position view', () => {
   it('deletes a lot only after confirming', async () => {
     const { actions } = renderModal({ ticker: 'AAPL' })
     const [, second] = within(screen.getByRole('list', { name: 'Lots' })).getAllByRole('listitem')
-    await userEvent.click(within(second).getByRole('button', { name: 'Delete lot' }))
+    await userEvent.click(within(second).getByRole('button', { name: /^Delete lot/ }))
     await userEvent.click(within(second).getByRole('button', { name: 'Keep' }))
     expect(actions.deleteLot).not.toHaveBeenCalled()
 
-    await userEvent.click(within(second).getByRole('button', { name: 'Delete lot' }))
+    await userEvent.click(within(second).getByRole('button', { name: /^Delete lot/ }))
     await userEvent.click(within(second).getByRole('button', { name: 'Delete' }))
     expect(actions.deleteLot).toHaveBeenCalledWith('lot-old')
   })
@@ -190,7 +190,7 @@ describe('HoldingModal — position view', () => {
     const { actions } = renderModal({ ticker: 'AAPL' })
     vi.mocked(actions.deleteLot).mockRejectedValue(new Error('Lot not found'))
     const [first] = within(screen.getByRole('list', { name: 'Lots' })).getAllByRole('listitem')
-    await userEvent.click(within(first).getByRole('button', { name: 'Delete lot' }))
+    await userEvent.click(within(first).getByRole('button', { name: /^Delete lot/ }))
     await userEvent.click(within(first).getByRole('button', { name: 'Delete' }))
     expect(await within(first).findByRole('alert')).toHaveTextContent('Lot not found')
   })
@@ -219,6 +219,30 @@ describe('HoldingModal — position view', () => {
 
     expect(actions.removeHolding).toHaveBeenCalledWith('AAPL')
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('labels each lot\'s controls with that lot', () => {
+    renderModal({ ticker: 'AAPL' })
+    expect(screen.getByRole('button', { name: 'Edit lot 5 × $160.00, 1 Jun 2025' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Delete lot 10 × $100.00, no date' }),
+    ).toBeInTheDocument()
+  })
+
+  it('warns when a save landed but the refresh failed', () => {
+    const actions = makeActions()
+    render(
+      <HoldingModal
+        state={{ ticker: 'AAPL' }}
+        holdings={[AAPL]}
+        actions={actions}
+        onClose={vi.fn()}
+        stale
+      />,
+    )
+    expect(screen.getByRole('status')).toHaveTextContent(
+      "Saved, but the portfolio couldn't refresh. Reload to see the latest.",
+    )
   })
 
   it('closes when the position disappears', () => {

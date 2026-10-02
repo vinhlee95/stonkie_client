@@ -7,8 +7,9 @@ import { fetchPortfolio, PORTFOLIO_QUERY_KEY, type Portfolio } from '@/lib/api/p
  * on every mount.
  * `refresh` marks it stale and refetches in the background without blocking
  * the caller, so a dialog can close as soon as its write succeeds.
- * `sync` refetches and resolves once that settles (it never rejects; a failed
- * refetch keeps the last good data), for views that stay open after a write.
+ * `sync` refetches and resolves once that settles, for views that stay open
+ * after a write: true when fresh data arrived, false when the refetch failed
+ * (it never rejects; the last good data stays).
  */
 export function usePortfolio(initialData: Portfolio) {
   const queryClient = useQueryClient()
@@ -31,9 +32,7 @@ export function usePortfolio(initialData: Portfolio) {
     [queryClient],
   )
 
-  const sync = useCallback(async () => {
-    await refetch()
-  }, [refetch])
+  const sync = useCallback(async () => !(await refetch()).isError, [refetch])
 
   return { data, refresh, sync }
 }

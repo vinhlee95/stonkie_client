@@ -34,11 +34,14 @@ export function HoldingModal({
   holdings,
   actions,
   onClose,
+  stale = false,
 }: {
   state: HoldingModalState
   holdings: PortfolioHolding[]
   actions: HoldingActions
   onClose: () => void
+  /** The last position-view write saved but its refresh failed, so the lots shown may be old. */
+  stale?: boolean
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -80,7 +83,7 @@ export function HoldingModal({
           </button>
         </header>
         {position ? (
-          <PositionView holding={position} actions={actions} onClose={onClose} />
+          <PositionView holding={position} actions={actions} onClose={onClose} stale={stale} />
         ) : (
           <AddView
             preset={'preset' in state ? state.preset : null}
@@ -150,10 +153,12 @@ function PositionView({
   holding: h,
   actions,
   onClose,
+  stale,
 }: {
   holding: PortfolioHolding
   actions: HoldingActions
   onClose: () => void
+  stale: boolean
 }) {
   const [adding, setAdding] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(false)
@@ -175,6 +180,14 @@ function PositionView({
   return (
     <>
       <div className="flex max-h-[65vh] flex-col gap-3.5 overflow-y-auto px-5 py-4">
+        {stale && (
+          <p
+            role="status"
+            className="m-0 rounded-[10px] bg-amber-600/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-300"
+          >
+            Saved, but the portfolio couldn&apos;t refresh. Reload to see the latest.
+          </p>
+        )}
         <TickerCard ticker={h.ticker} name={h.name}>
           {h.price !== null && (
             <b className="font-mono text-sm">{money(h.price, h.currency, priceDp(h.price))}</b>

@@ -33,6 +33,9 @@ export default function PortfolioDashboard({ initialData }: { initialData: Portf
   const { data, refresh, sync } = usePortfolio(initialData)
   const isClient = useIsClient()
   const [modal, setModal] = useState<HoldingModalState | null>(null)
+  // A position-view write saved but its refetch failed: the open view must not pass old lots off as current.
+  const [stale, setStale] = useState(false)
+  const resync = useCallback(async () => setStale(!(await sync())), [sync])
 
   // Adding a holding and removing a position close the dialog as soon as the
   // write succeeds and revalue in the background; lot edits keep the position
@@ -45,24 +48,27 @@ export default function PortfolioDashboard({ initialData }: { initialData: Portf
       },
       addLot: async (ticker, input) => {
         await addLot(ticker, input)
-        await sync()
+        await resync()
       },
       updateLot: async (id, input) => {
         await updateLot(id, input)
-        await sync()
+        await resync()
       },
       deleteLot: async (id) => {
         await deleteLot(id)
-        await sync()
+        await resync()
       },
       removeHolding: async (ticker) => {
         await removeHolding(ticker)
         refresh()
       },
     }),
-    [refresh, sync],
+    [refresh, resync],
   )
-  const closeModal = useCallback(() => setModal(null), [])
+  const closeModal = useCallback(() => {
+    setModal(null)
+    setStale(false)
+  }, [])
 
   const { summary: s, holdings, base_currency: currency } = data
   const add = (preset: { ticker: string; name: string | null } | null = null) =>
@@ -152,7 +158,13 @@ export default function PortfolioDashboard({ initialData }: { initialData: Portf
       )}
 
       {modal && (
-        <HoldingModal state={modal} holdings={holdings} actions={actions} onClose={closeModal} />
+        <HoldingModal
+          state={modal}
+          holdings={holdings}
+          actions={actions}
+          onClose={closeModal}
+          stale={stale}
+        />
       )}
     </main>
   )

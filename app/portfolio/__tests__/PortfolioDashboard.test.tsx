@@ -201,7 +201,7 @@ describe('PortfolioDashboard', () => {
       within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
     )
     const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Edit lot' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Edit lot/ }))
     const shares = within(dialog).getByLabelText('Shares')
     const save = within(dialog).getByRole('button', { name: 'Save lot' })
 
@@ -290,6 +290,28 @@ describe('PortfolioDashboard', () => {
     })
   })
 
+  it('flags a lot edit whose refresh failed instead of passing old lots off as current', async () => {
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH') return new Response('{}')
+      if (url === '/api/me/portfolio') return new Response('oops', { status: 500 })
+      return new Response('[]')
+    })
+    render(<PortfolioDashboard initialData={FILLED} />)
+
+    await userEvent.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Edit lot/ }))
+    const shares = within(dialog).getByLabelText('Shares')
+    await userEvent.clear(shares)
+    await userEvent.type(shares, '3')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save lot' }))
+
+    expect(await within(dialog).findByRole('status')).toHaveTextContent(/couldn't refresh/)
+    expect(within(dialog).queryByLabelText('Shares')).not.toBeInTheDocument()
+  })
+
   it('removes a position from the edit dialog', async () => {
     fetchMock.mockImplementation(async (_url: string, init?: RequestInit) =>
       init?.method === 'DELETE'
@@ -326,7 +348,7 @@ describe('PortfolioDashboard', () => {
       within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
     )
     const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete lot' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Delete lot/ }))
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())

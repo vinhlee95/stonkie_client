@@ -69,9 +69,9 @@ describe('usePortfolio', () => {
     const { result } = renderHook(() => usePortfolio(portfolio(100)), { wrapper })
 
     let settled = false
-    let pending!: Promise<void>
+    let pending!: Promise<boolean>
     act(() => {
-      pending = result.current.sync().then(() => {
+      pending = result.current.sync().finally(() => {
         settled = true
       })
     })
@@ -79,18 +79,26 @@ describe('usePortfolio', () => {
     expect(settled).toBe(false) // still waiting on the fetch
 
     resolve(new Response(JSON.stringify(portfolio(250))))
-    await act(() => pending)
+    let fresh: boolean | undefined
+    await act(async () => {
+      fresh = await pending
+    })
+    expect(fresh).toBe(true)
     expect(client.getQueryData<Portfolio>(PORTFOLIO_QUERY_KEY)?.summary.total_value).toBe(250)
     // Subscribers re-render a tick after the cache update.
     await waitFor(() => expect(result.current.data.summary.total_value).toBe(250))
   })
 
-  it('sync resolves and keeps the last good data when the refetch fails', async () => {
+  it('sync reports a failed refetch and keeps the last good data', async () => {
     fetchMock.mockResolvedValue(new Response('oops', { status: 500 }))
     const { result } = renderHook(() => usePortfolio(portfolio(100)), { wrapper })
 
-    await act(() => result.current.sync())
+    let fresh: boolean | undefined
+    await act(async () => {
+      fresh = await result.current.sync()
+    })
 
+    expect(fresh).toBe(false)
     expect(result.current.data.summary.total_value).toBe(100)
   })
 
