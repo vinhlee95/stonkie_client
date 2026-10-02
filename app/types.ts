@@ -48,3 +48,6 @@ export type AnnualFiling = {
   period_end_year: number
   period_end_quarter?: string
 }
+
+/** One ticker search match (Finnhub or Yahoo); exchange is Yahoo-only. */
+export type TickerSearchResult = { symbol: string; name: string; exchange?: string | null }

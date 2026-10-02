@@ -224,10 +224,44 @@ describe('PortfolioDashboard', () => {
     expect(screen.getByRole('dialog', { name: 'Edit AAPL' })).toBeInTheDocument()
   })
 
-  it('adds a searched ticker using its Yahoo symbol', async () => {
+  it('hides the raw-symbol fallback until the Yahoo search settles', async () => {
+    const searchUrls: string[] = []
+    let releaseSearch = () => {}
+    const searchGate = new Promise<void>((r) => (releaseSearch = r))
+    fetchMock.mockImplementation((url: string) => {
+      if (url.startsWith('/api/tickers/yahoo')) {
+        searchUrls.push(url)
+        return searchGate.then(
+          () =>
+            new Response(
+              JSON.stringify([
+                { symbol: 'SXR8.DE', name: 'iShares Core S&P 500', exchange: 'XETRA' },
+              ]),
+            ),
+        )
+      }
+      return Promise.resolve(new Response(JSON.stringify(FILLED)))
+    })
+    render(<PortfolioDashboard initialData={EMPTY} />)
+
+    await userEvent.click(screen.getByRole('button', { name: /Search ticker or company/ }))
+    await userEvent.type(screen.getByLabelText('Search ticker or company'), 'SXR8')
+    await screen.findByText('Searching…')
+    expect(screen.queryByRole('button', { name: /^SXR8\b/ })).not.toBeInTheDocument()
+
+    await waitFor(() => expect(searchUrls).toHaveLength(1))
+    expect(screen.queryByRole('button', { name: /^SXR8\b/ })).not.toBeInTheDocument()
+    releaseSearch()
+    expect(await screen.findByText('iShares Core S&P 500 · XETRA')).toBeInTheDocument()
+    expect(screen.getByText(/Use this Yahoo Finance symbol/)).toBeInTheDocument()
+  })
+
+  it('adds a searched ticker using its Yahoo symbol and shows its exchange', async () => {
     fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
-      if (url.startsWith('/api/tickers')) {
-        return new Response(JSON.stringify([{ symbol: 'BRK.B', name: 'Berkshire Hathaway B' }]))
+      if (url.startsWith('/api/tickers/yahoo')) {
+        return new Response(
+          JSON.stringify([{ symbol: 'BRK-B', name: 'Berkshire Hathaway B', exchange: 'NYSE' }]),
+        )
       }
       if (init?.method === 'POST') return new Response('{}')
       return new Response(JSON.stringify(FILLED))
@@ -236,7 +270,9 @@ describe('PortfolioDashboard', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Search ticker or company/ }))
     await userEvent.type(screen.getByLabelText('Search ticker or company'), 'berkshire')
-    await userEvent.click(await screen.findByRole('button', { name: /Berkshire Hathaway B/ }))
+    const row = await screen.findByRole('button', { name: /Berkshire Hathaway B/ })
+    expect(within(row).getByText('Berkshire Hathaway B · NYSE')).toBeInTheDocument()
+    await userEvent.click(row)
     const dialog = screen.getByRole('dialog', { name: 'Add holding' })
     expect(within(dialog).getByText('BRK-B')).toBeInTheDocument()
     await userEvent.type(within(dialog).getByLabelText('Shares'), '1,000.5')

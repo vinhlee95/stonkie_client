@@ -50,6 +50,17 @@ describe('useTickerSearch', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('/api/tickers?q=apple')
   })
 
+  it('queries the Yahoo endpoint when asked', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify([{ symbol: 'SXR8.DE', name: 'iShares S&P 500', exchange: 'XETRA' }]),
+      ),
+    )
+    const { result } = renderHook(() => useTickerSearch('sxr8', 0, 'yahoo'), { wrapper })
+    await waitFor(() => expect(result.current.results).toHaveLength(1))
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/tickers/yahoo?q=sxr8')
+  })
+
   it('hides stale results while a new query is debouncing', async () => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify([{ symbol: 'AAPL', name: 'Apple' }])))
     const { result, rerender } = renderHook(({ q }) => useTickerSearch(q, 300), {
