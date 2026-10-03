@@ -4,14 +4,13 @@ import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import type { PerformancePoint, PortfolioHolding } from '@/lib/api/portfolio'
 import { pct } from '../format'
-import { sliceAndRebase, type RangeKey } from '../performance'
+import { sliceAndRebase, type PerformanceState, type RangeKey } from '../performance'
 import {
   Allocation,
   Movers,
   PerformanceChart,
   PortfolioSummary,
   pricedHoldings,
-  type PerformanceState,
   Risk,
 } from '../components/sections'
 
@@ -180,7 +179,7 @@ function makePoints(): PerformancePoint[] {
   return out
 }
 const POINTS = makePoints()
-const LOADED: PerformanceState = { points: POINTS, status: 'success' }
+const LOADED: PerformanceState = { points: POINTS, excluded: [], status: 'success' }
 
 const SUMMARY = {
   holdings_count: 1,
@@ -215,7 +214,7 @@ describe('PortfolioSummary', () => {
   })
 
   it('All shows the cost-basis return', () => {
-    summary('All', { points: undefined, status: 'pending' })
+    summary('All', { points: undefined, excluded: [], status: 'pending' })
     expect(within(returnBox()).getByText('+€20')).toBeInTheDocument()
     expect(within(returnBox()).getByText('+25.00%')).toBeInTheDocument()
   })
@@ -231,14 +230,15 @@ describe('PortfolioSummary', () => {
     ).toBeInTheDocument()
     expect(within(box).getByText(pct((end / start - 1) * 100))).toBeInTheDocument()
     expect(box).toHaveAttribute('title', expect.stringMatching(/current holdings/))
+    expect(box.getAttribute('title')).not.toMatch(/Excludes/)
     expect(screen.queryByText('Total return')).not.toBeInTheDocument()
   })
 
   it('shows a placeholder while loading and a dash on error', () => {
-    const { unmount } = summary('1M', { points: undefined, status: 'pending' })
+    const { unmount } = summary('1M', { points: undefined, excluded: [], status: 'pending' })
     expect(screen.getByLabelText('Loading return')).toBeInTheDocument()
     unmount()
-    summary('1M', { points: undefined, status: 'error' })
+    summary('1M', { points: undefined, excluded: [], status: 'error' })
     expect(within(returnBox()).getByText('—')).toBeInTheDocument()
   })
 })
@@ -319,23 +319,36 @@ describe('PerformanceChart', () => {
     expect(screen.queryByText('Sample data')).not.toBeInTheDocument()
   })
 
+  it('names holdings left out of the series', () => {
+    render(<Controlled performance={{ points: POINTS, excluded: ['ZZZ'], status: 'success' }} />)
+    const note = screen.getByText(/Based on current holdings/)
+    expect(note).toHaveTextContent('Based on current holdings · excludes ZZZ')
+    expect(note).toHaveAttribute(
+      'title',
+      expect.stringContaining('Excludes ZZZ (no price history)'),
+    )
+  })
+
   it('shows loading, error and empty states', () => {
     const { rerender } = render(
-      <Controlled performance={{ points: undefined, status: 'pending' }} />,
+      <Controlled performance={{ points: undefined, excluded: [], status: 'pending' }} />,
     )
     expect(screen.getByLabelText('Loading performance')).toBeInTheDocument()
     expect(legend('Portfolio')).toBe('—')
 
-    rerender(<Controlled performance={{ points: undefined, status: 'error' }} />)
+    rerender(<Controlled performance={{ points: undefined, excluded: [], status: 'error' }} />)
     expect(screen.getByText("Couldn't load performance history.")).toBeInTheDocument()
 
-    rerender(<Controlled performance={{ points: [], status: 'success' }} />)
+    rerender(<Controlled performance={{ points: [], excluded: [], status: 'success' }} />)
     expect(screen.getByText(/No price history/)).toBeInTheDocument()
   })
 
   it('says when a range has too little history', () => {
     render(
-      <Controlled initial="1M" performance={{ points: POINTS.slice(-1), status: 'success' }} />,
+      <Controlled
+        initial="1M"
+        performance={{ points: POINTS.slice(-1), excluded: [], status: 'success' }}
+      />,
     )
     expect(screen.getByText('Not enough history for this range yet.')).toBeInTheDocument()
   })

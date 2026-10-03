@@ -1,13 +1,17 @@
 'use client'
 
 import { useMemo, useRef, useState } from 'react'
-import type {
-  PerformancePoint,
-  PortfolioHolding,
-  PortfolioSummary as Summary,
-} from '@/lib/api/portfolio'
+import type { PortfolioHolding, PortfolioSummary as Summary } from '@/lib/api/portfolio'
 import { money, pct, plural, signedMoney, tone, TONE_TEXT } from '../format'
-import { RANGE_KEYS, rangeReturn, sliceAndRebase, type RangeKey } from '../performance'
+import {
+  backTestNote,
+  RANGE_KEYS,
+  rangeReturn,
+  sliceAndRebase,
+  tickStep,
+  type PerformanceState,
+  type RangeKey,
+} from '../performance'
 import {
   SAMPLE_DIV_MONTHS,
   SAMPLE_DIV_PAYERS,
@@ -23,14 +27,6 @@ type Priced = PortfolioHolding & { value: number; weight: number }
 export function pricedHoldings(holdings: PortfolioHolding[]): Priced[] {
   return holdings.filter((h): h is Priced => h.value !== null && h.weight !== null)
 }
-
-/** Performance history query state, shared by the hero Return and the chart. */
-export interface PerformanceState {
-  points: PerformancePoint[] | undefined
-  status: 'pending' | 'error' | 'success'
-}
-
-const BACK_TEST_NOTE = "Based on current holdings: today's shares at past prices"
 
 /* ── Summary ─────────────────────────────── */
 export function PortfolioSummary({
@@ -67,7 +63,13 @@ export function PortfolioSummary({
         </div>
       </div>
       <div className="flex justify-between gap-0 border-t border-gray-100 pt-3 md:gap-7 md:border-0 md:pt-0 dark:border-white/10">
-        <div title={range === 'All' ? 'Since purchase, vs your average cost' : BACK_TEST_NOTE}>
+        <div
+          title={
+            range === 'All'
+              ? 'Since purchase, vs your average cost'
+              : backTestNote(performance.excluded)
+          }
+        >
           <Label>Return</Label>
           {loading ? (
             <div aria-label="Loading return" className="mt-1 flex flex-col gap-1.5">
@@ -104,8 +106,6 @@ export function PortfolioSummary({
 }
 
 /* ── Performance vs S&P 500 ──────────────── */
-const TICK_STEPS = [5, 10, 20, 25, 50, 100, 200, 500, 1000]
-
 export function PerformanceChart({
   height = 250,
   compact,
@@ -121,7 +121,7 @@ export function PerformanceChart({
 }) {
   const [hover, setHover] = useState<number | null>(null)
   const ref = useRef<HTMLDivElement>(null)
-  const { points, status } = performance
+  const { points, excluded, status } = performance
   const data = useMemo(() => (points ? sliceAndRebase(points, range) : []), [points, range])
   const ready = data.length >= 2
 
@@ -138,11 +138,7 @@ export function PerformanceChart({
     const py = (v: number) => H - ((v - lo) / (hi - lo)) * H
     const path = (k: 'p' | 'b') =>
       data.map((pt, i) => `${i ? 'L' : 'M'}${px(i).toFixed(1)} ${py(pt[k]).toFixed(1)}`).join(' ')
-    const span = hi - lo
-    const minStep = span > 40 ? 20 : span > 16 ? 10 : 5
-    // Multi-year ranges can span 100%+; cap gridlines so labels don't overlap on short charts.
-    const maxTicks = H < 200 ? 4 : 6
-    const step = TICK_STEPS.find((s) => s >= minStep && span / s <= maxTicks) ?? 1000
+    const step = tickStep(hi - lo, H)
     const ticks: number[] = []
     for (let t = Math.ceil(lo / step) * step; t < hi; t += step) ticks.push(t)
     return { lo, hi, ticks, pPath: path('p'), bPath: path('b') }
@@ -303,8 +299,9 @@ export function PerformanceChart({
           <div className="mt-1.5 flex justify-between gap-2 font-mono text-[10.5px] text-gray-400">
             <span>{fmtD(data[0].d)}</span>
             {!compact && (
-              <span className="font-sans" title={BACK_TEST_NOTE}>
+              <span className="truncate font-sans" title={backTestNote(excluded)}>
                 Based on current holdings
+                {excluded.length > 0 && ` · excludes ${excluded.join(', ')}`}
               </span>
             )}
             <span>{fmtD(data[data.length - 1].d)}</span>

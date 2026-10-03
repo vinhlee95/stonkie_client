@@ -16,7 +16,7 @@ import {
   type PortfolioHolding,
 } from '@/lib/api/portfolio'
 import { asOf, plural } from '../format'
-import type { RangeKey } from '../performance'
+import type { PerformanceState, RangeKey } from '../performance'
 import { HoldingModal, type HoldingActions, type HoldingModalState } from './HoldingModal'
 import { HoldingsList, HoldingsTable } from './holdings'
 import {
@@ -28,14 +28,17 @@ import {
   PerformanceChart,
   PortfolioSummary,
   Risk,
-  type PerformanceState,
 } from './sections'
 import { TickerLogo } from './ui'
 
 export default function PortfolioDashboard({ initialData }: { initialData: Portfolio }) {
   const { data, refresh, sync } = usePortfolio(initialData)
   const perf = usePortfolioPerformance(data.summary.holdings_count > 0)
-  const performance: PerformanceState = { points: perf.data?.points, status: perf.status }
+  const performance: PerformanceState = {
+    points: perf.data?.points,
+    excluded: perf.data?.excluded ?? [],
+    status: perf.status,
+  }
   // Shared by the hero Return and both chart instances (mobile + desktop).
   const [range, setRange] = useState<RangeKey>('YTD')
   const isClient = useIsClient()

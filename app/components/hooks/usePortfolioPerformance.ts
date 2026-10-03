@@ -3,8 +3,8 @@ import { fetchPerformance, PERFORMANCE_QUERY_KEY } from '@/lib/api/portfolio'
 
 /**
  * Daily portfolio vs S&P 500 history, fetched once per dashboard mount;
- * range buttons slice it client-side. Lot writes refetch it via the
- * portfolio key prefix. Closes change once a day (backend caches 12h).
+ * range buttons slice it client-side. Lot writes refetch it through
+ * usePortfolio's refresh (key prefix) and sync. Closes change once a day.
  * Disabled for an empty portfolio, which has no chart.
  */
 export function usePortfolioPerformance(enabled: boolean) {

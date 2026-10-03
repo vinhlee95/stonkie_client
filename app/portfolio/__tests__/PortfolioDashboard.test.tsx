@@ -182,9 +182,38 @@ describe('PortfolioDashboard', () => {
     expect(perfCalls).toHaveLength(1)
   })
 
-  it('does not fetch performance for an empty portfolio', () => {
+  it('does not fetch performance for an empty portfolio', async () => {
+    fetchMock.mockImplementation(async () => new Response(JSON.stringify({ points: [] })))
     render(<PortfolioDashboard initialData={EMPTY} />)
-    expect(fetchMock).not.toHaveBeenCalledWith('/api/me/portfolio/performance', expect.anything())
+    // Let mount effects and react-query's scheduled fetches run before asserting.
+    await new Promise((r) => setTimeout(r, 50))
+    expect(fetchMock.mock.calls.map(([url]) => url)).not.toContain('/api/me/portfolio/performance')
+  })
+
+  it('refetches performance after a lot edit so Return and chart use new shares', async () => {
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) =>
+      init?.method === 'PATCH'
+        ? new Response('{}')
+        : url === '/api/me/portfolio/performance'
+          ? new Response(JSON.stringify({ base_currency: 'EUR', points: [], excluded: [] }))
+          : new Response(JSON.stringify(FILLED)),
+    )
+    const perfCalls = () =>
+      fetchMock.mock.calls.filter(([url]) => url === '/api/me/portfolio/performance').length
+    render(<PortfolioDashboard initialData={FILLED} />)
+    await waitFor(() => expect(perfCalls()).toBe(1))
+
+    await userEvent.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Edit lot/ }))
+    const shares = within(dialog).getByLabelText('Shares')
+    await userEvent.clear(shares)
+    await userEvent.type(shares, '3')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save lot' }))
+
+    await waitFor(() => expect(perfCalls()).toBe(2))
   })
 
   it('marks placeholder sections as sample data', () => {

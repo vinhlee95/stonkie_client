@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { PerformancePoint } from '@/lib/api/portfolio'
-import { rangeReturn, rangeStartIndex, sliceAndRebase, type RangeKey } from '../performance'
+import {
+  backTestNote,
+  rangeReturn,
+  rangeStartIndex,
+  sliceAndRebase,
+  tickStep,
+  type RangeKey,
+} from '../performance'
 
 const pt = (date: string, portfolio_value: number, benchmark_value = 100): PerformancePoint => ({
   date,
@@ -87,5 +94,30 @@ describe('rangeReturn', () => {
 
   it('is null without points', () => {
     expect(rangeReturn([], '1M')).toBeNull()
+  })
+})
+
+describe('tickStep', () => {
+  it('keeps the original steps for small spans', () => {
+    expect(tickStep(10, 250)).toBe(5)
+    expect(tickStep(30, 250)).toBe(10)
+    expect(tickStep(60, 250)).toBe(20)
+  })
+
+  it('caps gridlines for 100%+ spans, tighter on short charts', () => {
+    expect(tickStep(180, 250)).toBe(50) // 180 / 50 = 3.6 lines; 25 would give 7.2 > 6
+    expect(tickStep(180, 150)).toBe(50) // 4 lines max
+    expect(tickStep(90, 150)).toBe(25) // 3.6 lines; 20 would give 4.5 > 4
+  })
+
+  it('falls back to the largest step for extreme spans', () => {
+    expect(tickStep(50000, 250)).toBe(1000)
+  })
+})
+
+describe('backTestNote', () => {
+  it('names excluded holdings', () => {
+    expect(backTestNote([])).not.toMatch(/Excludes/)
+    expect(backTestNote(['ZZZ', 'QQQ.L'])).toMatch(/Excludes ZZZ, QQQ\.L \(no price history\)\.$/)
   })
 })

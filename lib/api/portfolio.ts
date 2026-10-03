@@ -80,7 +80,8 @@ export interface LotInput {
 export type NewLot = LotInput & { name: string | null }
 
 export const PORTFOLIO_QUERY_KEY = ['portfolio'] as const
-// Nested under PORTFOLIO_QUERY_KEY so invalidating the portfolio after a write refetches it too.
+// Nested under PORTFOLIO_QUERY_KEY so invalidating the portfolio after a write refetches it too
+// (usePortfolio.sync, which refetches only its exact key, invalidates it explicitly).
 export const PERFORMANCE_QUERY_KEY = [...PORTFOLIO_QUERY_KEY, 'performance'] as const
 
 /** One trading day of the performance history. */

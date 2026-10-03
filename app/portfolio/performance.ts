@@ -8,6 +8,14 @@ import type { PerformancePoint } from '@/lib/api/portfolio'
 export const RANGE_KEYS = ['1M', '3M', 'YTD', '1Y', 'All'] as const
 export type RangeKey = (typeof RANGE_KEYS)[number]
 
+/** Performance history query state, shared by the hero Return and the chart. */
+export interface PerformanceState {
+  points: PerformancePoint[] | undefined
+  /** Holdings left out of the series (no price history or FX). */
+  excluded: string[]
+  status: 'pending' | 'error' | 'success'
+}
+
 export interface ChartPoint {
   d: Date
   /** Portfolio return since the range start, in %. */
@@ -68,4 +76,22 @@ export function rangeReturn(
   const start = points[rangeStartIndex(points, range)].portfolio_value
   const end = points[points.length - 1].portfolio_value
   return { abs: end - start, pct: (end / start - 1) * 100 }
+}
+
+const TICK_STEPS = [5, 10, 20, 25, 50, 100, 200, 500, 1000]
+
+/**
+ * Gridline step (in % points) for a y-span. Multi-year ranges can span 100%+,
+ * so the count is capped by chart height to keep labels from overlapping.
+ */
+export function tickStep(span: number, height: number): number {
+  const minStep = span > 40 ? 20 : span > 16 ? 10 : 5
+  const maxTicks = height < 200 ? 4 : 6
+  return TICK_STEPS.find((s) => s >= minStep && span / s <= maxTicks) ?? 1000
+}
+
+/** Tooltip/caption for back-tested figures, naming holdings missing from them. */
+export function backTestNote(excluded: string[]): string {
+  const base = "Based on current holdings: today's shares at past closing prices"
+  return excluded.length ? `${base}. Excludes ${excluded.join(', ')} (no price history).` : base
 }
