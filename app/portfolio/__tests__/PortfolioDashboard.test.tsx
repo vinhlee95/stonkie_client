@@ -1,9 +1,9 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@/tests/test-utils'
-import type { Portfolio, PortfolioHolding } from '@/lib/api/portfolio'
+import type { Portfolio, PortfolioHolding, PortfolioPerformance } from '@/lib/api/portfolio'
 import PortfolioDashboard from '../components/PortfolioDashboard'
-import { asOf } from '../format'
+import { asOf, signedMoney } from '../format'
 
 const AS_OF = new Date(2026, 8, 25, 18, 30).toISOString()
 
@@ -14,7 +14,12 @@ function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
     shares: 10,
     avg_cost: 100,
     lots: [
-      { id: '0b8a3f1e-5d2c-4c3a-9f1e-2b7d8c9a0e11', shares: 10, price: 100, purchased_on: '2025-01-02' },
+      {
+        id: '0b8a3f1e-5d2c-4c3a-9f1e-2b7d8c9a0e11',
+        shares: 10,
+        price: 100,
+        purchased_on: '2025-01-02',
+      },
     ],
     currency: 'USD',
     price: 210,
@@ -138,6 +143,48 @@ describe('PortfolioDashboard', () => {
     }
     render(<PortfolioDashboard initialData={data} />)
     expect(screen.getByRole('status')).toHaveTextContent('No price for ZZZ')
+  })
+
+  it('drives Return and both charts from one range, YTD by default', async () => {
+    const perf: PortfolioPerformance = {
+      base_currency: 'EUR',
+      excluded: [],
+      points: [
+        { date: '2025-06-30', portfolio_value: 1000, benchmark_value: 90 },
+        { date: '2025-12-31', portfolio_value: 1600, benchmark_value: 100 },
+        { date: '2026-10-02', portfolio_value: 2000, benchmark_value: 110 },
+      ],
+    }
+    fetchMock.mockImplementation(async (url: string) =>
+      url === '/api/me/portfolio/performance'
+        ? new Response(JSON.stringify(perf))
+        : new Response(JSON.stringify(FILLED)),
+    )
+    render(<PortfolioDashboard initialData={FILLED} />)
+    const ret = () => screen.getByText('Return', { selector: 'div' }).parentElement!
+
+    expect(await within(ret()).findByText('+€400')).toBeInTheDocument()
+    expect(within(ret()).getByText('+25.00%')).toBeInTheDocument()
+    for (const b of screen.getAllByRole('button', { name: 'YTD' })) {
+      expect(b).toHaveAttribute('aria-pressed', 'true')
+    }
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'All' })[0])
+    for (const b of screen.getAllByRole('button', { name: 'All' })) {
+      expect(b).toHaveAttribute('aria-pressed', 'true')
+    }
+    expect(
+      within(ret()).getByText(signedMoney(FILLED.summary.total_return, 'EUR', 0)),
+    ).toBeInTheDocument()
+    const perfCalls = fetchMock.mock.calls.filter(
+      ([url]) => url === '/api/me/portfolio/performance',
+    )
+    expect(perfCalls).toHaveLength(1)
+  })
+
+  it('does not fetch performance for an empty portfolio', () => {
+    render(<PortfolioDashboard initialData={EMPTY} />)
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/me/portfolio/performance', expect.anything())
   })
 
   it('marks placeholder sections as sample data', () => {
