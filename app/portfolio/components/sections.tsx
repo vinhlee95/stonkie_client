@@ -298,12 +298,11 @@ export function PerformanceChart({
           </div>
           <div className="mt-1.5 flex justify-between gap-2 font-mono text-[10.5px] text-gray-400">
             <span>{fmtD(data[0].d)}</span>
-            {!compact && (
-              <span className="truncate font-sans" title={backTestNote(excluded)}>
-                Based on current holdings
-                {excluded.length > 0 && ` · excludes ${excluded.join(', ')}`}
-              </span>
-            )}
+            {/* Shown on mobile too: touch devices never surface the Return tooltip. */}
+            <span className="min-w-0 truncate font-sans" title={backTestNote(excluded)}>
+              Based on current holdings
+              {excluded.length > 0 && ` · excludes ${excluded.join(', ')}`}
+            </span>
             <span>{fmtD(data[data.length - 1].d)}</span>
           </div>
         </>

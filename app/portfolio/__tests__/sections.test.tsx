@@ -319,6 +319,18 @@ describe('PerformanceChart', () => {
     expect(screen.queryByText('Sample data')).not.toBeInTheDocument()
   })
 
+  it('keeps the back-test note on the compact (mobile) chart', () => {
+    render(
+      <PerformanceChart
+        compact
+        range="1Y"
+        onRangeChange={() => {}}
+        performance={{ points: POINTS, excluded: ['ZZZ'], status: 'success' }}
+      />,
+    )
+    expect(screen.getByText(/Based on current holdings/)).toHaveTextContent('excludes ZZZ')
+  })
+
   it('names holdings left out of the series', () => {
     render(<Controlled performance={{ points: POINTS, excluded: ['ZZZ'], status: 'success' }} />)
     const note = screen.getByText(/Based on current holdings/)

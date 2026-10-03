@@ -1,7 +1,12 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@/tests/test-utils'
-import type { Portfolio, PortfolioHolding, PortfolioPerformance } from '@/lib/api/portfolio'
+import {
+  PERFORMANCE_QUERY_KEY,
+  type Portfolio,
+  type PortfolioHolding,
+  type PortfolioPerformance,
+} from '@/lib/api/portfolio'
 import PortfolioDashboard from '../components/PortfolioDashboard'
 import { asOf, signedMoney } from '../format'
 
@@ -183,11 +188,34 @@ describe('PortfolioDashboard', () => {
   })
 
   it('does not fetch performance for an empty portfolio', async () => {
-    fetchMock.mockImplementation(async () => new Response(JSON.stringify({ points: [] })))
-    render(<PortfolioDashboard initialData={EMPTY} />)
-    // Let mount effects and react-query's scheduled fetches run before asserting.
-    await new Promise((r) => setTimeout(r, 50))
-    expect(fetchMock.mock.calls.map(([url]) => url)).not.toContain('/api/me/portfolio/performance')
+    const { queryClient } = render(<PortfolioDashboard initialData={EMPTY} />)
+    expect(await screen.findByText('Track what you own')).toBeInTheDocument()
+    // A disabled query is registered but never scheduled, so idle here means it can't fetch later.
+    expect(queryClient.getQueryState(PERFORMANCE_QUERY_KEY)?.fetchStatus).toBe('idle')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('refetches performance after removing a position (prefix invalidation)', async () => {
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) =>
+      init?.method === 'DELETE'
+        ? new Response(null, { status: 204 })
+        : url === '/api/me/portfolio/performance'
+          ? new Response(JSON.stringify({ base_currency: 'EUR', points: [], excluded: [] }))
+          : new Response(JSON.stringify(FILLED)),
+    )
+    const perfCalls = () =>
+      fetchMock.mock.calls.filter(([url]) => url === '/api/me/portfolio/performance').length
+    render(<PortfolioDashboard initialData={FILLED} />)
+    await waitFor(() => expect(perfCalls()).toBe(1))
+
+    await userEvent.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove position' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Yes, remove' }))
+
+    await waitFor(() => expect(perfCalls()).toBe(2))
   })
 
   it('refetches performance after a lot edit so Return and chart use new shares', async () => {
