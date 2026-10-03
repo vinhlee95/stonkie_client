@@ -1,6 +1,11 @@
 import { useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchPortfolio, PORTFOLIO_QUERY_KEY, type Portfolio } from '@/lib/api/portfolio'
+import {
+  fetchPortfolio,
+  PERFORMANCE_QUERY_KEY,
+  PORTFOLIO_QUERY_KEY,
+  type Portfolio,
+} from '@/lib/api/portfolio'
 
 /**
  * The signed-in user's portfolio, seeded with the server-rendered snapshot
@@ -32,7 +37,11 @@ export function usePortfolio(initialData: Portfolio) {
     [queryClient],
   )
 
-  const sync = useCallback(async () => !(await refetch()).isError, [refetch])
+  const sync = useCallback(async () => {
+    // Share counts changed, so the back-tested history did too; it refetches in the background.
+    void queryClient.invalidateQueries({ queryKey: PERFORMANCE_QUERY_KEY, exact: true })
+    return !(await refetch()).isError
+  }, [queryClient, refetch])
 
   return { data, refresh, sync }
 }

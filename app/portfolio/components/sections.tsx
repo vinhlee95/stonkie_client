@@ -4,15 +4,21 @@ import { useMemo, useRef, useState } from 'react'
 import type { PortfolioHolding, PortfolioSummary as Summary } from '@/lib/api/portfolio'
 import { money, pct, plural, signedMoney, tone, TONE_TEXT } from '../format'
 import {
-  RANGES,
+  backTestNote,
+  RANGE_KEYS,
+  rangeReturn,
+  sliceAndRebase,
+  tickStep,
+  type PerformanceState,
+  type RangeKey,
+} from '../performance'
+import {
   SAMPLE_DIV_MONTHS,
   SAMPLE_DIV_PAYERS,
   SAMPLE_DIV_RECEIVED,
   SAMPLE_EVENTS,
   SAMPLE_NEWS,
   SAMPLE_RISK,
-  sampleSeries,
-  type RangeKey,
 } from '../sampleData'
 import { Card, Delta, Label, SampleBadge, Seg, TickerLogo } from './ui'
 
@@ -23,7 +29,25 @@ export function pricedHoldings(holdings: PortfolioHolding[]): Priced[] {
 }
 
 /* ── Summary ─────────────────────────────── */
-export function PortfolioSummary({ s, currency }: { s: Summary; currency: string }) {
+export function PortfolioSummary({
+  s,
+  currency,
+  range,
+  performance,
+}: {
+  s: Summary
+  currency: string
+  range: RangeKey
+  performance: PerformanceState
+}) {
+  // All = real return vs average cost; other ranges back-test current holdings.
+  const ret =
+    range === 'All'
+      ? { abs: s.total_return, pct: s.total_return_percent }
+      : performance.points
+        ? rangeReturn(performance.points, range)
+        : null
+  const loading = range !== 'All' && performance.status === 'pending'
   return (
     <div className="mb-3.5 flex flex-col gap-3.5 md:mb-[18px] md:flex-row md:items-end md:justify-between md:gap-6">
       <div>
@@ -39,16 +63,33 @@ export function PortfolioSummary({ s, currency }: { s: Summary; currency: string
         </div>
       </div>
       <div className="flex justify-between gap-0 border-t border-gray-100 pt-3 md:gap-7 md:border-0 md:pt-0 dark:border-white/10">
-        <div>
-          <Label>Total return</Label>
-          <div
-            className={`mt-1 font-mono text-[15px] font-bold tabular-nums md:text-lg ${TONE_TEXT[tone(s.total_return)]}`}
-          >
-            {signedMoney(s.total_return, currency, 0)}
-          </div>
-          <div className={`mt-0.5 font-mono text-xs ${TONE_TEXT[tone(s.total_return)]}`}>
-            {pct(s.total_return_percent)}
-          </div>
+        <div
+          title={
+            range === 'All'
+              ? 'Since purchase, vs your average cost'
+              : backTestNote(performance.excluded)
+          }
+        >
+          <Label>Return</Label>
+          {loading ? (
+            <div aria-label="Loading return" className="mt-1 flex flex-col gap-1.5">
+              <div className="h-[18px] w-24 animate-pulse rounded bg-gray-100 dark:bg-white/10 md:h-[22px]" />
+              <div className="h-3 w-12 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
+            </div>
+          ) : ret ? (
+            <>
+              <div
+                className={`mt-1 font-mono text-[15px] font-bold tabular-nums md:text-lg ${TONE_TEXT[tone(ret.abs)]}`}
+              >
+                {signedMoney(ret.abs, currency, 0)}
+              </div>
+              <div className={`mt-0.5 font-mono text-xs ${TONE_TEXT[tone(ret.abs)]}`}>
+                {pct(ret.pct)}
+              </div>
+            </>
+          ) : (
+            <div className="mt-1 font-mono text-[15px] font-bold text-gray-400 md:text-lg">—</div>
+          )}
         </div>
         <div>
           <Label>Invested</Label>
@@ -64,33 +105,31 @@ export function PortfolioSummary({ s, currency }: { s: Summary; currency: string
   )
 }
 
-/* ── Performance vs S&P 500 (sample) ─────── */
+/* ── Performance vs S&P 500 ──────────────── */
 export function PerformanceChart({
   height = 250,
   compact,
+  range,
+  onRangeChange,
+  performance,
 }: {
   height?: number
   compact?: boolean
+  range: RangeKey
+  onRangeChange: (range: RangeKey) => void
+  performance: PerformanceState
 }) {
-  const [range, setRange] = useState<RangeKey>('1Y')
   const [hover, setHover] = useState<number | null>(null)
   const ref = useRef<HTMLDivElement>(null)
-  const series = useMemo(() => sampleSeries(), [])
-  const data = useMemo(() => {
-    const sl = series.slice(-RANGES[range])
-    const p0 = 1 + sl[0].p / 100
-    const b0 = 1 + sl[0].b / 100
-    return sl.map((x) => ({
-      d: x.d,
-      p: ((1 + x.p / 100) / p0 - 1) * 100,
-      b: ((1 + x.b / 100) / b0 - 1) * 100,
-    }))
-  }, [series, range])
+  const { points, excluded, status } = performance
+  const data = useMemo(() => (points ? sliceAndRebase(points, range) : []), [points, range])
+  const ready = data.length >= 2
 
   const W = 1000
   const H = height
   // Hover re-renders on every mousemove; keep the O(n) geometry out of that path.
   const { lo, hi, ticks, pPath, bPath } = useMemo(() => {
+    if (data.length < 2) return { lo: 0, hi: 1, ticks: [], pPath: '', bPath: '' }
     const all = data.flatMap((pt) => [pt.p, pt.b])
     const pad = (Math.max(...all) - Math.min(...all)) * 0.12 || 1
     const lo = Math.min(...all) - pad
@@ -99,14 +138,14 @@ export function PerformanceChart({
     const py = (v: number) => H - ((v - lo) / (hi - lo)) * H
     const path = (k: 'p' | 'b') =>
       data.map((pt, i) => `${i ? 'L' : 'M'}${px(i).toFixed(1)} ${py(pt[k]).toFixed(1)}`).join(' ')
-    const step = hi - lo > 40 ? 20 : hi - lo > 16 ? 10 : 5
+    const step = tickStep(hi - lo, H)
     const ticks: number[] = []
     for (let t = Math.ceil(lo / step) * step; t < hi; t += step) ticks.push(t)
     return { lo, hi, ticks, pPath: path('p'), bPath: path('b') }
   }, [data, H])
   const y = (v: number) => H - ((v - lo) / (hi - lo)) * H
   const x = (i: number) => (i / (data.length - 1)) * W
-  const last = data[data.length - 1]
+  const last = ready ? data[data.length - 1] : null
   // A hover index from a longer range can point past the end of this one.
   const cur = (hover != null && data[hover]) || last
   const fmtD = (d: Date) =>
@@ -117,10 +156,19 @@ export function PerformanceChart({
       timeZone: 'UTC',
     })
   const onMove = (e: React.MouseEvent) => {
+    if (!ready) return
     const r = ref.current!.getBoundingClientRect()
     const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width))
     setHover(Math.round(f * (data.length - 1)))
   }
+  const message =
+    status === 'error'
+      ? "Couldn't load performance history."
+      : status === 'success' && !points?.length
+        ? 'No price history available for your holdings yet.'
+        : status === 'success' && !ready
+          ? 'Not enough history for this range yet.'
+          : null
 
   return (
     <div>
@@ -131,107 +179,134 @@ export function PerformanceChart({
           <span className="inline-flex items-center gap-1.5">
             <i className="inline-block h-[3px] w-3.5 rounded-sm bg-[var(--tab-active)]" />
             Portfolio
-            <b className={`inline-block min-w-[7ch] font-mono ${TONE_TEXT[tone(cur.p)]}`}>
-              {pct(cur.p, 1)}
+            <b
+              className={`inline-block min-w-[7ch] font-mono ${cur ? TONE_TEXT[tone(cur.p)] : ''}`}
+            >
+              {cur ? pct(cur.p, 1) : '—'}
             </b>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <i className="inline-block h-[3px] w-3.5 bg-[repeating-linear-gradient(90deg,#9aa19d_0_4px,transparent_4px_7px)]" />
-            S&amp;P 500 <b className="inline-block min-w-[7ch] font-mono">{pct(cur.b, 1)}</b>
+            S&amp;P 500{' '}
+            <b className="inline-block min-w-[7ch] font-mono">{cur ? pct(cur.b, 1) : '—'}</b>
           </span>
           {!compact && (
             <span className="inline-block w-[23ch] text-gray-500 dark:text-gray-400">
-              {hover != null
-                ? fmtD(cur.d)
-                : `${pct(cur.p - cur.b, 1).replace('%', ' pts')} vs benchmark`}
+              {cur &&
+                (hover != null
+                  ? fmtD(cur.d)
+                  : `${pct(cur.p - cur.b, 1).replace('%', ' pts')} vs benchmark`)}
             </span>
           )}
-          <SampleBadge />
         </div>
         <Seg
           small
           label="Range"
-          options={Object.keys(RANGES) as RangeKey[]}
+          options={RANGE_KEYS}
           value={range}
           onChange={(r) => {
-            setRange(r)
+            onRangeChange(r)
             setHover(null)
           }}
         />
       </div>
-      <div
-        ref={ref}
-        className="relative cursor-crosshair"
-        style={{ height }}
-        onMouseMove={onMove}
-        onMouseLeave={() => setHover(null)}
-      >
-        {ticks.map((t) => (
+      {!ready ? (
+        message ? (
           <div
-            key={t}
-            className="absolute inset-x-0 border-t border-dashed border-gray-100 dark:border-white/10"
-            style={{ top: y(t) }}
+            className="flex items-center justify-center rounded-xl border border-dashed border-gray-200 text-sm text-gray-500 dark:border-white/10 dark:text-gray-400"
+            style={{ height }}
           >
-            <span className="absolute -top-4 right-0 font-mono text-[10px] text-gray-400">
-              {t > 0 ? '+' : ''}
-              {t}%
-            </span>
+            {message}
           </div>
-        ))}
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
-          width="100%"
-          height={H}
-          className="absolute inset-0"
-          aria-label="Portfolio performance vs S&P 500 (sample data)"
-          role="img"
-        >
-          <defs>
-            <linearGradient id="pf-perf-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="rgb(40,105,86)" stopOpacity="0.14" />
-              <stop offset="1" stopColor="rgb(40,105,86)" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path d={`${pPath} L${W} ${H} L0 ${H}Z`} fill="url(#pf-perf-fill)" />
-          <path
-            d={bPath}
-            fill="none"
-            stroke="#9aa19d"
-            strokeWidth="1.5"
-            strokeDasharray="4 4"
-            vectorEffect="non-scaling-stroke"
+        ) : (
+          <div
+            aria-label="Loading performance"
+            className="animate-pulse rounded-xl bg-gray-100 dark:bg-white/5"
+            style={{ height }}
           />
-          <path
-            d={pPath}
-            fill="none"
-            stroke="var(--tab-active)"
-            strokeWidth="2"
-            vectorEffect="non-scaling-stroke"
-          />
-          {hover != null && (
-            <line
-              x1={x(hover)}
-              x2={x(hover)}
-              y1="0"
-              y2={H}
-              stroke="currentColor"
-              strokeOpacity="0.25"
-              vectorEffect="non-scaling-stroke"
-            />
-          )}
-        </svg>
-        {hover != null && (
-          <span
-            className="pointer-events-none absolute h-[9px] w-[9px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--tab-active)] shadow-[0_0_0_3px_var(--card-background)]"
-            style={{ left: `${(hover / (data.length - 1)) * 100}%`, top: y(cur.p) }}
-          />
-        )}
-      </div>
-      <div className="mt-1.5 flex justify-between font-mono text-[10.5px] text-gray-400">
-        <span>{fmtD(data[0].d)}</span>
-        <span>{fmtD(last.d)}</span>
-      </div>
+        )
+      ) : (
+        <>
+          <div
+            ref={ref}
+            className="relative cursor-crosshair"
+            style={{ height }}
+            onMouseMove={onMove}
+            onMouseLeave={() => setHover(null)}
+          >
+            {ticks.map((t) => (
+              <div
+                key={t}
+                className="absolute inset-x-0 border-t border-dashed border-gray-100 dark:border-white/10"
+                style={{ top: y(t) }}
+              >
+                <span className="absolute -top-4 right-0 font-mono text-[10px] text-gray-400">
+                  {t > 0 ? '+' : ''}
+                  {t}%
+                </span>
+              </div>
+            ))}
+            <svg
+              viewBox={`0 0 ${W} ${H}`}
+              preserveAspectRatio="none"
+              width="100%"
+              height={H}
+              className="absolute inset-0"
+              aria-label="Portfolio performance vs S&P 500"
+              role="img"
+            >
+              <defs>
+                <linearGradient id="pf-perf-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stopColor="rgb(40,105,86)" stopOpacity="0.14" />
+                  <stop offset="1" stopColor="rgb(40,105,86)" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d={`${pPath} L${W} ${H} L0 ${H}Z`} fill="url(#pf-perf-fill)" />
+              <path
+                d={bPath}
+                fill="none"
+                stroke="#9aa19d"
+                strokeWidth="1.5"
+                strokeDasharray="4 4"
+                vectorEffect="non-scaling-stroke"
+              />
+              <path
+                d={pPath}
+                fill="none"
+                stroke="var(--tab-active)"
+                strokeWidth="2"
+                vectorEffect="non-scaling-stroke"
+              />
+              {hover != null && (
+                <line
+                  x1={x(hover)}
+                  x2={x(hover)}
+                  y1="0"
+                  y2={H}
+                  stroke="currentColor"
+                  strokeOpacity="0.25"
+                  vectorEffect="non-scaling-stroke"
+                />
+              )}
+            </svg>
+            {hover != null && cur && (
+              <span
+                className="pointer-events-none absolute h-[9px] w-[9px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--tab-active)] shadow-[0_0_0_3px_var(--card-background)]"
+                style={{ left: `${(hover / (data.length - 1)) * 100}%`, top: y(cur.p) }}
+              />
+            )}
+          </div>
+          <div className="mt-1.5 flex justify-between gap-2 font-mono text-[10.5px] text-gray-400">
+            <span>{fmtD(data[0].d)}</span>
+            {/* Shown on mobile too: touch devices never surface the Return tooltip. */}
+            <span className="min-w-0 truncate font-sans" title={backTestNote(excluded)}>
+              Based on current holdings
+              {excluded.length > 0 && ` · excludes ${excluded.join(', ')}`}
+            </span>
+            <span>{fmtD(data[data.length - 1].d)}</span>
+          </div>
+        </>
+      )}
     </div>
   )
 }

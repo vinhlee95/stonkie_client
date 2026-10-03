@@ -7,6 +7,7 @@ vi.mock('@/lib/auth/server', () => ({ authedBackendFetch: vi.fn() }))
 import { authedBackendFetch } from '@/lib/auth/server'
 import { UnauthenticatedError } from '@/lib/auth/shared'
 import { GET } from '../route'
+import { GET as GET_PERFORMANCE } from '../performance/route'
 import * as holdingRoute from '../holdings/[ticker]/route'
 import { POST as POST_LOT } from '../holdings/[ticker]/lots/route'
 import { DELETE as DELETE_LOT, PATCH as PATCH_LOT } from '../lots/[lotId]/route'
@@ -27,6 +28,14 @@ describe('portfolio BFF routes', () => {
     expect(res.headers.get('cache-control')).toBe('private, no-store')
   })
 
+  it('GET performance proxies to the backend endpoint', async () => {
+    backend.mockResolvedValue(new Response(JSON.stringify({ points: [] }), { status: 200 }))
+    const res = await GET_PERFORMANCE()
+    expect(backend).toHaveBeenCalledWith('/api/me/portfolio/performance', {})
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ points: [] })
+  })
+
   it('returns 401 without a session', async () => {
     backend.mockRejectedValue(new UnauthenticatedError())
     expect((await GET()).status).toBe(401)
@@ -38,7 +47,10 @@ describe('portfolio BFF routes', () => {
   })
 
   it('rejects invalid tickers without calling backend', async () => {
-    const res = await holdingRoute.DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('../me'))
+    const res = await holdingRoute.DELETE(
+      new NextRequest('http://x', { method: 'DELETE' }),
+      ctx('../me'),
+    )
     expect(res.status).toBe(400)
     expect(backend).not.toHaveBeenCalled()
   })
@@ -52,7 +64,10 @@ describe('portfolio BFF routes', () => {
 
   it('DELETE passes 204 through', async () => {
     backend.mockResolvedValue(new Response(null, { status: 204 }))
-    const res = await holdingRoute.DELETE(new NextRequest('http://x', { method: 'DELETE' }), ctx('AAPL'))
+    const res = await holdingRoute.DELETE(
+      new NextRequest('http://x', { method: 'DELETE' }),
+      ctx('AAPL'),
+    )
     expect(res.status).toBe(204)
     expect(res.headers.get('Cache-Control')).toBe('private, no-store')
   })
@@ -103,10 +118,7 @@ describe('portfolio BFF routes', () => {
   it.each(['../holdings', 'not-a-uuid', '0b8a3f1e-5d2c-4c3a-9f1e-2b7d8c9a0e1'])(
     'rejects lot id %j without calling backend',
     async (lotId) => {
-      const res = await DELETE_LOT(
-        new NextRequest('http://x', { method: 'DELETE' }),
-        lotCtx(lotId),
-      )
+      const res = await DELETE_LOT(new NextRequest('http://x', { method: 'DELETE' }), lotCtx(lotId))
       expect(res.status).toBe(400)
       expect(backend).not.toHaveBeenCalled()
     },

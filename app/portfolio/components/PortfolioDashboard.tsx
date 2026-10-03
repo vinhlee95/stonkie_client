@@ -6,6 +6,7 @@ import type { Company } from '@/app/CompanyList'
 import { useFavourites } from '@/app/components/hooks/useFavourites'
 import { useIsClient } from '@/app/components/hooks/useIsClient'
 import { usePortfolio } from '@/app/components/hooks/usePortfolio'
+import { usePortfolioPerformance } from '@/app/components/hooks/usePortfolioPerformance'
 import {
   addLot,
   deleteLot,
@@ -15,6 +16,7 @@ import {
   type PortfolioHolding,
 } from '@/lib/api/portfolio'
 import { asOf, plural } from '../format'
+import type { PerformanceState, RangeKey } from '../performance'
 import { HoldingModal, type HoldingActions, type HoldingModalState } from './HoldingModal'
 import { HoldingsList, HoldingsTable } from './holdings'
 import {
@@ -31,6 +33,14 @@ import { TickerLogo } from './ui'
 
 export default function PortfolioDashboard({ initialData }: { initialData: Portfolio }) {
   const { data, refresh, sync } = usePortfolio(initialData)
+  const perf = usePortfolioPerformance(data.summary.holdings_count > 0)
+  const performance: PerformanceState = {
+    points: perf.data?.points,
+    excluded: perf.data?.excluded ?? [],
+    status: perf.status,
+  }
+  // Shared by the hero Return and both chart instances (mobile + desktop).
+  const [range, setRange] = useState<RangeKey>('YTD')
   const isClient = useIsClient()
   const [modal, setModal] = useState<HoldingModalState | null>(null)
   // A position-view write saved but its refetch failed: the open view must not pass old lots off as current.
@@ -118,12 +128,23 @@ export default function PortfolioDashboard({ initialData }: { initialData: Portf
           )}
           <div className="grid grid-cols-1 items-start gap-3.5 md:gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
             <section className="min-w-0 rounded-2xl border border-[var(--accent-active-border)] bg-[var(--card-background)] px-3.5 pb-3.5 pt-3 md:px-[18px] md:pb-[18px] md:pt-3.5 dark:border-white/10">
-              <PortfolioSummary s={s} currency={currency} />
+              <PortfolioSummary s={s} currency={currency} range={range} performance={performance} />
               <div className="md:hidden">
-                <PerformanceChart height={150} compact />
+                <PerformanceChart
+                  height={150}
+                  compact
+                  range={range}
+                  onRangeChange={setRange}
+                  performance={performance}
+                />
               </div>
               <div className="hidden md:block">
-                <PerformanceChart height={250} />
+                <PerformanceChart
+                  height={250}
+                  range={range}
+                  onRangeChange={setRange}
+                  performance={performance}
+                />
               </div>
             </section>
             <div className="hidden min-w-0 flex-col gap-5 lg:flex">

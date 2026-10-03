@@ -80,6 +80,31 @@ export interface LotInput {
 export type NewLot = LotInput & { name: string | null }
 
 export const PORTFOLIO_QUERY_KEY = ['portfolio'] as const
+// Nested under PORTFOLIO_QUERY_KEY so invalidating the portfolio after a write refetches it too
+// (usePortfolio.sync, which refetches only its exact key, invalidates it explicitly).
+export const PERFORMANCE_QUERY_KEY = [...PORTFOLIO_QUERY_KEY, 'performance'] as const
+
+/** One trading day of the performance history. */
+export interface PerformancePoint {
+  /** Session date (YYYY-MM-DD). */
+  date: string
+  /** Current holdings priced at that day's closes and FX, in `base_currency`. */
+  portfolio_value: number
+  /** S&P 500 level converted at that day's FX; only meaningful relative to itself. */
+  benchmark_value: number
+}
+
+/**
+ * ~5y of daily values, oldest first, ending at the last completed close.
+ * Back-tests today's holdings (lot purchase dates are not used). Clients
+ * slice and rebase per range. `points` is empty when nothing can be priced.
+ */
+export interface PortfolioPerformance {
+  base_currency: string
+  points: PerformancePoint[]
+  /** Holdings left out of `portfolio_value` (no currency, history or FX). */
+  excluded: string[]
+}
 
 /** Yahoo symbols the backend accepts: AAPL, BRK-B, NOKIA.HE, EURUSD=X. Match the backend's TICKER_RE. */
 export const TICKER_RE = /^[A-Z0-9][A-Z0-9.\-=^]{0,19}$/
@@ -138,6 +163,12 @@ export async function fetchPortfolio(): Promise<Portfolio> {
   const res = await fetch('/api/me/portfolio', { cache: 'no-store' })
   if (!res.ok) throw new Error(await errorDetail(res))
   return (await res.json()) as Portfolio
+}
+
+export async function fetchPerformance(): Promise<PortfolioPerformance> {
+  const res = await fetch('/api/me/portfolio/performance', { cache: 'no-store' })
+  if (!res.ok) throw new Error(await errorDetail(res))
+  return (await res.json()) as PortfolioPerformance
 }
 
 export async function removeHolding(ticker: string): Promise<void> {
