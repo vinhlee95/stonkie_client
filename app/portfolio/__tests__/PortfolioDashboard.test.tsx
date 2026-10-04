@@ -1,9 +1,14 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@/tests/test-utils'
-import type { Portfolio, PortfolioHolding } from '@/lib/api/portfolio'
+import {
+  PERFORMANCE_QUERY_KEY,
+  type Portfolio,
+  type PortfolioHolding,
+  type PortfolioPerformance,
+} from '@/lib/api/portfolio'
 import PortfolioDashboard from '../components/PortfolioDashboard'
-import { asOf } from '../format'
+import { asOf, signedMoney } from '../format'
 
 const AS_OF = new Date(2026, 8, 25, 18, 30).toISOString()
 
@@ -14,7 +19,12 @@ function holding(over: Partial<PortfolioHolding>): PortfolioHolding {
     shares: 10,
     avg_cost: 100,
     lots: [
-      { id: '0b8a3f1e-5d2c-4c3a-9f1e-2b7d8c9a0e11', shares: 10, price: 100, purchased_on: '2025-01-02' },
+      {
+        id: '0b8a3f1e-5d2c-4c3a-9f1e-2b7d8c9a0e11',
+        shares: 10,
+        price: 100,
+        purchased_on: '2025-01-02',
+      },
     ],
     currency: 'USD',
     price: 210,
@@ -138,6 +148,141 @@ describe('PortfolioDashboard', () => {
     }
     render(<PortfolioDashboard initialData={data} />)
     expect(screen.getByRole('status')).toHaveTextContent('No price for ZZZ')
+  })
+
+  it('drives Return and both charts from one range, YTD by default', async () => {
+    const perf: PortfolioPerformance = {
+      base_currency: 'EUR',
+      excluded: [],
+      points: [
+        { date: '2025-06-30', portfolio_value: 1000, benchmark_value: 90 },
+        { date: '2025-12-31', portfolio_value: 1600, benchmark_value: 100 },
+        { date: '2026-10-02', portfolio_value: 2000, benchmark_value: 110 },
+      ],
+    }
+    fetchMock.mockImplementation(async (url: string) =>
+      url === '/api/me/portfolio/performance'
+        ? new Response(JSON.stringify(perf))
+        : new Response(JSON.stringify(FILLED)),
+    )
+    render(<PortfolioDashboard initialData={FILLED} />)
+    const ret = () => screen.getByText('Return', { selector: 'div' }).parentElement!
+
+    expect(await within(ret()).findByText('+€400')).toBeInTheDocument()
+    expect(within(ret()).getByText('+25.00%')).toBeInTheDocument()
+    for (const b of screen.getAllByRole('button', { name: 'YTD' })) {
+      expect(b).toHaveAttribute('aria-pressed', 'true')
+    }
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'All' })[0])
+    for (const b of screen.getAllByRole('button', { name: 'All' })) {
+      expect(b).toHaveAttribute('aria-pressed', 'true')
+    }
+    expect(
+      within(ret()).getByText(signedMoney(FILLED.summary.total_return, 'EUR', 0)),
+    ).toBeInTheDocument()
+    const perfCalls = fetchMock.mock.calls.filter(
+      ([url]) => url === '/api/me/portfolio/performance',
+    )
+    expect(perfCalls).toHaveLength(1)
+  })
+
+  it('does not fetch performance for an empty portfolio', async () => {
+    const { queryClient } = render(<PortfolioDashboard initialData={EMPTY} />)
+    expect(await screen.findByText('Track what you own')).toBeInTheDocument()
+    // A disabled query is registered but never scheduled, so idle here means it can't fetch later.
+    expect(queryClient.getQueryState(PERFORMANCE_QUERY_KEY)?.fetchStatus).toBe('idle')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('shows the error state, not stale history, when a refetch after a lot edit fails', async () => {
+    const perf: PortfolioPerformance = {
+      base_currency: 'EUR',
+      excluded: [],
+      points: [
+        { date: '2025-12-31', portfolio_value: 1600, benchmark_value: 100 },
+        { date: '2026-10-02', portfolio_value: 2000, benchmark_value: 110 },
+      ],
+    }
+    let perfCalls = 0
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH') return new Response('{}')
+      if (url === '/api/me/portfolio/performance') {
+        perfCalls += 1
+        return perfCalls === 1
+          ? new Response(JSON.stringify(perf))
+          : new Response('{"detail":"down"}', { status: 503 })
+      }
+      return new Response(JSON.stringify(FILLED))
+    })
+    render(<PortfolioDashboard initialData={FILLED} />)
+    const ret = () => screen.getByText('Return', { selector: 'div' }).parentElement!
+    expect(await within(ret()).findByText('+€400')).toBeInTheDocument()
+
+    await userEvent.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Edit lot/ }))
+    const shares = within(dialog).getByLabelText('Shares')
+    await userEvent.clear(shares)
+    await userEvent.type(shares, '3')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save lot' }))
+
+    expect(
+      (await screen.findAllByText("Couldn't load performance history.")).length,
+    ).toBeGreaterThan(0)
+    expect(within(ret()).queryByText('+€400')).not.toBeInTheDocument()
+    expect(within(ret()).getByText('—')).toBeInTheDocument()
+  })
+
+  it('refetches performance after removing a position (prefix invalidation)', async () => {
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) =>
+      init?.method === 'DELETE'
+        ? new Response(null, { status: 204 })
+        : url === '/api/me/portfolio/performance'
+          ? new Response(JSON.stringify({ base_currency: 'EUR', points: [], excluded: [] }))
+          : new Response(JSON.stringify(FILLED)),
+    )
+    const perfCalls = () =>
+      fetchMock.mock.calls.filter(([url]) => url === '/api/me/portfolio/performance').length
+    render(<PortfolioDashboard initialData={FILLED} />)
+    await waitFor(() => expect(perfCalls()).toBe(1))
+
+    await userEvent.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove position' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Yes, remove' }))
+
+    await waitFor(() => expect(perfCalls()).toBe(2))
+  })
+
+  it('refetches performance after a lot edit so Return and chart use new shares', async () => {
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) =>
+      init?.method === 'PATCH'
+        ? new Response('{}')
+        : url === '/api/me/portfolio/performance'
+          ? new Response(JSON.stringify({ base_currency: 'EUR', points: [], excluded: [] }))
+          : new Response(JSON.stringify(FILLED)),
+    )
+    const perfCalls = () =>
+      fetchMock.mock.calls.filter(([url]) => url === '/api/me/portfolio/performance').length
+    render(<PortfolioDashboard initialData={FILLED} />)
+    await waitFor(() => expect(perfCalls()).toBe(1))
+
+    await userEvent.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Edit lot/ }))
+    const shares = within(dialog).getByLabelText('Shares')
+    await userEvent.clear(shares)
+    await userEvent.type(shares, '3')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save lot' }))
+
+    await waitFor(() => expect(perfCalls()).toBe(2))
   })
 
   it('marks placeholder sections as sample data', () => {

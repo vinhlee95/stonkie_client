@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { PortfolioHolding } from '@/lib/api/portfolio'
+import { useState } from 'react'
+import type { PerformancePoint, PortfolioHolding } from '@/lib/api/portfolio'
 import { pct } from '../format'
-import { RANGES, sampleSeries, type RangeKey } from '../sampleData'
+import { sliceAndRebase, type PerformanceState, type RangeKey } from '../performance'
 import {
   Allocation,
   Movers,
@@ -162,36 +163,87 @@ describe('Movers', () => {
   })
 })
 
+/** Weekdays from 2025-09-01 to 2026-10-02, values drifting so every range differs. */
+function makePoints(): PerformancePoint[] {
+  const out: PerformancePoint[] = []
+  for (let t = Date.UTC(2025, 8, 1), i = 0; t <= Date.UTC(2026, 9, 2); t += 864e5) {
+    const day = new Date(t).getUTCDay()
+    if (day === 0 || day === 6) continue
+    out.push({
+      date: new Date(t).toISOString().slice(0, 10),
+      portfolio_value: 10000 + i * 20 + (i % 7) * 15,
+      benchmark_value: 5000 + i * 4 - (i % 5) * 9,
+    })
+    i++
+  }
+  return out
+}
+const POINTS = makePoints()
+const LOADED: PerformanceState = { points: POINTS, excluded: [], status: 'success' }
+
+const SUMMARY = {
+  holdings_count: 1,
+  priced_count: 1,
+  total_value: 100,
+  total_cost: 80,
+  total_return: 20,
+  total_return_percent: 25,
+  day_change: 1,
+  day_change_percent: 1,
+  as_of: null,
+  delayed_count: 0,
+}
+
 describe('PortfolioSummary', () => {
+  const summary = (range: RangeKey, performance: PerformanceState = LOADED) =>
+    render(<PortfolioSummary s={SUMMARY} currency="EUR" range={range} performance={performance} />)
+  const returnBox = () => screen.getByText('Return').parentElement!
+
   it('pluralizes the holdings count', () => {
-    const s = {
-      holdings_count: 1,
-      priced_count: 1,
-      total_value: 100,
-      total_cost: 80,
-      total_return: 20,
-      total_return_percent: 25,
-      day_change: 1,
-      day_change_percent: 1,
-      as_of: null,
-      delayed_count: 0,
-    }
-    const { rerender } = render(<PortfolioSummary s={s} currency="EUR" />)
+    const { rerender } = summary('All')
     expect(screen.getByText('1 holding')).toBeInTheDocument()
-    rerender(<PortfolioSummary s={{ ...s, holdings_count: 3 }} currency="EUR" />)
+    rerender(
+      <PortfolioSummary
+        s={{ ...SUMMARY, holdings_count: 3 }}
+        currency="EUR"
+        range="All"
+        performance={LOADED}
+      />,
+    )
     expect(screen.getByText('3 holdings')).toBeInTheDocument()
+  })
+
+  it('All shows the cost-basis return', () => {
+    summary('All', { points: undefined, excluded: [], status: 'pending' })
+    expect(within(returnBox()).getByText('+€20')).toBeInTheDocument()
+    expect(within(returnBox()).getByText('+25.00%')).toBeInTheDocument()
+  })
+
+  it('other ranges show the back-tested change over the range', () => {
+    summary('YTD')
+    // YTD is based on the last close of 2025.
+    const start = POINTS.filter((p) => p.date <= '2025-12-31').at(-1)!.portfolio_value
+    const end = POINTS.at(-1)!.portfolio_value
+    const box = returnBox()
+    expect(
+      within(box).getByText(`+€${Math.round(end - start).toLocaleString('en-US')}`),
+    ).toBeInTheDocument()
+    expect(within(box).getByText(pct((end / start - 1) * 100))).toBeInTheDocument()
+    expect(box).toHaveAttribute('title', expect.stringMatching(/current holdings/))
+    expect(box.getAttribute('title')).not.toMatch(/Excludes/)
+    expect(screen.queryByText('Total return')).not.toBeInTheDocument()
+  })
+
+  it('shows a placeholder while loading and a dash on error', () => {
+    const { unmount } = summary('1M', { points: undefined, excluded: [], status: 'pending' })
+    expect(screen.getByLabelText('Loading return')).toBeInTheDocument()
+    unmount()
+    summary('1M', { points: undefined, excluded: [], status: 'error' })
+    expect(within(returnBox()).getByText('—')).toBeInTheDocument()
   })
 })
 
 describe('PerformanceChart', () => {
-  // sampleSeries() ends on a fixed UTC date, so expected values are deterministic.
-  const series = sampleSeries()
-  function point(range: RangeKey, i: number) {
-    const sl = series.slice(-RANGES[range])
-    const rebase = (v: number, v0: number) => ((1 + v / 100) / (1 + v0 / 100) - 1) * 100
-    const x = sl[i < 0 ? sl.length + i : i]
-    return { p: rebase(x.p, sl[0].p), b: rebase(x.b, sl[0].b), d: x.d, n: sl.length }
-  }
   const fmtD = (d: Date) =>
     d.toLocaleDateString('en-GB', {
       day: 'numeric',
@@ -202,28 +254,42 @@ describe('PerformanceChart', () => {
   const legend = (name: string) => screen.getByText(name).querySelector('b')!.textContent
   const plot = () => screen.getByRole('img', { name: /Portfolio performance/ }).parentElement!
 
+  function Controlled({
+    initial = '1Y',
+    performance = LOADED,
+  }: {
+    initial?: RangeKey
+    performance?: PerformanceState
+  }) {
+    const [range, setRange] = useState<RangeKey>(initial)
+    return <PerformanceChart range={range} onRangeChange={setRange} performance={performance} />
+  }
+
   function hoverAt(fraction: number) {
     const el = plot()
     el.getBoundingClientRect = () => ({ left: 0, width: 1000 }) as DOMRect
     fireEvent.mouseMove(el, { clientX: fraction * 1000 })
   }
 
-  it('shows the return over the selected range, 1Y by default', async () => {
-    render(<PerformanceChart />)
-    expect(legend('Portfolio')).toBe(pct(point('1Y', -1).p, 1))
-    expect(legend('S&P 500')).toBe(pct(point('1Y', -1).b, 1))
+  it('shows the return over the selected range and switches without refetching', async () => {
+    render(<Controlled initial="1Y" />)
+    const oneYear = sliceAndRebase(POINTS, '1Y')
+    expect(legend('Portfolio')).toBe(pct(oneYear.at(-1)!.p, 1))
+    expect(legend('S&P 500')).toBe(pct(oneYear.at(-1)!.b, 1))
 
     await userEvent.click(screen.getByRole('button', { name: '1M' }))
+    const oneMonth = sliceAndRebase(POINTS, '1M')
     expect(screen.getByRole('button', { name: '1M' })).toHaveAttribute('aria-pressed', 'true')
-    expect(legend('Portfolio')).toBe(pct(point('1M', -1).p, 1))
-    expect(legend('S&P 500')).toBe(pct(point('1M', -1).b, 1))
-    expect(pct(point('1M', -1).p, 1)).not.toBe(pct(point('1Y', -1).p, 1))
+    expect(legend('Portfolio')).toBe(pct(oneMonth.at(-1)!.p, 1))
+    expect(legend('S&P 500')).toBe(pct(oneMonth.at(-1)!.b, 1))
+    expect(legend('Portfolio')).not.toBe(pct(oneYear.at(-1)!.p, 1))
   })
 
   it('shows the hovered point and its date, then restores on mouse leave', () => {
-    render(<PerformanceChart />)
+    render(<Controlled initial="1Y" />)
+    const data = sliceAndRebase(POINTS, '1Y')
     const label = screen.getByText(/vs benchmark$/)
-    const mid = point('1Y', Math.round(0.5 * (RANGES['1Y'] - 1)))
+    const mid = data[Math.round(0.5 * (data.length - 1))]
 
     hoverAt(0.5)
     expect(legend('Portfolio')).toBe(pct(mid.p, 1))
@@ -232,18 +298,70 @@ describe('PerformanceChart', () => {
 
     hoverAt(0)
     expect(legend('Portfolio')).toBe('+0.0%')
-    expect(label).toHaveTextContent(fmtD(point('1Y', 0).d))
+    expect(label).toHaveTextContent(fmtD(data[0].d))
 
     fireEvent.mouseLeave(plot())
-    expect(legend('Portfolio')).toBe(pct(point('1Y', -1).p, 1))
+    expect(legend('Portfolio')).toBe(pct(data.at(-1)!.p, 1))
     expect(label).toHaveTextContent(/vs benchmark$/)
   })
 
   it('does not crash when the range shrinks while hovering', () => {
-    render(<PerformanceChart />)
+    render(<Controlled initial="1Y" />)
     hoverAt(1) // last index of 1Y, past the end of 1M
     fireEvent.click(screen.getByRole('button', { name: '1M' }))
-    expect(legend('Portfolio')).toBe(pct(point('1M', -1).p, 1))
+    expect(legend('Portfolio')).toBe(pct(sliceAndRebase(POINTS, '1M').at(-1)!.p, 1))
     expect(screen.getByText(/vs benchmark$/)).toBeInTheDocument()
+  })
+
+  it('labels the series as a back-test, not sample data', () => {
+    render(<Controlled />)
+    expect(screen.getByText('Based on current holdings')).toBeInTheDocument()
+    expect(screen.queryByText('Sample data')).not.toBeInTheDocument()
+  })
+
+  it('keeps the back-test note on the compact (mobile) chart', () => {
+    render(
+      <PerformanceChart
+        compact
+        range="1Y"
+        onRangeChange={() => {}}
+        performance={{ points: POINTS, excluded: ['ZZZ'], status: 'success' }}
+      />,
+    )
+    expect(screen.getByText(/Based on current holdings/)).toHaveTextContent('excludes ZZZ')
+  })
+
+  it('names holdings left out of the series', () => {
+    render(<Controlled performance={{ points: POINTS, excluded: ['ZZZ'], status: 'success' }} />)
+    const note = screen.getByText(/Based on current holdings/)
+    expect(note).toHaveTextContent('Based on current holdings · excludes ZZZ')
+    expect(note).toHaveAttribute(
+      'title',
+      expect.stringContaining('Excludes ZZZ (pricing data unavailable)'),
+    )
+  })
+
+  it('shows loading, error and empty states', () => {
+    const { rerender } = render(
+      <Controlled performance={{ points: undefined, excluded: [], status: 'pending' }} />,
+    )
+    expect(screen.getByLabelText('Loading performance')).toBeInTheDocument()
+    expect(legend('Portfolio')).toBe('—')
+
+    rerender(<Controlled performance={{ points: undefined, excluded: [], status: 'error' }} />)
+    expect(screen.getByText("Couldn't load performance history.")).toBeInTheDocument()
+
+    rerender(<Controlled performance={{ points: [], excluded: [], status: 'success' }} />)
+    expect(screen.getByText(/No price history/)).toBeInTheDocument()
+  })
+
+  it('says when a range has too little history', () => {
+    render(
+      <Controlled
+        initial="1M"
+        performance={{ points: POINTS.slice(-1), excluded: [], status: 'success' }}
+      />,
+    )
+    expect(screen.getByText('Not enough history for this range yet.')).toBeInTheDocument()
   })
 })

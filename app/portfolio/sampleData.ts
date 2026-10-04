@@ -1,6 +1,6 @@
 /**
  * Placeholder data for dashboard sections that have no backend source yet
- * (performance history, risk, news, events, dividends).
+ * (risk, news, events, dividends).
  * Every card that renders this data shows a "Sample data" badge.
  */
 
@@ -24,27 +24,6 @@ export function walk(n: number, seed: number, endRet: number, vol: number): numb
   const drift = endRet - out[n - 1]
   return out.map((x, i) => x + drift * (i / (n - 1)))
 }
-
-export interface SeriesPoint {
-  d: Date
-  p: number
-  b: number
-}
-
-/** ~2y of cumulative % returns: portfolio (p) vs S&P 500 (b). */
-// Fixed end date so SSR and hydration build identical series (no new Date()).
-const SAMPLE_SERIES_END = new Date(Date.UTC(2026, 8, 25))
-
-export function sampleSeries(end: Date = SAMPLE_SERIES_END): SeriesPoint[] {
-  const n = 504
-  const p = walk(n, 7, 61, 3.2)
-  const b = walk(n, 19, 29, 1.6)
-  const start = end.getTime() - 730 * 864e5
-  return p.map((v, i) => ({ d: new Date(start + i * (730 / n) * 864e5), p: v, b: b[i] }))
-}
-
-export const RANGES = { '1M': 21, '3M': 63, YTD: 186, '1Y': 252, All: 504 } as const
-export type RangeKey = keyof typeof RANGES
 
 export function sampleSpark(ticker: string, up: boolean): number[] {
   const seed = [...ticker].reduce((a, c) => a + c.charCodeAt(0), 0)
