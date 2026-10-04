@@ -1,5 +1,7 @@
 'use client'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { ChatBubbleOutline, HomeOutlined, SearchOutlined } from '@mui/icons-material'
 import { Suspense, useState, useEffect } from 'react'
 import AccountMenu from './AccountMenu'
@@ -8,12 +10,18 @@ import { ChatProvider } from './Chat'
 import SpotlightSearch from './SpotlightSearch'
 import { useScrollLock } from './hooks/useScrollLock'
 import { usePopularCompanies } from './hooks/usePopularCompanies'
+import PortfolioChat from '@/app/portfolio/components/PortfolioChat'
+import { PORTFOLIO_QUERY_KEY, type Portfolio } from '@/lib/api/portfolio'
 
 const BottomNavigation = () => {
   const [isChatVisible, setIsChatVisible] = useState(false)
   const [isChatClosing, setIsChatClosing] = useState(false)
+  // Which chat the button opened; fixed while open so a portfolio refetch can't swap it mid-chat.
+  const [isPortfolioChat, setIsPortfolioChat] = useState(false)
   const [isSearchVisible, setIsSearchVisible] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
+  const pathname = usePathname()
+  const queryClient = useQueryClient()
 
   // Prefetch popular companies on mount so search is instant when opened
   usePopularCompanies()
@@ -50,6 +58,9 @@ const BottomNavigation = () => {
   }
 
   const handleChatClick = () => {
+    // On the portfolio page the chat is about the user's holdings; with none yet, the general chat.
+    const portfolio = queryClient.getQueryData<Portfolio>(PORTFOLIO_QUERY_KEY)
+    setIsPortfolioChat(pathname === '/portfolio' && (portfolio?.holdings.length ?? 0) > 0)
     setIsSearchVisible(false)
     setIsChatClosing(false)
     setIsChatVisible(true)
@@ -69,9 +80,16 @@ const BottomNavigation = () => {
     <>
       <Suspense>
         <ChatProvider>
-          {isChatVisible && (
-            <Chat onClose={handleChatClose} isDesktop={isDesktop} isClosing={isChatClosing} />
-          )}
+          {isChatVisible &&
+            (isPortfolioChat ? (
+              <PortfolioChat
+                onClose={handleChatClose}
+                isDesktop={isDesktop}
+                isClosing={isChatClosing}
+              />
+            ) : (
+              <Chat onClose={handleChatClose} isDesktop={isDesktop} isClosing={isChatClosing} />
+            ))}
         </ChatProvider>
       </Suspense>
 
@@ -101,6 +119,7 @@ const BottomNavigation = () => {
           <button
             onClick={handleChatClick}
             className="group relative p-2.5 rounded-full text-gray-700 dark:text-gray-300 focus:outline-none transition-all duration-300 hover:scale-110 active:scale-95 z-10"
+            aria-label="Chat"
           >
             <div className="absolute -inset-y-3 -inset-x-8 rounded-full bg-gradient-to-br from-white/80 to-white/30 dark:from-white/30 dark:to-white/10 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 backdrop-blur-sm border-l border-white/40 dark:border-white/20 pointer-events-none" />
             <div className="absolute -inset-y-3 -inset-x-8 rounded-full shadow-[inset_0_2px_8px_rgba(255,255,255,0.6),inset_0_-2px_8px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_2px_8px_rgba(255,255,255,0.3),inset_0_-2px_8px_rgba(0,0,0,0.4)] opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200 pointer-events-none" />

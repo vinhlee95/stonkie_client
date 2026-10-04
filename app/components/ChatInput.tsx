@@ -13,6 +13,8 @@ interface ChatInputProps {
   preferredModel: string
   setPreferredModel: (model: string) => void
   placeholder?: string
+  /** Rendered above the text field inside the input box (e.g. a scope chip). */
+  inputAccessory?: React.ReactNode
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -26,6 +28,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   preferredModel,
   setPreferredModel,
   placeholder = 'Ask follow-up...',
+  inputAccessory,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -44,6 +47,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <div className="flex-shrink-0 pb-4 px-4 w-full bg-transparent">
       <div className="max-w-4xl mx-auto flex flex-col gap-2 border border-gray-200 dark:border-gray-700 rounded-xl">
+        {inputAccessory && <div className="px-4 pt-3">{inputAccessory}</div>}
         {/* First row: Textarea */}
         <textarea
           disabled={isLoading}

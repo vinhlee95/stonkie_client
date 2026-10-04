@@ -202,6 +202,8 @@ interface ChatboxUIProps {
   preferredModel: string
   setPreferredModel: (model: string) => void
   placeholder?: string
+  /** Rendered above the text field inside the input box (e.g. a scope chip). */
+  inputAccessory?: React.ReactNode
   /** Header configuration — icon, title, subtitle, optional actions. */
   header: Omit<ChatHeaderProps, 'onClose'>
   /** When true, plays the slide-down exit animation before unmounting. */
@@ -226,6 +228,7 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
   preferredModel,
   setPreferredModel,
   placeholder,
+  inputAccessory,
   header,
   isClosing,
 }) => {
@@ -321,6 +324,7 @@ export const ChatboxUI: React.FC<ChatboxUIProps> = ({
             preferredModel={preferredModel}
             setPreferredModel={setPreferredModel}
             placeholder={placeholder}
+            inputAccessory={inputAccessory}
           />
         </div>
       </div>
