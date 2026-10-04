@@ -88,8 +88,8 @@ describe('rangeReturn', () => {
     expect(rangeReturn(POINTS, 'All')!.abs).toBe(100)
   })
 
-  it('is zero when the range has a single point', () => {
-    expect(rangeReturn([pt('2026-10-02', 5)], 'YTD')).toEqual({ abs: 0, pct: 0 })
+  it('is null when the range has a single point', () => {
+    expect(rangeReturn([pt('2026-10-02', 5)], 'YTD')).toBeNull()
   })
 
   it('is null without points', () => {
@@ -110,14 +110,23 @@ describe('tickStep', () => {
     expect(tickStep(90, 150)).toBe(25) // 3.6 lines; 20 would give 4.5 > 4
   })
 
-  it('falls back to the largest step for extreme spans', () => {
-    expect(tickStep(50000, 250)).toBe(1000)
+  it('keeps the gridline cap for spans beyond the fixed steps', () => {
+    for (const [span, height, max] of [
+      [50000, 250, 6],
+      [7000, 250, 6],
+      [5000, 150, 4],
+    ]) {
+      expect(span / tickStep(span, height)).toBeLessThanOrEqual(max)
+    }
+    expect(tickStep(50000, 250)).toBe(10000)
   })
 })
 
 describe('backTestNote', () => {
   it('names excluded holdings', () => {
     expect(backTestNote([])).not.toMatch(/Excludes/)
-    expect(backTestNote(['ZZZ', 'QQQ.L'])).toMatch(/Excludes ZZZ, QQQ\.L \(no price history\)\.$/)
+    expect(backTestNote(['ZZZ', 'QQQ.L'])).toMatch(
+      /Excludes ZZZ, QQQ\.L \(pricing data unavailable\)\.$/,
+    )
   })
 })

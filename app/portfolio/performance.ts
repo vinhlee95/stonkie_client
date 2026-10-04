@@ -11,7 +11,7 @@ export type RangeKey = (typeof RANGE_KEYS)[number]
 /** Performance history query state, shared by the hero Return and the chart. */
 export interface PerformanceState {
   points: PerformancePoint[] | undefined
-  /** Holdings left out of the series (no price history or FX). */
+  /** Holdings left out of the series (no currency, price history or FX). */
   excluded: string[]
   status: 'pending' | 'error' | 'success'
 }
@@ -67,13 +67,15 @@ export function sliceAndRebase(points: PerformancePoint[], range: RangeKey): Cha
   }))
 }
 
-/** Portfolio gain over the range, in base currency and %; null without data. */
+/** Portfolio gain over the range, in base currency and %; null when the range has under two points. */
 export function rangeReturn(
   points: PerformancePoint[],
   range: RangeKey,
 ): { abs: number; pct: number } | null {
-  if (points.length === 0) return null
-  const start = points[rangeStartIndex(points, range)].portfolio_value
+  const startIndex = rangeStartIndex(points, range)
+  // One point measures no change; the chart shows "not enough history" for the same data.
+  if (startIndex >= points.length - 1) return null
+  const start = points[startIndex].portfolio_value
   const end = points[points.length - 1].portfolio_value
   return { abs: end - start, pct: (end / start - 1) * 100 }
 }
@@ -87,11 +89,18 @@ const TICK_STEPS = [5, 10, 20, 25, 50, 100, 200, 500, 1000]
 export function tickStep(span: number, height: number): number {
   const minStep = span > 40 ? 20 : span > 16 ? 10 : 5
   const maxTicks = height < 200 ? 4 : 6
-  return TICK_STEPS.find((s) => s >= minStep && span / s <= maxTicks) ?? 1000
+  const step = TICK_STEPS.find((s) => s >= minStep && span / s <= maxTicks)
+  if (step) return step
+  // Beyond the fixed steps: smallest 1/2/5 x 10^n that still respects the cap.
+  const raw = span / maxTicks
+  const magnitude = 10 ** Math.floor(Math.log10(raw))
+  return [1, 2, 5, 10].map((m) => m * magnitude).find((s) => s >= raw)!
 }
 
 /** Tooltip/caption for back-tested figures, naming holdings missing from them. */
 export function backTestNote(excluded: string[]): string {
   const base = "Based on current holdings: today's shares at past closing prices"
-  return excluded.length ? `${base}. Excludes ${excluded.join(', ')} (no price history).` : base
+  return excluded.length
+    ? `${base}. Excludes ${excluded.join(', ')} (pricing data unavailable).`
+    : base
 }

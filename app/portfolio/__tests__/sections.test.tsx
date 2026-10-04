@@ -337,7 +337,7 @@ describe('PerformanceChart', () => {
     expect(note).toHaveTextContent('Based on current holdings · excludes ZZZ')
     expect(note).toHaveAttribute(
       'title',
-      expect.stringContaining('Excludes ZZZ (no price history)'),
+      expect.stringContaining('Excludes ZZZ (pricing data unavailable)'),
     )
   })
 

@@ -34,9 +34,11 @@ import { TickerLogo } from './ui'
 export default function PortfolioDashboard({ initialData }: { initialData: Portfolio }) {
   const { data, refresh, sync } = usePortfolio(initialData)
   const perf = usePortfolioPerformance(data.summary.holdings_count > 0)
+  // A failed refetch keeps the last data; show the error rather than pass pre-edit holdings off as current.
+  const fresh = perf.status === 'success' ? perf.data : undefined
   const performance: PerformanceState = {
-    points: perf.data?.points,
-    excluded: perf.data?.excluded ?? [],
+    points: fresh?.points,
+    excluded: fresh?.excluded ?? [],
     status: perf.status,
   }
   // Shared by the hero Return and both chart instances (mobile + desktop).

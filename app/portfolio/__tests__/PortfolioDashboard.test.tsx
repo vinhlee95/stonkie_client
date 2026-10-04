@@ -195,6 +195,47 @@ describe('PortfolioDashboard', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it('shows the error state, not stale history, when a refetch after a lot edit fails', async () => {
+    const perf: PortfolioPerformance = {
+      base_currency: 'EUR',
+      excluded: [],
+      points: [
+        { date: '2025-12-31', portfolio_value: 1600, benchmark_value: 100 },
+        { date: '2026-10-02', portfolio_value: 2000, benchmark_value: 110 },
+      ],
+    }
+    let perfCalls = 0
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (init?.method === 'PATCH') return new Response('{}')
+      if (url === '/api/me/portfolio/performance') {
+        perfCalls += 1
+        return perfCalls === 1
+          ? new Response(JSON.stringify(perf))
+          : new Response('{"detail":"down"}', { status: 503 })
+      }
+      return new Response(JSON.stringify(FILLED))
+    })
+    render(<PortfolioDashboard initialData={FILLED} />)
+    const ret = () => screen.getByText('Return', { selector: 'div' }).parentElement!
+    expect(await within(ret()).findByText('+€400')).toBeInTheDocument()
+
+    await userEvent.click(
+      within(screen.getByRole('table')).getByRole('button', { name: 'Edit AAPL' }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Edit AAPL' })
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Edit lot/ }))
+    const shares = within(dialog).getByLabelText('Shares')
+    await userEvent.clear(shares)
+    await userEvent.type(shares, '3')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save lot' }))
+
+    expect(
+      (await screen.findAllByText("Couldn't load performance history.")).length,
+    ).toBeGreaterThan(0)
+    expect(within(ret()).queryByText('+€400')).not.toBeInTheDocument()
+    expect(within(ret()).getByText('—')).toBeInTheDocument()
+  })
+
   it('refetches performance after removing a position (prefix invalidation)', async () => {
     fetchMock.mockImplementation(async (url: string, init?: RequestInit) =>
       init?.method === 'DELETE'
