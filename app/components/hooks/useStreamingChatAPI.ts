@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   AnalysisPhase,
   AnswerGround,
@@ -48,6 +48,15 @@ export type OpenChatStream = (
   request: StreamRequest,
 ) => Promise<ReadableStreamDefaultReader<Uint8Array> | undefined>
 
+function errorAnswer(error: unknown): string {
+  if (error instanceof ChatRequestError) {
+    if (error.status === 401) return SESSION_EXPIRED_ANSWER
+    // Recoverable client errors (rate limited, stale focus holding) carry an actionable reason.
+    if (error.status >= 400 && error.status < 500 && error.detail) return error.detail
+  }
+  return 'Sorry, I encountered an error analyzing the data.'
+}
+
 /**
  * Submits questions through `openStream` and folds the streamed events
  * (answer, thinking, sources, visuals, …) into the thread.
@@ -62,6 +71,9 @@ export const useStreamingChatAPI = (
   const [isLoading, setIsLoading] = useState(false)
   const isThinkingRef = useRef(false)
   const abortControllerRef = useRef<AbortController | null>(null)
+
+  // Closing the chat (unmount) stops the stream, so the server stops generating too.
+  useEffect(() => () => abortControllerRef.current?.abort(), [])
 
   const cancelRequest = () => {
     if (abortControllerRef.current) {
@@ -352,7 +364,8 @@ export const useStreamingChatAPI = (
         }
       }
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      // By name: an aborted fetch rejects with a DOMException, which isn't always an Error subclass.
+      if ((error as { name?: string } | null)?.name === 'AbortError') {
         updateThread(threadId, {
           answer: 'Request cancelled.',
           thoughts: [],
@@ -363,11 +376,8 @@ export const useStreamingChatAPI = (
       }
 
       console.error('Error in chat:', error)
-      const sessionExpired = error instanceof ChatRequestError && error.status === 401
       updateThread(threadId, {
-        answer: sessionExpired
-          ? SESSION_EXPIRED_ANSWER
-          : 'Sorry, I encountered an error analyzing the data.',
+        answer: errorAnswer(error),
         thoughts: [],
         relatedQuestions: [],
         visualBlocks: [],

@@ -15,6 +15,8 @@ interface ChatInputProps {
   placeholder?: string
   /** Rendered above the text field inside the input box (e.g. a scope chip). */
   inputAccessory?: React.ReactNode
+  /** Fast/Deep analysis toggle; off for chats whose backend has no deep mode. */
+  showModeToggle?: boolean
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -29,6 +31,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   setPreferredModel,
   placeholder = 'Ask follow-up...',
   inputAccessory,
+  showModeToggle = true,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -69,42 +72,46 @@ const ChatInput: React.FC<ChatInputProps> = ({
         {/* Second row: Icons aligned left and right */}
         <div className="flex justify-between items-center px-2 pb-2">
           {/* Left side: Mode toggle */}
-          <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-700 rounded-full p-0.5">
-            {/* Fast analysis toggle */}
-            <div className="relative group">
-              <button
-                type="button"
-                className={`p-2 cursor-pointer rounded-full transition-colors ${!deepAnalysis ? 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]' : 'hover:bg-gray-100 dark:hover:bg-[#232323]'}`}
-                aria-label="Fast analysis"
-                onClick={() => setDeepAnalysis(false)}
-              >
-                <Zap
-                  className={`w-4 h-4 ${!deepAnalysis ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`}
-                />
-              </button>
-              {/* Tooltip */}
-              <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
-                Fast analysis
+          {showModeToggle ? (
+            <div className="flex items-center gap-1 border border-gray-200 dark:border-gray-700 rounded-full p-0.5">
+              {/* Fast analysis toggle */}
+              <div className="relative group">
+                <button
+                  type="button"
+                  className={`p-2 cursor-pointer rounded-full transition-colors ${!deepAnalysis ? 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]' : 'hover:bg-gray-100 dark:hover:bg-[#232323]'}`}
+                  aria-label="Fast analysis"
+                  onClick={() => setDeepAnalysis(false)}
+                >
+                  <Zap
+                    className={`w-4 h-4 ${!deepAnalysis ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`}
+                  />
+                </button>
+                {/* Tooltip */}
+                <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+                  Fast analysis
+                </div>
+              </div>
+              {/* Deep analysis toggle */}
+              <div className="relative group">
+                <button
+                  type="button"
+                  className={`p-2 cursor-pointer rounded-full transition-colors ${deepAnalysis ? 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]' : 'hover:bg-gray-100 dark:hover:bg-[#232323]'}`}
+                  aria-label="Deep analysis"
+                  onClick={() => setDeepAnalysis(true)}
+                >
+                  <Brain
+                    className={`w-4 h-4 ${deepAnalysis ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`}
+                  />
+                </button>
+                {/* Tooltip */}
+                <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+                  Deep analysis
+                </div>
               </div>
             </div>
-            {/* Deep analysis toggle */}
-            <div className="relative group">
-              <button
-                type="button"
-                className={`p-2 cursor-pointer rounded-full transition-colors ${deepAnalysis ? 'bg-[var(--accent-hover)] dark:bg-[var(--accent-hover-dark)]' : 'hover:bg-gray-100 dark:hover:bg-[#232323]'}`}
-                aria-label="Deep analysis"
-                onClick={() => setDeepAnalysis(true)}
-              >
-                <Brain
-                  className={`w-4 h-4 ${deepAnalysis ? 'text-white dark:text-[#ededed]' : 'text-gray-500 dark:text-gray-400'}`}
-                />
-              </button>
-              {/* Tooltip */}
-              <div className="absolute left-1/2 -translate-x-1/2 -top-8 z-10 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
-                Deep analysis
-              </div>
-            </div>
-          </div>
+          ) : (
+            <span />
+          )}
 
           {/* Right side: Model selector and submit */}
           <div className="flex items-center gap-2">

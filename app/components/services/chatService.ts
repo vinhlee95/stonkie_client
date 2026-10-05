@@ -2,10 +2,20 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:808
 
 /** A chat request the server answered with a non-2xx status. */
 export class ChatRequestError extends Error {
-  constructor(readonly status: number) {
+  /** `detail` is the server's user-facing reason, when it sent one (e.g. rate limited). */
+  constructor(
+    readonly status: number,
+    readonly detail?: string,
+  ) {
     super(`Chat request failed with status ${status}`)
     this.name = 'ChatRequestError'
   }
+}
+
+async function errorDetail(response: Response): Promise<string | undefined> {
+  const body = await response.json().catch(() => null)
+  const detail = body?.detail ?? body?.error
+  return typeof detail === 'string' ? detail : undefined
 }
 
 export const chatService = {
@@ -95,7 +105,7 @@ export const chatService = {
       body: JSON.stringify({ question, scopeTicker, conversationId, preferredModel }),
       signal,
     })
-    if (!response.ok) throw new ChatRequestError(response.status)
+    if (!response.ok) throw new ChatRequestError(response.status, await errorDetail(response))
     return response.body?.getReader()
   },
 

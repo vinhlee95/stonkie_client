@@ -10,8 +10,13 @@ import { ChatProvider } from './Chat'
 import SpotlightSearch from './SpotlightSearch'
 import { useScrollLock } from './hooks/useScrollLock'
 import { usePopularCompanies } from './hooks/usePopularCompanies'
-import PortfolioChat from '@/app/portfolio/components/PortfolioChat'
+import dynamic from 'next/dynamic'
 import { PORTFOLIO_QUERY_KEY, type Portfolio } from '@/lib/api/portfolio'
+
+// Only opened from /portfolio: keep it out of the nav bundle every page loads.
+const PortfolioChat = dynamic(() => import('@/app/portfolio/components/PortfolioChat'), {
+  ssr: false,
+})
 
 const BottomNavigation = () => {
   const [isChatVisible, setIsChatVisible] = useState(false)

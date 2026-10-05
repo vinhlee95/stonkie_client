@@ -206,6 +206,8 @@ export default function PortfolioChat({ onClose, isDesktop, isClosing }: Portfol
       setPreferredModel={setPreferredModel}
       placeholder={placeholder}
       inputAccessory={scope && <ScopeChip holding={scope} onClear={() => setScope(null)} />}
+      // The portfolio backend has a single (fast) mode.
+      showModeToggle={false}
       header={{ icon: <Sparkles size={13} strokeWidth={2.4} />, title: 'Portfolio chat' }}
     >
       {portfolio && (
