@@ -1,5 +1,23 @@
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
+/** A chat request the server answered with a non-2xx status. */
+export class ChatRequestError extends Error {
+  /** `detail` is the server's user-facing reason, when it sent one (e.g. rate limited). */
+  constructor(
+    readonly status: number,
+    readonly detail?: string,
+  ) {
+    super(`Chat request failed with status ${status}`)
+    this.name = 'ChatRequestError'
+  }
+}
+
+async function errorDetail(response: Response): Promise<string | undefined> {
+  const body = await response.json().catch(() => null)
+  const detail = body?.detail ?? body?.error
+  return typeof detail === 'string' ? detail : undefined
+}
+
 export const chatService = {
   async analyzeQuestion(
     question: string,
@@ -70,6 +88,24 @@ export const chatService = {
       throw new Error('Failed to get analysis')
     }
 
+    return response.body?.getReader()
+  },
+
+  /** Signed-in portfolio chat, via the same-origin BFF route (which attaches the backend JWT). */
+  async analyzePortfolioQuestion(
+    question: string,
+    scopeTicker: string | null,
+    conversationId: string | null = null,
+    preferredModel: string = 'fastest',
+    signal?: AbortSignal,
+  ) {
+    const response = await fetch('/api/me/portfolio/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, scopeTicker, conversationId, preferredModel }),
+      signal,
+    })
+    if (!response.ok) throw new ChatRequestError(response.status, await errorDetail(response))
     return response.body?.getReader()
   },
 
