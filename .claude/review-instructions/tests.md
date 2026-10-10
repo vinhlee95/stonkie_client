@@ -1,8 +1,3 @@
----
-applyTo: "**"
-excludeAgent: "cloud-agent"
----
-
 # Code review: Tests
 
 This checklist covers the tests angle of code review for the Stonkie frontend (vitest unit tests `**/*.{test,spec}.{ts,tsx}`; Playwright e2e in `tests/e2e/` against a mock backend started by `tests/global-setup.ts` on localhost:8080).

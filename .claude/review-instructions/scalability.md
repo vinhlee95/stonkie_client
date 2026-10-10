@@ -1,8 +1,3 @@
----
-applyTo: "**"
-excludeAgent: "cloud-agent"
----
-
 # Code review: Scalability/Performance
 
 This checklist covers the scalability/performance angle of code review for the Stonkie frontend (Next.js App Router SSR/SSG, React Query, PWA, charts).

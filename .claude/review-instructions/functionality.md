@@ -1,8 +1,3 @@
----
-applyTo: "**"
-excludeAgent: "cloud-agent"
----
-
 # Code review: Functionality
 
 This checklist covers the functionality angle of code review for the Stonkie frontend (Next.js App Router in `app/`, TypeScript, React Query, Auth.js via `auth.ts`, proxy in `proxy.ts`, backend API at `/api/companies/{ticker}/...`).

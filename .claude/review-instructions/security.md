@@ -1,8 +1,3 @@
----
-applyTo: "**"
-excludeAgent: "cloud-agent"
----
-
 # Code review: Security
 
 This checklist covers the security angle of code review for the Stonkie frontend (Next.js App Router, Auth.js via `auth.ts`, `proxy.ts`, renders LLM-generated markdown answers).

@@ -6,7 +6,7 @@ on:
       - ".claude/hooks/**"
       - ".github/workflows/hook-tests.yml"
       - "tests/hooks/**"
-      - ".github/instructions/**"
+      - ".claude/review-instructions/**"
       - ".claude/agents/**"
       - ".claude/skills/multi-review/**"
   push:
@@ -15,7 +15,7 @@ on:
       - ".claude/hooks/**"
       - ".github/workflows/hook-tests.yml"
       - "tests/hooks/**"
-      - ".github/instructions/**"
+      - ".claude/review-instructions/**"
       - ".claude/agents/**"
       - ".claude/skills/multi-review/**"
 

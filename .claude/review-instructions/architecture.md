@@ -1,8 +1,3 @@
----
-applyTo: "**"
-excludeAgent: "cloud-agent"
----
-
 # Code review: Architecture
 
 This checklist covers the architecture angle of code review for the Stonkie frontend (Next.js App Router, TypeScript, React Query, Tailwind, shadcn components).
